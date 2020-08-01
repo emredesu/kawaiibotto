@@ -7,4 +7,4 @@ kawaiibotto is a twitch.tv bot.
 
 *2- Edit the **globals.py** with your account's info*
 
-*3- Run bot.py!*
+*3- Run **bot.py!***
