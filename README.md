@@ -2,6 +2,7 @@
 kawaiibotto is a twitch.tv bot.
 
 **Run the bot**
+
 *1- Install requirements:*
 `pip install -r requirements.txt`
 
