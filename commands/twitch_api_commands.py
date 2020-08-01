@@ -1,0 +1,60 @@
+from commands.command import Command
+from globals import TWITCH_API_HEADERS
+import requests
+
+
+class UserIDCommand(Command):
+	COMMAND_NAME = "userid"
+	COOLDOWN = 0
+	DESCRIPTION = f"Gets you the Twitch userID of a person. Example usage: _{COMMAND_NAME} kawaiibotto"
+
+	def execute(self, bot, user, message, channel):
+		args = message.split()
+
+		try:
+			username = args[1]
+		except IndexError:
+			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username)")
+			return
+		else:
+			url = f"https://api.twitch.tv/helix/users?login={username}"
+			data = requests.get(url, headers=TWITCH_API_HEADERS).json()
+
+			try:
+				userid = data["data"][0]["id"]
+			except IndexError:
+				bot.send_message(channel, "User not found ¯\_(ツ)_/¯")
+			else:
+				bot.send_message(channel, userid)
+
+
+class EmotesCommand(Command):
+	COMMAND_NAME = "emotes"
+	COOLDOWN = 5
+	DESCRIPTION = "Get a twitchemotes.com link of a user. Example usage: _emotes Verniy"
+
+	def execute(self, bot, user, message, channel):
+		args = message.split()
+
+		try:
+			username = args[1]
+		except IndexError:
+			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username)")
+			return
+		else:
+			url = f"https://api.twitch.tv/helix/users?login={username}"
+			data = requests.get(url, headers=TWITCH_API_HEADERS).json()
+
+			try:
+				userid = data["data"][0]["id"]
+			except IndexError:
+				bot.send_message(channel, "User not found ¯\_(ツ)_/¯")
+				return
+			else:
+				broadcaster_type = data["data"][0]["broadcaster_type"]
+
+				if broadcaster_type not in ["partner", "affiliate"]:
+					bot.send_message(channel, "That user is not an affiliate nor a partner. ;w;")
+					return
+				else:
+					bot.send_message(channel, "https://twitchemotes.com/channels/{}".format(userid))
