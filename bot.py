@@ -101,6 +101,8 @@ while True:
 
 					if command_found is False:
 						bot.send_message(channel, "specified command was not found ;w;")
+			if invoked_command == "commands":
+				bot.send_message(channel, f"Currently available commands are: {' '.join([cmd.COMMAND_NAME for cmd in commands])}")
 			else:
 				for command in commands:
 					if command.COMMAND_NAME == invoked_command:
