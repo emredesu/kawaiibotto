@@ -1,4 +1,5 @@
 from commands.command import Command
+from messagetypes import error
 import requests
 
 
@@ -6,6 +7,16 @@ class RandomQuoteCommand(Command):
 	COMMAND_NAME = "rq"
 	COOLDOWN = 0
 	DESCRIPTION = f"Get a random quote of yours or someone else's. Only usable for channels in https://logs.ivr.fi/channels. Example usage: _{COMMAND_NAME} emredesu forsen"
+
+	def __init__(self, commands):
+		super().__init__(commands)
+		try:
+			channels_data = requests.get("https://logs.ivr.fi/channels").json()
+		except requests.exceptions.ConnectionError:
+			error("can't import RandomQuoteCommand, ivr.fi API is down ;w;")
+			return
+		else:
+			self.channels = [channels_data["channels"][i]["name"] for i in range(len(channels_data["channels"]))]
 
 	def execute(self, bot, user, message, channel):
 		args = message.split()
@@ -16,24 +27,16 @@ class RandomQuoteCommand(Command):
 		except IndexError:
 			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username) (channel)")
 		else:
-			try:
-				channels_data = requests.get("https://logs.ivr.fi/channels").json()
-			except requests.exceptions.ConnectionError:
-				bot.send_message(channel, "ivr.fi API is down ;w;")
+			if ch not in self.channels:
+				bot.send_message(channel, "That channel is not logged by ivr.fi. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
 				return
 			else:
-				channels = [channels_data["channels"][i]["name"] for i in range(len(channels_data["channels"]))]
+				rq_data = requests.get(f"https://api.ivr.fi/logs/rq/{ch}/{person}").json()
 
-				if ch not in channels:
-					bot.send_message(channel, "That channel is not logged by ivr.fi. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
-					return
-				else:
-					rq_data = requests.get(f"https://api.ivr.fi/logs/rq/{ch}/{person}").json()
-
-					try:
-						bot.send_message(channel, f"{rq_data['time24h']} #{ch} {rq_data['user']}: {rq_data['message']}")
-					except KeyError:
-						bot.send_message(channel, f"api.ivr.fi returned {rq_data['status']}: {rq_data['error']}")
+				try:
+					bot.send_message(channel, f"{rq_data['time24h']} #{ch} {rq_data['user']}: {rq_data['message']}")
+				except KeyError:
+					bot.send_message(channel, f"api.ivr.fi returned {rq_data['status']}: {rq_data['error']}")
 
 
 class EmoteInfoCommand(Command):
