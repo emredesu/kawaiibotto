@@ -9,18 +9,18 @@ import time
 s = socket.socket()
 connected_once = False
 reconnections = 0
-commands = []
 
 
 class kawaiibotto:
 	def __init__(self):
 		self.connect()
 		self.start_time = datetime.datetime.now()
-		instantiate_commands(commands)
+		self.commands = []
+		instantiate_commands(self.commands)
 
 	@staticmethod
 	def send_message(ch, msg):
-		if len(msg) > 500:
+		if len(msg) > 500:  # can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
 			messages = [msg[i:i+500] for i in range(0, len(msg), 500)]
 			for i in messages:
 				s.send("PRIVMSG #{} :{}\r\n".format(ch, i).encode("utf-8"))
@@ -62,6 +62,15 @@ class kawaiibotto:
 		s = socket.socket()
 		bot.connect()
 
+	@staticmethod
+	def execute_command(cmnd):
+		if time.time() - cmnd.last_used > cmnd.COOLDOWN:  # cooldown management
+			cmnd.execute(bot, user, message, channel)
+			log(f"{user} used {COMMAND_PREFIX}{invoked_command} in {channel}")
+			cmnd.last_used = time.time()
+		else:
+			bot.send_message(channel, f"{user}, that command is on cooldown :c")
+
 
 bot = kawaiibotto()
 
@@ -86,32 +95,14 @@ while True:
 		if message.startswith(COMMAND_PREFIX):
 			invoked_command = message.split()[0][len(COMMAND_PREFIX)::]
 
-			if invoked_command == "help":
-				try:
-					command_to_get_help_for = message.split()[1]
-				except IndexError:
-					bot.send_message(channel, "Usage: _help {command name}")
+			for command in bot.commands:
+				if isinstance(command.COMMAND_NAME, list):  # alias support
+					for alias in command.COMMAND_NAME:
+						if alias == invoked_command:
+							bot.execute_command(command)
 				else:
-					command_found = False
-
-					for cmd in commands:
-						if cmd.COMMAND_NAME == command_to_get_help_for:
-							bot.send_message(channel, cmd.DESCRIPTION)
-							command_found = True
-
-					if command_found is False:
-						bot.send_message(channel, "specified command was not found ;w;")
-			if invoked_command == "commands":
-				bot.send_message(channel, f"Currently available commands are: {' '.join([cmd.COMMAND_NAME for cmd in commands])}")
-			else:
-				for command in commands:
 					if command.COMMAND_NAME == invoked_command:
-						if time.time() - command.last_used > command.COOLDOWN:  # cooldown management
-							command.execute(bot, user, message, channel)
-							log(f"{user} used {COMMAND_PREFIX}{invoked_command} in {channel}")
-							command.last_used = time.time()
-						else:
-							bot.send_message(channel, f"{user}, that command is on cooldown :c")
+						bot.execute_command(command)
 	except AttributeError:
 		pass
 	except KeyboardInterrupt:
