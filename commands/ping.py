@@ -18,9 +18,9 @@ def calculate_uptime(bot):
 		minutes = minutes % 60
 
 	return "The bot has been running for {} {}, {} {}, {} {} and {} {}! ^w^".format(days, "days" if days > 1 or days == 0 else "day",
-																					hours, "hours" if hours > 1 or hours == 0 else "hour",
-																					minutes, "minutes" if minutes > 1 or minutes == 0 else "minute",
-																					seconds, "seconds" if seconds > 1 or seconds == 0 else "second")
+											hours, "hours" if hours > 1 or hours == 0 else "hour",
+											minutes, "minutes" if minutes > 1 or minutes == 0 else "minute",
+											seconds, "seconds" if seconds > 1 or seconds == 0 else "second")
 
 
 class PingCommand(Command):
