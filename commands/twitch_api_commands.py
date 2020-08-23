@@ -28,6 +28,31 @@ class UserIDCommand(Command):
 				bot.send_message(channel, userid)
 
 
+class ProfilePictureCommand(Command):
+	COMMAND_NAME = ["profilepic", "profilepicture", "pfp"]
+	COOLDOWN = 0
+	DESCRIPTION = "Get a link to a user's profile picture."
+
+	def execute(self, bot, user, message, channel):
+		args = message.split()
+
+		try:
+			username = args[1]
+		except IndexError:
+			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username)")
+			return
+		else:
+			url = f"https://api.twitch.tv/helix/users?login={username}"
+			data = requests.get(url, headers=TWITCH_API_HEADERS).json()
+
+			try:
+				userid = data["data"][0]["profile_image_url"]
+			except IndexError:
+				bot.send_message(channel, "User not found ¯\_(ツ)_/¯")
+			else:
+				bot.send_message(channel, userid)
+
+
 class EmotesCommand(Command):
 	COMMAND_NAME = "emotes"
 	COOLDOWN = 5
