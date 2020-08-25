@@ -10,6 +10,7 @@ from commands.commands import CommandsCommand
 from commands.help import HelpCommand
 from commands.code import CodeCommand
 from commands.math import MathCommand
+from commands.translate import TranslateCommand
 
 
 def instantiate_commands(commands):
@@ -28,3 +29,4 @@ def instantiate_commands(commands):
 	CodeCommand(commands)
 	ProfilePictureCommand(commands)
 	MathCommand(commands)
+	TranslateCommand(commands)
