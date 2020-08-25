@@ -9,7 +9,7 @@ class TranslateCommand(Command):
 
 	google_supported_languages = {
 		"Afrikaans": "af",
-		"Albanian":	"sq",
+		"Albanian": "sq",
 		"Amharic": "am",
 		"Arabic": "ar",
 		"Armenian": "hy",
@@ -23,7 +23,7 @@ class TranslateCommand(Command):
 		"Cbuano": "ceb",
 		"Chinese(Simplified)": "zh",
 		"Chinese(Traditional)":	"zh - TW",
-		"Corsican":	"co",
+		"Corsican": "co",
 		"Croatian": "hr",
 		"Czech": "cs",
 		"Danish": "da",
