@@ -65,9 +65,13 @@ class kawaiibotto:
 	@staticmethod
 	def execute_command(cmnd):
 		if time.time() - cmnd.last_used > cmnd.COOLDOWN:  # cooldown management
-			cmnd.execute(bot, user, message, channel)
-			log(f"{user} used {COMMAND_PREFIX}{invoked_command} in {channel}")
-			cmnd.last_used = time.time()
+			try:
+				cmnd.execute(bot, user, message, channel)
+				log(f"{user} used {COMMAND_PREFIX}{invoked_command} in {channel}")
+				cmnd.last_used = time.time()
+			except Exception as e:
+				error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
+				bot.send_message(channel, f"{user}, the execution of that command failed! Sorry for the inconvenience, it will be fixed soon hopefully ;w;")
 		else:
 			bot.send_message(channel, f"{user}, that command is on cooldown :c")
 
