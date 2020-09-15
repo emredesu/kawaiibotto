@@ -17,7 +17,8 @@ class MathCommand(Command):
 		ast.Mult: operator.mul,
 		ast.Mod: operator.mod,
 		ast.Pow: operator.pow,
-		ast.Div: operator.truediv
+		ast.Div: operator.truediv,
+		ast.FloorDiv: operator.floordiv,
 	}
 
 	callOps = {
@@ -52,8 +53,8 @@ class MathCommand(Command):
 
 	def execute(self, bot, user, message, channel):
 		try:
-			args = message.split()
-			expression = tuple(args[1::])
+			args = "".join(message.split()[1::])
+			expression = (args,)
 		except IndexError:
 			bot.send_message(channel, "Usage example: _math 1 + 1")
 		else:
