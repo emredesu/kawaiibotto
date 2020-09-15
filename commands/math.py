@@ -2,6 +2,8 @@ from commands.command import Command
 import math
 import ast
 import operator
+import multiprocessing.pool
+from multiprocessing.context import TimeoutError
 
 
 class MathCommand(Command):
@@ -14,8 +16,8 @@ class MathCommand(Command):
 		ast.Sub: operator.sub,
 		ast.Mult: operator.mul,
 		ast.Mod: operator.mod,
-		ast.Pow: math.pow,
-		ast.Div: operator.truediv,
+		ast.Pow: operator.pow,
+		ast.Div: operator.truediv
 	}
 
 	callOps = {
@@ -26,7 +28,7 @@ class MathCommand(Command):
 		"log": math.log,
 		"log10": math.log10,
 		"radians": math.radians,
-		"degrees": math.degrees,
+		"degrees": math.degrees
 	}
 
 	def arithmetic_eval(self, s):
@@ -51,12 +53,18 @@ class MathCommand(Command):
 	def execute(self, bot, user, message, channel):
 		try:
 			args = message.split()
-			expression = message[len(args[0]) + 1::]
+			expression = tuple(args[1::])
 		except IndexError:
 			bot.send_message(channel, "Usage example: _math 1 + 1")
 		else:
 			try:
-				result = self.arithmetic_eval(expression)
+				pool = multiprocessing.pool.Pool(processes=1)
+				async_result = pool.apply_async(self.arithmetic_eval, args=expression)
+
+				result = async_result.get(timeout=self.COOLDOWN)
+
 				bot.send_message(channel, str(result))
+			except TimeoutError:
+				bot.send_message(channel, f"Timed out after {self.COOLDOWN} seconds.")
 			except Exception as e:
 				bot.send_message(channel, str(e.__class__.__name__) + ": " + str(e))
