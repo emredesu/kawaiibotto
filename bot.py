@@ -76,38 +76,39 @@ class kawaiibotto:
 			bot.send_message(channel, f"{user}, that command is on cooldown :c")
 
 
-bot = kawaiibotto()
+if __name__ == "__main__":
+	bot = kawaiibotto()
 
-while True:
-	response = s.recv(2048).decode("utf-8", "ignore")
+	while True:
+		response = s.recv(2048).decode("utf-8", "ignore")
 
-	if "PING :tmi.twitch.tv\r\n" in response:
-		s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
-		log("answered the twitch ping")
+		if "PING :tmi.twitch.tv\r\n" in response:
+			s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
+			log("answered the twitch ping")
 
-	if "Login authentication failed" in response:
-		error("oauth expired, attempting to get a new oauth...")
-		# todo: get another oauth automatically
+		if "Login authentication failed" in response:
+			error("oauth expired, attempting to get a new oauth...")
+			# todo: get another oauth automatically
 
-	if not response:
-		bot.reconnect()
+		if not response:
+			bot.reconnect()
 
-	# command handling
-	try:
-		user, channel, message = re.search(':(.*)!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', response).groups()
+		# command handling
+		try:
+			user, channel, message = re.search(':(.*)!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', response).groups()
 
-		if message.startswith(COMMAND_PREFIX):
-			invoked_command = message.split()[0][len(COMMAND_PREFIX)::]
+			if message.startswith(COMMAND_PREFIX):
+				invoked_command = message.split()[0][len(COMMAND_PREFIX)::]
 
-			for command in bot.commands:
-				if isinstance(command.COMMAND_NAME, list):  # alias support
-					for alias in command.COMMAND_NAME:
-						if alias == invoked_command:
+				for command in bot.commands:
+					if isinstance(command.COMMAND_NAME, list):  # alias support
+						for alias in command.COMMAND_NAME:
+							if alias == invoked_command:
+								bot.execute_command(command)
+					else:
+						if command.COMMAND_NAME == invoked_command:
 							bot.execute_command(command)
-				else:
-					if command.COMMAND_NAME == invoked_command:
-						bot.execute_command(command)
-	except AttributeError:
-		pass
-	except KeyboardInterrupt:
-		exit()
+		except AttributeError:
+			pass
+		except KeyboardInterrupt:
+			exit()
