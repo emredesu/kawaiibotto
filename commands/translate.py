@@ -9,7 +9,7 @@ class TranslateCommand(Command):
 
 	google_supported_languages = {
 		"Afrikaans": "af",
-		"Albanian": "sq",
+		"Albanian":	"sq",
 		"Amharic": "am",
 		"Arabic": "ar",
 		"Armenian": "hy",
@@ -23,7 +23,7 @@ class TranslateCommand(Command):
 		"Cbuano": "ceb",
 		"Chinese(Simplified)": "zh",
 		"Chinese(Traditional)":	"zh - TW",
-		"Corsican": "co",
+		"Corsican":	"co",
 		"Croatian": "hr",
 		"Czech": "cs",
 		"Danish": "da",
@@ -170,9 +170,11 @@ class TranslateCommand(Command):
 			bot.send_message(channel, f"{user}, translation failed ;w;")
 			return
 		else:
-			translated_text = data[0][0][0]
+			translated_text = ""
+			for i in range(len(data[0])):
+				translated_text += data[0][i][0]
 
 			if source_language == "auto":
 				source_language = data[2]
 
-			bot.send_message(channel, f"{user}, {source_language} -> {target_language} - {text} -> {translated_text}")
+			bot.send_message(channel, f"{user}, {source_language} -> {target_language} - {translated_text}")
