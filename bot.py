@@ -61,6 +61,26 @@ class kawaiibotto:
 		time.sleep(2 ** reconnections)
 		s = socket.socket()
 		bot.connect()
+	
+	@staticmethod
+	def parsemsg(s):
+		"""
+		Breaks a message from an IRC server into its prefix, command, and arguments.
+		Taken from here: http://twistedmatrix.com/trac/browser/trunk/twisted/words/protocols/irc.py#54
+		"""
+		prefix = ''
+		trailing = []
+
+		if s[0] == ':':
+			prefix, s = s[1:].split(' ', 1)
+		if s.find(' :') != -1:
+			s, trailing = s.split(' :', 1)
+			args = s.split()
+			args.append(trailing)
+		else:
+			args = s.split()
+		command = args.pop(0)
+		return prefix, command, args
 
 	@staticmethod
 	def execute_command(cmnd):
@@ -82,20 +102,25 @@ if __name__ == "__main__":
 	while True:
 		response = s.recv(2048).decode("utf-8", "ignore")
 
-		if "PING :tmi.twitch.tv\r\n" in response:
-			s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
-			log("answered the twitch ping")
-
-		if "Login authentication failed" in response:
-			error("oauth expired, attempting to get a new oauth...")
-			# todo: get another oauth automatically
-
 		if not response:
 			bot.reconnect()
 
-		# command handling
-		try:
-			user, channel, message = re.search(':(.*)!.*@.*\.tmi\.twitch\.tv PRIVMSG #(.*) :(.*)', response).groups()
+		data = bot.parsemsg(response)
+		data_type = data[1]
+
+		if data_type == "PING":
+			s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
+			log("answered the twitch ping")
+		elif data_type == "PRIVMSG":
+			channel = data[2][0][1::]
+			message = data[2][1]
+			user = ""
+
+			for char in data[0]:
+				if char == "!":
+					break
+				else:
+					user += char
 
 			if message.startswith(COMMAND_PREFIX):
 				invoked_command = message.split()[0][len(COMMAND_PREFIX)::]
@@ -108,7 +133,3 @@ if __name__ == "__main__":
 					else:
 						if command.COMMAND_NAME == invoked_command:
 							bot.execute_command(command)
-		except AttributeError:
-			pass
-		except KeyboardInterrupt:
-			exit()
