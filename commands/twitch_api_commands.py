@@ -4,7 +4,7 @@ import requests
 
 
 class UserIDCommand(Command):
-	COMMAND_NAME = "userid"
+	COMMAND_NAME = ["uid", "userid"]
 	COOLDOWN = 0
 	DESCRIPTION = f"Gets you the Twitch userID of a person. Example usage: _{COMMAND_NAME} kawaiibotto"
 
@@ -21,6 +21,7 @@ class UserIDCommand(Command):
 			data = requests.get(url, headers=TWITCH_API_HEADERS).json()
 
 			try:
+				print(data)
 				userid = data["data"][0]["id"]
 			except IndexError:
 				bot.send_message(channel, "User not found ¯\_(ツ)_/¯")
