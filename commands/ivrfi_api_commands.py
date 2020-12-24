@@ -32,9 +32,10 @@ class RandomQuoteCommand(Command):
 				return
 			else:
 				rq_data = requests.get(f"https://api.ivr.fi/logs/rq/{ch}/{person}").json()
+				print(rq_data)
 
 				try:
-					bot.send_message(channel, f"{rq_data['time24h']} #{ch} {rq_data['user']}: {rq_data['message']}")
+					bot.send_message(channel, f"{rq_data['time']} ago, #{ch} {rq_data['user']}: {rq_data['message']}")
 				except KeyError:
 					bot.send_message(channel, f"api.ivr.fi returned {rq_data['status']}: {rq_data['error']}")
 
