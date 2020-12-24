@@ -32,7 +32,6 @@ class RandomQuoteCommand(Command):
 				return
 			else:
 				rq_data = requests.get(f"https://api.ivr.fi/logs/rq/{ch}/{person}").json()
-				print(rq_data)
 
 				try:
 					bot.send_message(channel, f"{rq_data['time']} ago, #{ch} {rq_data['user']}: {rq_data['message']}")
