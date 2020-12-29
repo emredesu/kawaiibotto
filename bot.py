@@ -25,14 +25,14 @@ class kawaiibotto:
 			for i in messages:
 				s.send("PRIVMSG #{} :{}\r\n".format(ch, i).encode("utf-8"))
 		else:
-			s.send("PRIVMSG #{} :{}\r\n".format(ch, msg).encode("utf-8"))
+			s.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))  # irc does not accept newlines, so we replace them with spaces
 
 	def connect(self):
 		global s, connected_once
 		while True:
 			try:
 				s.connect((HOST, PORT))
-			except socket.gaierror or socket.timeout:
+			except (socket.gaierror, socket.timeout):
 				error("couldn't connect to {}. retrying in {} seconds...".format(HOST, reconnections ** 2))
 				s.close()
 				time.sleep(reconnections ** 2)
@@ -66,7 +66,6 @@ class kawaiibotto:
 	def parsemsg(s):
 		"""
 		Breaks a message from an IRC server into its prefix, command, and arguments.
-		Taken from here: http://twistedmatrix.com/trac/browser/trunk/twisted/words/protocols/irc.py#54
 		"""
 		prefix = ''
 		trailing = []
