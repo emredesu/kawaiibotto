@@ -1,5 +1,5 @@
 # kawaiibotto
-kawaiibotto is a twitch.tv bot.
+kawaiibotto is a twitch.tv bot that does not depend on any external libraries for its core functionality.
 
 **Run the bot**
 
