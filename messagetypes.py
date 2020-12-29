@@ -1,4 +1,3 @@
-from importlib import util
 from datetime import datetime
 
 has_colorama = None
