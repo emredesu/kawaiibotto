@@ -50,5 +50,5 @@ class UrbanCommand(Command):
 
 			bot.send_message(channel, f"{user}, ({len(data['list'])} extra definitions) (+{currind_data['thumbs_up']}/-{currind_data['thumbs_down']}) {definition.replace(crlf, lf)} - Example: {example.replace(crlf, lf)}")
 		except IndexError:
-			bot.send_message(channel, f"{user}, Index too big! Max index for this query is {len(data['list'])}.")
+			bot.send_message(channel, f"{user}, Index too big! Max index for this query is {len(data['list']) - 1}.")
 			return
