@@ -69,17 +69,20 @@ class kawaiibotto:
 		"""
 		prefix = ''
 		trailing = []
-
-		if s[0] == ':':
-			prefix, s = s[1:].split(' ', 1)
-		if s.find(' :') != -1:
-			s, trailing = s.split(' :', 1)
-			args = s.split()
-			args.append(trailing)
-		else:
-			args = s.split()
-		command = args.pop(0)
-		return prefix, command, args
+		try:
+			if s[0] == ':':
+				prefix, s = s[1:].split(' ', 1)
+			if s.find(' :') != -1:
+				s, trailing = s.split(' :', 1)
+				args = s.split()
+				args.append(trailing)
+			else:
+				args = s.split()
+			command = args.pop(0)
+			return prefix, command, args
+		except Exception as e:
+			error(f"Error while parsing message {s}: {str(e.__class__.__name__)}: {str(e)}")
+			return None
 
 	@staticmethod
 	def execute_command(cmnd):
@@ -110,6 +113,9 @@ if __name__ == "__main__":
 		if data_type == "PING":
 			s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
 			log("answered the twitch ping")
+		elif data_type == "RECONNECT":
+			time.sleep(60)
+			bot.reconnect()
 		elif data_type == "PRIVMSG":
 			channel = data[2][0][1::]
 			message = data[2][1]
