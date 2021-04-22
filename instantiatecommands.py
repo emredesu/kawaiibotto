@@ -12,6 +12,7 @@ from commands.code import CodeCommand
 from commands.math import MathCommand
 from commands.translate import TranslateCommand
 from commands.urban import UrbanCommand
+from commands.define import DefineCommand
 
 
 def instantiate_commands(commands):
@@ -32,3 +33,4 @@ def instantiate_commands(commands):
 	MathCommand(commands)
 	TranslateCommand(commands)
 	UrbanCommand(commands)
+	DefineCommand(commands)
