@@ -36,6 +36,7 @@ class kawaiibotto:
 			except (socket.gaierror, socket.timeout):
 				error("couldn't connect to {}. retrying in {} seconds...".format(HOST, reconnections ** 2))
 				s.close()
+				s = socket.socket()
 				time.sleep(reconnections ** 2)
 			else:
 				s.send("PASS oauth:{}\r\n".format(OAUTH_TOKEN).encode("utf-8"))
