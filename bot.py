@@ -5,6 +5,7 @@ import datetime
 import socket
 import re
 import time
+import traceback
 
 s = socket.socket()
 connected_once = False
@@ -56,10 +57,17 @@ class kawaiibotto:
 	def reconnect():
 		global s, reconnections
 		reconnections += 1
-		error("disconnected from twitch. attempting to reconnect in {} seconds...".format(2 ** reconnections))
+		wait_time = 2 ** reconnections
+		if wait_time > 1800:
+			wait_time = 1800
+
+		error("Disconnected from twitch. attempting to reconnect in {} seconds...".format(wait_time))
+
 		s.close()
-		time.sleep(2 ** reconnections)
 		s = socket.socket()
+
+		time.sleep(wait_time)
+
 		bot.connect()
 	
 	@staticmethod
@@ -102,13 +110,19 @@ if __name__ == "__main__":
 	bot = kawaiibotto()
 
 	while True:
-		response = s.recv(2048).decode("utf-8", "ignore")
+		try:
+			response = s.recv(2048).decode("utf-8", "ignore")
+		except Exception as e:
+			error(f"Failed to recv from Twitch, exception: {e.__class__.__name__}")
+			error(f"Printing traceback: ")
+			traceback.print_exc()
 
-		if not response:
+			log("Attempting reconnection.")
 			bot.reconnect()
+			continue
 
 		data = bot.parsemsg(response)
-		data_type = data[1]
+		data_type = data[1] if data is not None else "FAILED_TO_PARSE"
 
 		if data_type == "PING":
 			s.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
