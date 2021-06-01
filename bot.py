@@ -62,7 +62,7 @@ class kawaiibotto:
 		if wait_time > 1800:
 			wait_time = 1800
 
-		error("Disconnected from twitch. attempting to reconnect in {} seconds...".format(wait_time))
+		error("Attempting reconnection in {} seconds...".format(wait_time))
 
 		s.close()
 		s = socket.socket()
@@ -70,6 +70,7 @@ class kawaiibotto:
 		time.sleep(wait_time)
 
 		bot.connect()
+		reconnections = 0
 	
 	@staticmethod
 	def parsemsg(s):
@@ -113,6 +114,9 @@ if __name__ == "__main__":
 	while True:
 		try:
 			response = s.recv(2048).decode("utf-8", "ignore")
+			if not response:
+				error("Disconnected from Twitch. Reconnecting...")
+				bot.reconnect()
 		except Exception as e:
 			error(f"Failed to recv from Twitch, exception: {e.__class__.__name__}")
 			error(f"Printing traceback: ")
