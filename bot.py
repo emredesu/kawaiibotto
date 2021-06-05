@@ -136,14 +136,22 @@ class kawaiibotto:
 
 	def start(self):
 		self.connect()
+		buffer = ""
 
 		while True:
 			try:
-				response = self.socket.recv(2048).decode("utf-8", "ignore")
-				if not response:
-					error("Disconnected from Twitch. Reconnecting...")
-					self.reconnect()
-					continue
+				# Implementation of receiving from a TCP buffer until a delimiter is found.
+				while TWITCH_DELIMITER not in buffer:
+					response = self.socket.recv(2048).decode("utf-8", "ignore")
+					if not response:
+						error("Disconnected from Twitch. Reconnecting...")
+						self.reconnect()
+						continue
+					else:
+						buffer += response
+					
+				message, seperator, buffer = buffer.partition(TWITCH_DELIMITER)
+				self.process_irc_message(message)
 			except Exception as e:
 				error(f"Failed to recv from Twitch, exception: {e.__class__.__name__}")
 				error(f"Printing traceback: ")
@@ -152,10 +160,6 @@ class kawaiibotto:
 				log("Attempting reconnection.")
 				self.reconnect()
 				continue
-
-			self.process_irc_message(response)
-
-
 
 if __name__ == "__main__":
 	bot = kawaiibotto()
