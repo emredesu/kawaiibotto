@@ -142,6 +142,7 @@ class kawaiibotto:
 			try:
 				# Implementation of receiving from a TCP buffer until a delimiter is found.
 				while TWITCH_DELIMITER not in buffer:
+					self.socket.settimeout(600.0)
 					response = self.socket.recv(2048).decode("utf-8", "ignore")
 					if not response:
 						error("Disconnected from Twitch. Reconnecting...")
