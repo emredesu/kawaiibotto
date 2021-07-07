@@ -13,6 +13,7 @@ from commands.math import MathCommand
 from commands.translate import TranslateCommand
 from commands.urban import UrbanCommand
 from commands.define import DefineCommand
+from commands.ocr import OCRCommand
 
 
 def instantiate_commands(commands):
@@ -34,3 +35,4 @@ def instantiate_commands(commands):
 	TranslateCommand(commands)
 	UrbanCommand(commands)
 	DefineCommand(commands)
+	OCRCommand(commands)
