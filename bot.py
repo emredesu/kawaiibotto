@@ -12,6 +12,10 @@ class kawaiibotto:
 		self.start_time = datetime.datetime.now()
 		self.commands = []
 		self.socket = socket.socket()
+
+		self.last_twitch_pinged_time = None
+		self.last_twitch_pong_time = None
+
 		self.connected_once = False
 		self.reconnections = 0
 
@@ -25,6 +29,10 @@ class kawaiibotto:
 				self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, i).encode("utf-8"))
 		else:
 			self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))	# irc does not accept newlines, so we replace them with spaces
+
+	def ping_twitch(self):
+		self.last_twitch_pinged_time = datetime.datetime.now()
+		self.socket.send("PING :tmi.twitch.tv\r\n".encode("utf-8"))
 
 	def connect(self):
 		while True:
@@ -49,6 +57,7 @@ class kawaiibotto:
 					self.send_message(debug_channel, "/me {} live with {} {} connected! VoHiYo".format(USERNAME, len(channels), "channel" if len(channels) == 1 else "channels"))
 					connected_once = True
 
+				self.ping_twitch()
 				break
 
 	def reconnect(self):
@@ -95,6 +104,9 @@ class kawaiibotto:
 		if data_type == "PING":
 			self.socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
 			log("answered the twitch ping")
+			self.ping_twitch() # When Twitch pings us, we ping Twitch back to get our current ping.
+		elif data_type == "PONG":
+			self.last_twitch_pong_time = datetime.datetime.now()
 		elif data_type == "RECONNECT":
 			log("Reconnecting per Twitch's demand...")
 			self.reconnect()
