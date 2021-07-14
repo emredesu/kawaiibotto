@@ -3,9 +3,9 @@ from messagetypes import *
 from instantiatecommands import instantiate_commands
 import datetime
 import socket
-import re
 import time
 import traceback
+import threading
 
 class kawaiibotto:
 	def __init__(self):
@@ -19,12 +19,12 @@ class kawaiibotto:
 		self.start()
 
 	def send_message(self, ch, msg):
-		if len(msg) > 500:  # can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
+		if len(msg) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
 			messages = [msg[i:i+500] for i in range(0, len(msg), 500)]
 			for i in messages:
 				self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, i).encode("utf-8"))
 		else:
-			self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))  # irc does not accept newlines, so we replace them with spaces
+			self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))	# irc does not accept newlines, so we replace them with spaces
 
 	def connect(self):
 		while True:
@@ -110,17 +110,22 @@ class kawaiibotto:
 				else:
 					user += char
 
+			# Command invocation
 			if message.startswith(COMMAND_PREFIX):
 				invoked_command = message.split()[0][len(COMMAND_PREFIX)::]
 
 				for command in self.commands:
-					if isinstance(command.COMMAND_NAME, list):  # alias support
+					if isinstance(command.COMMAND_NAME, list):	# alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
-								self.execute_command(command, user, message, channel)
+								thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel)) # Spawn a new thread for the command 
+								thread.start()
 					else:
 						if command.COMMAND_NAME == invoked_command:
-							self.execute_command(command, user, message, channel)
+							thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel))
+							thread.start()
+			elif message.startswith("pajaVanish"):
+				self.send_message(channel, f"/timeout {user} 1")
 
 	def execute_command(self, cmnd, user, message, channel):
 		if time.time() - cmnd.last_used > cmnd.COOLDOWN:  # cooldown management
