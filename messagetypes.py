@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 
 def time_now():
 	now = datetime.now()
-	return "[{}:{}:{}]".format(now.hour, "0" + str(now.minute) if len(str(now.minute)) == 1 else now.minute, "0" + str(now.second) if len(str(now.second)) == 1 else now.second)
+	return now.strftime("%d/%m/%Y %H:%M:%S")
 
 
 def error(string):
