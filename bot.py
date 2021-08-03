@@ -50,6 +50,7 @@ class kawaiibotto:
 
 				for ch in channels:
 					self.socket.send("JOIN #{}\r\n".format(ch).encode("utf-8"))
+					time.sleep(0.6) # Twitch now has a 20 JOIN request limit per 10 seconds. We'll wait 0.6 seconds after every join attempt rather than 0.5 just to be safe.
 					if not self.connected_once:
 						log("joined {}".format(ch))
 
