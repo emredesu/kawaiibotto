@@ -32,6 +32,7 @@ class UrbanCommand(Command):
 
 		if not data["list"]:
 			bot.send_message(channel, f"{user}, no results found.")
+			return
 
 		# f-strings can't have backslashes so we need to assign new line characters to variables.
 		crlf = "\r\n"
