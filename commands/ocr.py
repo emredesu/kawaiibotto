@@ -1,6 +1,5 @@
 from commands.command import Command
-import pytesseract
-from PIL import Image, UnidentifiedImageError
+from globals import OCR_SPACE_APIKEY
 import requests
 
 class OCRCommand(Command):
@@ -10,7 +9,6 @@ class OCRCommand(Command):
                 "using \"lang:(language code here)\". Example usage: _ocr https://i.nuuls.com/leMKr.png lang:jpn"
 
     def execute(self, bot, user, message, channel):
-        available_languages = pytesseract.get_languages(config="")
         target_language = "eng"
 
         message_args = message.split()
@@ -20,42 +18,27 @@ class OCRCommand(Command):
                 target_language = arg[5:]
                 message_args.remove(arg)
 
-        if target_language not in pytesseract.get_languages(config=""):
-            bot.send_message(channel, f"{user}, {target_language} is not a supported language code! Find the language code for your " \
-                                     "language from here: https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html")
-            return
+        targetRequest = f"https://api.ocr.space/parse/imageurl?apikey={OCR_SPACE_APIKEY}&url={message_args[0]}"
+        if target_language != "eng":
+            targetRequest += f"&language={target_language}"
 
         try:
-            request = requests.get(message_args[0], stream=True)
-            if request.status_code != 200:
-                bot.send_message(channel, f"{user}, failed to connect, the website returned {request.status_code}")
-                return
+            requestData = requests.get(targetRequest)
+            if requestData.status_code != 200:
+                bot.send_message(channel, f"{user}, the OCR API returned a {requestData.status_code}.")
 
-            image = Image.open(request.raw)
-            result = pytesseract.image_to_string(image, lang=target_language)
-
-            bot.send_message(channel, f"{user}, {result}")
-        except requests.ConnectionError:
-            bot.send_message(channel, f"{user}, connection failed.")
-            return
-        except requests.HTTPError:
-            bot.send_message(channel, f"{user}, invalid HTTP response received.")
-            return
-        except requests.Timeout:
-            bot.send_message(channel, f"{user}, GET request timed out.")
-            return
-        except UnidentifiedImageError:
-            bot.send_message(channel, f"{user}, this image cannot be opened and identified.")
-            return
-        except Image.DecompressionBombError:
-            bot.send_message(channel, f"{user}, that image exceeds the file size limit. Are you trying to DOS me? 🤨")
-            return
-        except (ValueError, TypeError):
-            bot.send_message(channel, f"{user}, either the link you gave returns data that cannot be parsed into the required raw byte " \
-                                        "format or you just didn't give a valid link.")
-            return
-        except pytesseract.pytesseract.TesseractNotFoundError:
-            bot.send_message(channel, f"{user}, this instance of kawaiibotto does not have Tesseract set up in its environment.")
-            return
-        except pytesseract.pytesseract.TesseractError:
-            bot.send_message(channel, f"{user}, there was an error with the OCR engine.")
+            jsonData = requestData.json()
+            
+            if jsonData["IsErroredOnProcessing"]:
+                errorMessage = " / ".join(jsonData["ErrorMessage"])
+                bot.send_message(channel, f"{user}, {errorMessage}")
+            else:
+                parsedText = jsonData["ParsedResults"][0]["ParsedText"]
+                if not parsedText:
+                    bot.send_message(channel, f"{user}, received empty response from the API, did you give the correct language code with lang:code ?")
+                    return
+                else:
+                    bot.send_message(channel, f"{user}, {parsedText}")
+        except:
+            bot.send_message(channel, f"{user}, an unknown error has occured.")
+        
