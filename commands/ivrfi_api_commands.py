@@ -40,7 +40,7 @@ class RandomQuoteCommand(Command):
 
 
 class EmoteInfoCommand(Command):
-	COMMAND_NAME = "emoteinfo"
+	COMMAND_NAME = ["emoteinfo", "weit"]
 	COOLDOWN = 5
 	DESCRIPTION = f"Get info about an emote (whose emote is it, which tier is it etc.). Example usage: _{COMMAND_NAME} bepBlush"
 
