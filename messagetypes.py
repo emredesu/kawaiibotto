@@ -31,6 +31,6 @@ def success(string):
 
 def log(string):
 	if has_colorama:
-		print(colorama.Fore.BLUE + ("{} [LOG] ".format(time_now()) + string))
+		print(colorama.Fore.YELLOW + ("{} [LOG] ".format(time_now()) + string))
 	else:
 		print("{} [LOG] ".format(time_now()) + string)
