@@ -1,17 +1,22 @@
+# Login / API key info
 OAUTH_TOKEN = ""
 USERNAME = ""
 CLIENT_ID = ""
 TWITCH_API_HEADERS = {"Authorization": "Bearer {}".format(OAUTH_TOKEN), "Client-ID": "{}".format(CLIENT_ID)}
-WOLFRAM_APP_ID = "947PTKK6L9T6XA7P"
-COMMAND_PREFIX = "_"
-TWITCH_DELIMITER = "\r\n"
+WOLFRAM_APP_ID = ""
 OCR_SPACE_APIKEY = ""
 
+# Command prefix
+COMMAND_PREFIX = "_"
 
-channels = []
-
-debug_channel = ""
-channels.append(debug_channel)
-
+# Do not change these!
+TWITCH_DELIMITER = "\r\n"
 HOST = "irc.chat.twitch.tv"
 PORT = 6667
+
+# Add the channels that you want to join here!
+channels = []
+
+# Debug channel will be the place where the bot reports once it's online.
+debug_channel = ""
+channels.append(debug_channel)
