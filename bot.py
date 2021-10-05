@@ -75,7 +75,6 @@ class kawaiibotto:
 		time.sleep(wait_time)
 
 		self.connect()
-		self.reconnections = 0
 	
 	def parsemsg(self, msg):
 		"""
@@ -168,6 +167,7 @@ class kawaiibotto:
 						continue
 					else:
 						buffer += response
+						self.reconnections = 0 # Reset reconnection count if we're able to receive from Twitch. (which would indicate that we're connected now)
 					
 				message, seperator, buffer = buffer.partition(TWITCH_DELIMITER)
 				self.process_irc_message(message)
