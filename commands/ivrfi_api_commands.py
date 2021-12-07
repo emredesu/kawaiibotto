@@ -28,7 +28,7 @@ class RandomQuoteCommand(Command):
 			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username) (channel)")
 		else:
 			if ch not in self.channels:
-				bot.send_message(channel, "That channel is not logged by ivr.fi. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
+				bot.send_message(channel, "That channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
 				return
 			else:
 				rq_data = requests.get(f"https://api.ivr.fi/logs/rq/{ch}/{person}").json()
@@ -36,7 +36,7 @@ class RandomQuoteCommand(Command):
 				try:
 					bot.send_message(channel, f"{rq_data['time']} ago, #{ch} {rq_data['user']}: {rq_data['message']}")
 				except KeyError:
-					bot.send_message(channel, f"api.ivr.fi returned {rq_data['status']}: {rq_data['error']}")
+					bot.send_message(channel, f"API returned {rq_data['status']}: {rq_data['error']}")
 
 
 class EmoteInfoCommand(Command):
@@ -46,25 +46,35 @@ class EmoteInfoCommand(Command):
 
 	def execute(self, bot, user, message, channel):
 		args = message.split()
+		data = None
 
 		try:
 			emote = args[1]
 		except IndexError:
-			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (emote)")
+			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (emote name or emote ID)")
 			return
 		else:
 			try:
-				data = requests.get("https://api.ivr.fi/twitch/emotes/{}".format(emote)).json()
+				data = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}".format(emote)).json()
 
-				ch = data["channel"]
-				tier = data["tier"]
-				emoteid = data["emoteid"]
+				ch = data["channelName"]
 
-				bot.send_message(channel, f"{emote} belongs to the channel {ch}, tier {tier} emote. https://twitchemotes.com/emotes/{emoteid}")
+				bot.send_message(channel, f"{emote} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
 			except KeyError:
-				error = requests.get(f"https://api.ivr.fi/twitch/emotes/{emote}").json()["error"]
+				# On failure, try again with the ?id=true parameter in case the given param is an emote code.
+				try:
+					data = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}?id=true".format(emote)).json()
+					
+					ch = data["channelName"]
+					emoteName = data["emoteCode"]
 
-				bot.send_message(channel, f"api.ivr.fi returned an error: {error}")
+					bot.send_message(channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+				except KeyError:
+					# Give up if that fails too.
+					statusCode = data["statusCode"]
+					errorMessage = data["message"]
+
+					bot.send_message(channel, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
 
 			except requests.exceptions.ConnectionError:
-				bot.send_message(channel, "api.ivr.fi is down ;w;")
+				bot.send_message(channel, "API is down ;w;")
