@@ -57,7 +57,7 @@ class EmoteInfoCommand(Command):
 			try:
 				data = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}".format(emote)).json()
 
-				ch = data["channelName"]
+				ch = data["channelLogin"]
 
 				bot.send_message(channel, f"{emote} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
 			except KeyError:
@@ -65,7 +65,7 @@ class EmoteInfoCommand(Command):
 				try:
 					data = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}?id=true".format(emote)).json()
 					
-					ch = data["channelName"]
+					ch = data["channelLogin"]
 					emoteName = data["emoteCode"]
 
 					bot.send_message(channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
