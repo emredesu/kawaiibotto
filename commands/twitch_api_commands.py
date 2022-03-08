@@ -83,4 +83,4 @@ class EmotesCommand(Command):
 					bot.send_message(channel, "That user is not an affiliate nor a partner. ;w;")
 					return
 				else:
-					bot.send_message(channel, "https://twitchemotes.com/channels/{}".format(userid))
+					bot.send_message(channel, "https://emotes.raccatta.cc/twitch/{}".format(userid))
