@@ -14,6 +14,7 @@ from commands.translate import TranslateCommand
 from commands.urban import UrbanCommand
 from commands.define import DefineCommand
 from commands.ocr import OCRCommand
+from commands.genshin import GenshinCommand
 
 
 def instantiate_commands(commands):
@@ -36,3 +37,4 @@ def instantiate_commands(commands):
 	UrbanCommand(commands)
 	DefineCommand(commands)
 	OCRCommand(commands)
+	GenshinCommand(commands)
