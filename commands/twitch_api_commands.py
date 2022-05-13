@@ -61,6 +61,8 @@ class EmotesCommand(Command):
 
 	def execute(self, bot, user, message, channel):
 		args = message.split()
+        
+        username = None
 
 		try:
 			username = args[1]
@@ -83,4 +85,4 @@ class EmotesCommand(Command):
 					bot.send_message(channel, "That user is not an affiliate nor a partner. ;w;")
 					return
 				else:
-					bot.send_message(channel, "https://emotes.raccatta.cc/twitch/{}".format(userid))
+					bot.send_message(channel, "https://emotes.raccatta.cc/twitch/{}".format(username))
