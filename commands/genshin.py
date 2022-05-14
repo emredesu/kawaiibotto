@@ -54,7 +54,7 @@ database genshinStats
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
     COOLDOWN = 0
-    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data and _genshin pity to check your pity counters. Every user gets a new wish every 1/2 hour."
+    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data and _genshin pity to check your pity counters. Every user gets a new wish every 1/2 hour. HungryPaimon"
 
 
     successfulInit = True
@@ -166,7 +166,13 @@ class GenshinCommand(Command):
         args = message.split()
 
         validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "mystats", "update"]
-        firstArg = args[1]
+
+        firstArg = None
+        try:
+            firstArg = args[1]
+        except IndexError:
+            bot.send_message(channel, f"{user}, Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data and _genshin pity to check your pity counters. Every user gets a new wish every 1/2 hour. HungryPaimon")
+            return
 
         if firstArg not in validFirstArgs:
             bot.send_message(channel, f"Invalid first argument supplied! Valid first arguments are: {' '.join(validFirstArgs)}")
