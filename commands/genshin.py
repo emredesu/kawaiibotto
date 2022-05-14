@@ -11,7 +11,7 @@ import json
 """ 
 --- DATABASE STRUCTURE ---
 database genshinStats
-    table wishStats
+    table wishstats
         BIGINT userId
         BIGINT wishesDone
         DATETIME lastWishTime
@@ -129,7 +129,7 @@ class GenshinCommand(Command):
     def CheckUserRowExists(self, username) -> bool:
         uid = self.GetTwitchUserID(username)
 
-        self.cursor.execute("SELECT * from wishStats where userId=%s", (uid,))
+        self.cursor.execute("SELECT * from wishstats where userId=%s", (uid,))
 
         result = self.cursor.fetchone()
 
@@ -139,14 +139,14 @@ class GenshinCommand(Command):
         uid = self.GetTwitchUserID(username)
 
         # Subtracting two hours from the current time to allow the user to wish after getting registered.
-        self.cursor.execute("INSERT INTO wishStats VALUES (%s, %s, 0, SUBTIME(NOW(), \"2:0:0\"), 0, 0, 0, 0, 0, FALSE, FALSE, FALSE, FALSE, \"{}\", \"{}\", \"{}\", \"{}\", 0, 0, 0)", (username, uid))
+        self.cursor.execute("INSERT INTO wishstats VALUES (%s, %s, 0, SUBTIME(NOW(), \"2:0:0\"), 0, 0, 0, 0, 0, FALSE, FALSE, FALSE, FALSE, \"{}\", \"{}\", \"{}\", \"{}\", 0, 0, 0)", (username, uid))
         self.database.commit()
 
     # Returns True if the user can wish now, otherwise returns the remaining time until the next wish.
     def GetUserCanWish(self, username):
         uid = self.GetTwitchUserID(username)
 
-        self.cursor.execute("SELECT lastWishTime FROM wishStats where userId=%s", (uid,))
+        self.cursor.execute("SELECT lastWishTime FROM wishstats where userId=%s", (uid,))
 
         result = self.cursor.fetchone()
         timeNow = datetime.datetime.now()
@@ -194,7 +194,7 @@ class GenshinCommand(Command):
                 uid = self.GetTwitchUserID(user)
 
                 if "character" in secondArg:
-                    self.cursor.execute(f"SELECT characterBannerPityCounter, wishesSinceLast4StarOnCharacterBanner FROM wishStats where userId=%s", (uid,))
+                    self.cursor.execute(f"SELECT characterBannerPityCounter, wishesSinceLast4StarOnCharacterBanner FROM wishstats where userId=%s", (uid,))
                     retrievedData = self.cursor.fetchone()
                     currentPityCounter = retrievedData[0]
                     wishesSinceLast4Star = retrievedData[1]
@@ -212,7 +212,7 @@ class GenshinCommand(Command):
                         # We got a 5 star!
 
                         # Get data regarding to 5 star characters for the user.
-                        self.cursor.execute("SELECT owned5StarCharacters, has5StarGuaranteeOnCharacterBanner FROM wishStats WHERE userId=%s", (uid,))
+                        self.cursor.execute("SELECT owned5StarCharacters, has5StarGuaranteeOnCharacterBanner FROM wishstats WHERE userId=%s", (uid,))
                         retrievedData = self.cursor.fetchone()
 
                         characterData = json.loads(retrievedData[0])
@@ -233,7 +233,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET=lastWishTime SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET=lastWishTime SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
                                     
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish now instead. paimonHeh"
@@ -245,12 +245,12 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
 
                             # Finally, commit the final changes including guarantee and pity updates.
-                            self.cursor.execute("UPDATE wishStats SET owned5StarCharacters=%s, has5StarGuaranteeOnCharacterBanner=false, characterBannerPityCounter=0 WHERE userId=%s", (json.dumps(characterData) ,uid))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarCharacters=%s, has5StarGuaranteeOnCharacterBanner=false, characterBannerPityCounter=0 WHERE userId=%s", (json.dumps(characterData) ,uid))
                             self.database.commit()
 
                             # 50-50 win/lose counting
                             if not hasGuarantee:
-                                self.cursor.execute("UPDATE wishStats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
+                                self.cursor.execute("UPDATE wishstats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
                                 self.database.commit()
 
 
@@ -266,7 +266,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, you get a free wish now instead. paimonHeh"
@@ -278,7 +278,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
 
                             # Finally, commit the final changes including guarantee and pity updates.
-                            self.cursor.execute("UPDATE wishStats SET owned5StarCharacters=%s, has5StarGuaranteeOnCharacterBanner=true, characterBannerPityCounter=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (json.dumps(characterData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarCharacters=%s, has5StarGuaranteeOnCharacterBanner=true, characterBannerPityCounter=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (json.dumps(characterData), uid))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -286,11 +286,11 @@ class GenshinCommand(Command):
                         # We got a 4 star!
 
                         # Increment the pity counter.
-                        self.cursor.execute("UPDATE wishStats SET characterBannerPityCounter=characterBannerPityCounter+1 WHERE userId=%s", (uid,))
+                        self.cursor.execute("UPDATE wishstats SET characterBannerPityCounter=characterBannerPityCounter+1 WHERE userId=%s", (uid,))
                         self.database.commit()
 
                         # Get user info related to 4 stars.
-                        self.cursor.execute("SELECT has4StarGuaranteeOnCharacterBanner, owned4StarCharacters FROM wishStats WHERE userId=%s", (uid,))
+                        self.cursor.execute("SELECT has4StarGuaranteeOnCharacterBanner, owned4StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                         retrievedData = self.cursor.fetchone()
                         hasGuarantee = retrievedData[0]
                         characterData = json.loads(retrievedData[1])
@@ -309,7 +309,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -321,13 +321,13 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
 
                             # Update the database with the final data.
-                            self.cursor.execute("UPDATE wishStats SET owned4StarCharacters=%s, has4StarGuaranteeOnCharacterBanner=false, wishesSinceLast4StarOnCharacterBanner=0 WHERE userId=%s",
+                            self.cursor.execute("UPDATE wishstats SET owned4StarCharacters=%s, has4StarGuaranteeOnCharacterBanner=false, wishesSinceLast4StarOnCharacterBanner=0 WHERE userId=%s",
                             (json.dumps(characterData), uid))
                             self.database.commit()
 
                             # 50-50 win/lose counting
                             if not hasGuarantee:
-                                self.cursor.execute("UPDATE wishStats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
+                                self.cursor.execute("UPDATE wishstats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
                                 self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -341,7 +341,7 @@ class GenshinCommand(Command):
 
                                 userString += f" and got {acquiredWeapon}(4★)! paimonTantrum"
 
-                                self.cursor.execute("SELECT owned4StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                                self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                                 weaponData = json.loads(self.cursor.fetchone()[0])
 
                                 if acquiredWeapon not in weaponData:
@@ -350,7 +350,7 @@ class GenshinCommand(Command):
                                     # Reset wish timer if the weapon is already maxed out.
                                     if weaponData[acquiredWeapon] == "R5":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -362,7 +362,7 @@ class GenshinCommand(Command):
                                         userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                     
                                 # Update the database with the new weapon.
-                                self.cursor.execute("UPDATE wishStats SET owned4StarWeapons=%s WHERE userId=%s", (json.dumps(weaponData), uid))
+                                self.cursor.execute("UPDATE wishstats SET owned4StarWeapons=%s WHERE userId=%s", (json.dumps(weaponData), uid))
                                 self.database.commit()
 
                                 bot.send_message(channel, userString)
@@ -376,7 +376,7 @@ class GenshinCommand(Command):
                                 else:
                                     if characterData[acquiredCharacter] == "C6":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -388,24 +388,24 @@ class GenshinCommand(Command):
                                         userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
                                 
                                 # Update owned 4 star characters with the updated data.
-                                self.cursor.execute("UPDATE wishStats SET owned4StarCharacters=%s WHERE userId=%s", (json.dumps(characterData), uid))
+                                self.cursor.execute("UPDATE wishstats SET owned4StarCharacters=%s WHERE userId=%s", (json.dumps(characterData), uid))
                                 self.database.commit()
 
                                 bot.send_message(channel, userString)
 
                             # Finally, update the database data to have pity for the next 4 star.
-                            self.cursor.execute("UPDATE wishStats SET has4StarGuaranteeOnCharacterBanner=true, wishesSinceLast4StarOnCharacterBanner=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (uid,))
+                            self.cursor.execute("UPDATE wishstats SET has4StarGuaranteeOnCharacterBanner=true, wishesSinceLast4StarOnCharacterBanner=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (uid,))
                             self.database.commit()
                         
                     else:
                         acquiredTrash = random.choice(self.bannerData[secondArg]["all3StarWeapons"])
 
                         # Increment the pity counters for 4 star and 5 star.
-                        self.cursor.execute("UPDATE wishStats SET wishesSinceLast4StarOnCharacterBanner=wishesSinceLast4StarOnCharacterBanner+1, characterBannerPityCounter=characterBannerPityCounter+1 WHERE userId=%s", (uid,))
+                        self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnCharacterBanner=wishesSinceLast4StarOnCharacterBanner+1, characterBannerPityCounter=characterBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                         bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep")                      
                 elif "standard" in secondArg:
-                    self.cursor.execute("SELECT standardBannerPityCounter, wishesSinceLast4StarOnStandardBanner FROM wishStats where userId=%s", (uid,))
+                    self.cursor.execute("SELECT standardBannerPityCounter, wishesSinceLast4StarOnStandardBanner FROM wishstats where userId=%s", (uid,))
                     retrievedData = self.cursor.fetchone()
                     currentPityCounter = retrievedData[0]
                     wishesSinceLast4Star = retrievedData[1]
@@ -424,7 +424,7 @@ class GenshinCommand(Command):
                         isCharacter = True if random.choice([0, 1]) == 0 else False
                         if isCharacter:
                             # Get info related to owned 5 star characters.
-                            self.cursor.execute("SELECT owned5StarCharacters FROM wishStats WHERE userId=%s", (uid,))
+                            self.cursor.execute("SELECT owned5StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                             retrievedData = self.cursor.fetchone()
                             characterData = json.loads(retrievedData[0])
 
@@ -437,7 +437,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -449,13 +449,13 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
 
                             # Finally, commit the final changes including guarantee and pity updates.
-                            self.cursor.execute("UPDATE wishStats SET owned5StarCharacters=%s, standardBannerPityCounter=0 WHERE userId=%s", (json.dumps(characterData), uid,))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarCharacters=%s, standardBannerPityCounter=0 WHERE userId=%s", (json.dumps(characterData), uid,))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
                         else:
                             # Get info related to owned 5 star weapons.
-                            self.cursor.execute("SELECT owned5StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                            self.cursor.execute("SELECT owned5StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                             retrievedData = self.cursor.fetchone()
                             weaponData = json.loads(retrievedData[0])
 
@@ -469,7 +469,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -481,7 +481,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                 
                             # Update the database with the new weapon.
-                            self.cursor.execute("UPDATE wishStats SET owned5StarWeapons=%s, standardBannerPityCounter=0 WHERE userId=%s", (json.dumps(weaponData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, standardBannerPityCounter=0 WHERE userId=%s", (json.dumps(weaponData), uid))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -490,13 +490,13 @@ class GenshinCommand(Command):
                         # We got a 4 star.
 
                         # Increment the pity counter.
-                        self.cursor.execute("UPDATE wishStats SET standardBannerPityCounter=standardBannerPityCounter+1 WHERE userId=%s", (uid,))
+                        self.cursor.execute("UPDATE wishstats SET standardBannerPityCounter=standardBannerPityCounter+1 WHERE userId=%s", (uid,))
                         self.database.commit()
 
                         isCharacter = True if random.choice([0, 1]) == 0 else False
                         if isCharacter:
                             # Get info related to owned 4 star characters.
-                            self.cursor.execute("SELECT owned4StarCharacters FROM wishStats WHERE userId=%s", (uid,))
+                            self.cursor.execute("SELECT owned4StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                             retrievedData = self.cursor.fetchone()
                             characterData = json.loads(retrievedData[0])
 
@@ -509,7 +509,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -521,13 +521,13 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
 
                             # Finally, commit the final changes including guarantee and pity updates.
-                            self.cursor.execute("UPDATE wishStats SET owned4StarCharacters=%s, wishesSinceLast4StarOnStandardBanner=0 WHERE userId=%s", (json.dumps(characterData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned4StarCharacters=%s, wishesSinceLast4StarOnStandardBanner=0 WHERE userId=%s", (json.dumps(characterData), uid))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
                         else:
                             # Get info related to owned 4 star weapons.
-                            self.cursor.execute("SELECT owned4StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                            self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                             retrievedData = self.cursor.fetchone()
                             weaponData = json.loads(retrievedData[0])
 
@@ -541,7 +541,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -553,7 +553,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                 
                             # Update the database with the new weapon.
-                            self.cursor.execute("UPDATE wishStats SET owned4StarWeapons=%s, wishesSinceLast4StarOnStandardBanner=0 WHERE userId=%s", (json.dumps(weaponData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned4StarWeapons=%s, wishesSinceLast4StarOnStandardBanner=0 WHERE userId=%s", (json.dumps(weaponData), uid))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -561,14 +561,14 @@ class GenshinCommand(Command):
                         acquiredTrash = random.choice(self.bannerData[secondArg]["all3StarWeapons"])
 
                         # Increment the pity counters for 5 star and 4 star.
-                        self.cursor.execute("UPDATE wishStats SET wishesSinceLast4StarOnStandardBanner=wishesSinceLast4StarOnStandardBanner+1, standardBannerPityCounter=standardBannerPityCounter+1 WHERE userId=%s", (uid,))
+                        self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnStandardBanner=wishesSinceLast4StarOnStandardBanner+1, standardBannerPityCounter=standardBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                         bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep") 
                 else:
                     # Weapon banner
 
                     # Get data regarding the weapon banner.
-                    self.cursor.execute("SELECT weaponBannerPityCounter, has5StarGuaranteeOnWeaponBanner, has4StarGuaranteeOnWeaponBanner, wishesSinceLast4StarOnWeaponBanner from wishStats WHERE userId=%s", (uid,))
+                    self.cursor.execute("SELECT weaponBannerPityCounter, has5StarGuaranteeOnWeaponBanner, has4StarGuaranteeOnWeaponBanner, wishesSinceLast4StarOnWeaponBanner from wishstats WHERE userId=%s", (uid,))
                     retrievedData = self.cursor.fetchone()
                     currentPityCounter = retrievedData[0]
                     hasGuarantee5Star = retrievedData[1]
@@ -588,7 +588,7 @@ class GenshinCommand(Command):
                         # We got a 5 star!
 
                         # Get data related to the owned 5 star weapons
-                        self.cursor.execute("SELECT owned5StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                        self.cursor.execute("SELECT owned5StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                         weaponData = json.loads(self.cursor.fetchone()[0])
 
                         # Roll a random chance or see if we have guarantee to check if the 5 star we got is one of the featured ones.
@@ -605,7 +605,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -617,7 +617,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                 
                             # Update the database with the new weapon.
-                            self.cursor.execute("UPDATE wishStats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false WHERE userId=%s", (json.dumps(weaponData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false WHERE userId=%s", (json.dumps(weaponData), uid))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -633,7 +633,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -645,7 +645,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                 
                             # Update the database with the new weapon.
-                            self.cursor.execute("UPDATE wishStats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false WHERE userId=%s", (json.dumps(weaponData), uid,))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false WHERE userId=%s", (json.dumps(weaponData), uid,))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -653,11 +653,11 @@ class GenshinCommand(Command):
                         # We got a 4 star.
 
                         # Increment the pity counter.
-                        self.cursor.execute("UPDATE wishStats SET weaponBannerPityCounter=weaponBannerPityCounter+1 WHERE userId=%s", (uid,))
+                        self.cursor.execute("UPDATE wishstats SET weaponBannerPityCounter=weaponBannerPityCounter+1 WHERE userId=%s", (uid,))
                         self.database.commit()
                         
                         # Get user info related to 4 stars.
-                        self.cursor.execute("SELECT has4StarGuaranteeOnWeaponBanner, owned4StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                        self.cursor.execute("SELECT has4StarGuaranteeOnWeaponBanner, owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                         retrievedData = self.cursor.fetchone()
                         hasGuarantee = retrievedData[0]
                         weaponData = json.loads(retrievedData[1])
@@ -677,7 +677,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -689,12 +689,12 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
 
                             # Update the database with the final data.
-                            self.cursor.execute("UPDATE wishStats SET owned4StarWeapons=%s, has4StarGuaranteeOnWeaponBanner=false, wishesSinceLast4StarOnWeaponBanner=0 WHERE userId=%s", (json.dumps(weaponData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned4StarWeapons=%s, has4StarGuaranteeOnWeaponBanner=false, wishesSinceLast4StarOnWeaponBanner=0 WHERE userId=%s", (json.dumps(weaponData), uid))
                             self.database.commit()
 
                             # 50-50 win/lose counting
                             if not hasGuarantee:
-                                self.cursor.execute("UPDATE wishStats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
+                                self.cursor.execute("UPDATE wishstats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
                                 self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -708,7 +708,7 @@ class GenshinCommand(Command):
 
                                 userString += f" and got {acquiredWeapon}(4★)! paimonTantrum"
 
-                                self.cursor.execute("SELECT owned4StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                                self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                                 weaponData = json.loads(self.cursor.fetchone()[0])
 
                                 if acquiredWeapon not in weaponData:
@@ -717,7 +717,7 @@ class GenshinCommand(Command):
                                     # Reset wish timer if the weapon is already maxed out.
                                     if weaponData[acquiredWeapon] == "R5":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -729,12 +729,12 @@ class GenshinCommand(Command):
                                         userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                     
                                 # Update the database with the new weapon.
-                                self.cursor.execute("UPDATE wishStats SET owned4StarWeapons=%s WHERE userId=%s", (json.dumps(weaponData), uid))
+                                self.cursor.execute("UPDATE wishstats SET owned4StarWeapons=%s WHERE userId=%s", (json.dumps(weaponData), uid))
                                 self.database.commit()
 
                                 bot.send_message(channel, userString)
                             else:
-                                self.cursor.execute("SELECT owned4StarCharacters from wishStats WHERE userId=%s", (uid,))
+                                self.cursor.execute("SELECT owned4StarCharacters from wishstats WHERE userId=%s", (uid,))
                                 characterData = json.loads(self.cursor.fetchone()[0])
 
                                 acquiredCharacter = random.choice(self.bannerData[secondArg]["all4StarCharacters"])
@@ -746,7 +746,7 @@ class GenshinCommand(Command):
                                 else:
                                     if characterData[acquiredCharacter] == "C6":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishStats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -758,23 +758,23 @@ class GenshinCommand(Command):
                                         userString += f" Your {acquiredCharacter} is now {newConstellation}! paimonHeh"
                                 
                                 # Update owned 4 star characters with the updated data.
-                                self.cursor.execute("UPDATE wishStats SET owned4StarCharacters=%s WHERE userId=%s", (json.dumps(characterData), uid))
+                                self.cursor.execute("UPDATE wishstats SET owned4StarCharacters=%s WHERE userId=%s", (json.dumps(characterData), uid))
                                 self.database.commit()
 
                                 bot.send_message(channel, userString)
 
                             # Finally, update the database data to have pity for the next 4 star.
-                            self.cursor.execute("UPDATE wishStats SET has4StarGuaranteeOnWeaponBanner=true, wishesSinceLast4StarOnWeaponBanner=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (uid,))
+                            self.cursor.execute("UPDATE wishstats SET has4StarGuaranteeOnWeaponBanner=true, wishesSinceLast4StarOnWeaponBanner=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (uid,))
                             self.database.commit()                        
                     else:
                         acquiredTrash = random.choice(self.bannerData[secondArg]["all3StarWeapons"])
 
                         # Increment the pity counters for 4 star and 5 star.
-                        self.cursor.execute("UPDATE wishStats SET wishesSinceLast4StarOnWeaponBanner=wishesSinceLast4StarOnWeaponBanner+1, weaponBannerPityCounter=weaponBannerPityCounter+1 WHERE userId=%s", (uid,))
+                        self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnWeaponBanner=wishesSinceLast4StarOnWeaponBanner+1, weaponBannerPityCounter=weaponBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                         bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep")
 
-                self.cursor.execute("UPDATE wishStats SET lastWishTime=NOW(), wishesDone=wishesDone+1 WHERE userId=%s", (self.GetTwitchUserID(user),))
+                self.cursor.execute("UPDATE wishstats SET lastWishTime=NOW(), wishesDone=wishesDone+1 WHERE userId=%s", (self.GetTwitchUserID(user),))
                 self.database.commit()
             else:
                 bot.send_message(channel, f"{user}, You cannot wish yet - your next wish will be in: {canUserWish} paimonTantrum")
@@ -800,7 +800,7 @@ class GenshinCommand(Command):
                 uid = self.GetTwitchUserID(user)
 
                 if secondArg == "5star":
-                    self.cursor.execute("SELECT owned5StarCharacters FROM wishStats WHERE userId=%s", (uid,))
+                    self.cursor.execute("SELECT owned5StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                     characterData = json.loads(self.cursor.fetchone()[0])
 
                     if len(characterData.items()) == 0:
@@ -820,7 +820,7 @@ class GenshinCommand(Command):
                     
                     bot.send_message(channel, f"{user}, {targetString}")
                 else:
-                    self.cursor.execute("SELECT owned4StarCharacters FROM wishStats WHERE userId=%s", (uid,))
+                    self.cursor.execute("SELECT owned4StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                     characterData = json.loads(self.cursor.fetchone()[0])
 
                     if len(characterData.items()) == 0:
@@ -860,7 +860,7 @@ class GenshinCommand(Command):
                 uid = self.GetTwitchUserID(user)
 
                 if secondArg == "5star":
-                    self.cursor.execute("SELECT owned5StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                    self.cursor.execute("SELECT owned5StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                     weaponData = json.loads(self.cursor.fetchone()[0])
 
                     if len(weaponData.items()) == 0:
@@ -880,7 +880,7 @@ class GenshinCommand(Command):
                     
                     bot.send_message(channel, f"{user}, {targetString}")
                 else:
-                    self.cursor.execute("SELECT owned4StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+                    self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                     weaponData = json.loads(self.cursor.fetchone()[0])
 
                     if len(weaponData.items()) == 0:
@@ -914,7 +914,7 @@ class GenshinCommand(Command):
                 return
 
             if secondArg == "wishes":
-                self.cursor.execute("SELECT username, wishesDone FROM wishStats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, wishesDone FROM wishstats ORDER BY wishesDone DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -929,7 +929,7 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
             elif secondArg == "fiftyfiftieswon":
-                self.cursor.execute("SELECT username, fiftyFiftiesWon FROM wishStats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, fiftyFiftiesWon FROM wishstats ORDER BY wishesDone DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -944,7 +944,7 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
             elif secondArg == "fiftyfiftieslost":
-                self.cursor.execute("SELECT username, fiftyFiftiesLost FROM wishStats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, fiftyFiftiesLost FROM wishstats ORDER BY wishesDone DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -965,7 +965,7 @@ class GenshinCommand(Command):
 
             uid = self.GetTwitchUserID(user)
 
-            self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter FROM wishStats WHERE userId=%s", (uid,))
+            self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter FROM wishstats WHERE userId=%s", (uid,))
             results = self.cursor.fetchone()
 
             bot.send_message(channel, f"{user}, Your current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} HungryPaimon")
@@ -976,7 +976,7 @@ class GenshinCommand(Command):
 
             uid = self.GetTwitchUserID(user)
 
-            self.cursor.execute("SELECT wishesDone, fiftyFiftiesWon, fiftyFiftiesLost, owned5StarCharacters, owned5StarWeapons, owned4StarCharacters, owned4StarWeapons FROM wishStats WHERE userId=%s", (uid,))
+            self.cursor.execute("SELECT wishesDone, fiftyFiftiesWon, fiftyFiftiesLost, owned5StarCharacters, owned5StarWeapons, owned4StarCharacters, owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
             results = self.cursor.fetchone()
 
             wishesDone = results[0]
