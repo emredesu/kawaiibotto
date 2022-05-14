@@ -99,7 +99,7 @@ class GenshinCommand(Command):
         self.UpdateFromGist()
 
         try:
-            self.database = mysql.connector.connect(host="localhost", username="root", password="makiisthebestgirl", database="genshinStats")
+            self.database = mysql.connector.connect(host="localhost", user="root", password="makiisthebestgirl", database="genshinStats")
             self.cursor = self.database.cursor()
         except Exception as e:
             error(f"Fatal error while connecting to the database: {e.__class__.__name__}")
@@ -129,7 +129,7 @@ class GenshinCommand(Command):
     def CheckUserRowExists(self, username) -> bool:
         uid = self.GetTwitchUserID(username)
 
-        self.cursor.execute("SELECT * from wishstats where userId=%s", (uid,))
+        self.cursor.execute("SELECT * from wishStats where userId=%s", (uid,))
 
         result = self.cursor.fetchone()
 
@@ -914,7 +914,7 @@ class GenshinCommand(Command):
                 return
 
             if secondArg == "wishes":
-                self.cursor.execute("SELECT username, wishesDone FROM genshinstats.wishstats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, wishesDone FROM wishStats ORDER BY wishesDone DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -929,7 +929,7 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
             elif secondArg == "fiftyfiftieswon":
-                self.cursor.execute("SELECT username, fiftyFiftiesWon FROM genshinstats.wishstats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, fiftyFiftiesWon FROM wishStats ORDER BY wishesDone DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -944,7 +944,7 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
             elif secondArg == "fiftyfiftieslost":
-                self.cursor.execute("SELECT username, fiftyFiftiesLost FROM genshinstats.wishstats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, fiftyFiftiesLost FROM wishStats ORDER BY wishesDone DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
