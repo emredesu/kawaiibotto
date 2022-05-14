@@ -930,7 +930,7 @@ class GenshinCommand(Command):
                 for data in result:
                     currentLoopCount += 1
 
-                    targetStr += f"{data[0]} ({data[1]})"
+                    targetStr += f"{data[0]}_({data[1]})"
                     if currentLoopCount < len(result):
                         targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                 
@@ -945,7 +945,7 @@ class GenshinCommand(Command):
                 for data in result:
                     currentLoopCount += 1
 
-                    targetStr += f"{data[0]} ({data[1]})"
+                    targetStr += f"{data[0]}_({data[1]})"
                     if currentLoopCount < len(result):
                         targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                 
@@ -960,7 +960,7 @@ class GenshinCommand(Command):
                 for data in result:
                     currentLoopCount += 1
 
-                    targetStr += f"{data[0]} ({data[1]})"
+                    targetStr += f"{data[0]}_({data[1]})"
                     if currentLoopCount < len(result):
                         targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                 
