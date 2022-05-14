@@ -1,4 +1,5 @@
 from datetime import datetime
+import traceback
 
 has_colorama = None
 
@@ -20,6 +21,8 @@ def error(string):
 		print(colorama.Fore.RED + ("{} [ERROR] ".format(time_now()) + string))
 	else:
 		print("{} [ERROR] ".format(time_now()) + string)
+
+	traceback.print_exc()
 
 
 def success(string):
