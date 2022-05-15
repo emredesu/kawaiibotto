@@ -124,11 +124,16 @@ class GenshinCommand(Command):
     def GetTwitchUserID(self, username) -> int: 
         url = f"https://api.twitch.tv/helix/users?login={username}"
         data = requests.get(url, headers=TWITCH_API_HEADERS).json()
-        userid = data["data"][0]["id"]
-        return int(userid)
+        try:
+            userid = data["data"][0]["id"]
+            return int(userid)
+        except IndexError:
+            return -1
 
     def CheckUserRowExists(self, username) -> bool:
         uid = self.GetTwitchUserID(username)
+        if uid == -1:
+            return False
 
         self.cursor.execute("SELECT * from wishstats where userId=%s", (uid,))
 
@@ -165,7 +170,7 @@ class GenshinCommand(Command):
 
         args = message.split()
 
-        validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "mystats", "update"]
+        validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "update"]
 
         firstArg = None
         try:
@@ -790,28 +795,39 @@ class GenshinCommand(Command):
             validSecondArgs = ["4star", "5star"]
             secondArg = None
 
+            targetUser = user
+
             try:
                 secondArg = args[2]
             except IndexError:
                 bot.send_message(channel, f"Please provide a character type to retrieve. Character types are: {' '.join(validSecondArgs)}")
                 return
+            
+            try:
+                targetUser = args[3]
+            except IndexError:
+                pass
+
+            targetUser = targetUser.strip("@,")
+
+            addressingMethod = "you" if targetUser == user else "they"
 
             if secondArg not in validSecondArgs:
                 bot.send_message(channel, f"Please provide a valid character type. Valid character types are: {' '.join(validSecondArgs)} | Example usage: _genshin characters {random.choice(validSecondArgs)}")
                 return
 
-            if not self.CheckUserRowExists(user):
-                bot.send_message(channel, f"{user}, you are not registered! Use _genshin register to register! paimonWhale")
+            if not self.CheckUserRowExists(targetUser):
+                bot.send_message(channel, f"{user}, {addressingMethod} are not registered! Use _genshin register to register! paimonWhale")
                 return
             else:
-                uid = self.GetTwitchUserID(user)
+                uid = self.GetTwitchUserID(targetUser)
 
                 if secondArg == "5star":
                     self.cursor.execute("SELECT owned5StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                     characterData = json.loads(self.cursor.fetchone()[0])
 
                     if len(characterData.items()) == 0:
-                        bot.send_message(channel, f"{user}, you have no 5 star characters to show. QiqiSleep")
+                        bot.send_message(channel, f"{user}, {addressingMethod} have no 5 star characters to show. QiqiSleep")
                         return
 
                     targetString = ""
@@ -831,7 +847,7 @@ class GenshinCommand(Command):
                     characterData = json.loads(self.cursor.fetchone()[0])
 
                     if len(characterData.items()) == 0:
-                        bot.send_message(channel, f"{user}, you have no 4 star characters to show. QiqiSleep")
+                        bot.send_message(channel, f"{user}, {addressingMethod} have no 4 star characters to show. QiqiSleep")
                         return
 
                     targetString = ""
@@ -850,28 +866,39 @@ class GenshinCommand(Command):
             validSecondArgs = ["4star", "5star"]
             secondArg = None
 
+            targetUser = user
+
             try:
                 secondArg = args[2]
             except IndexError:
                 bot.send_message(channel, f"Please provide a weapon type to retrieve. Valid weapon types are: {' '.join(validSecondArgs)}")
                 return
+            
+            try:
+                targetUser = args[3]
+            except IndexError:
+                pass
+
+            targetUser = targetUser.strip("@,")
+
+            addressingMethod = "you" if targetUser == user else "they"
 
             if secondArg not in validSecondArgs:
                 bot.send_message(channel, f"Please provide a valid weapon type. Valid weapon types are: {' '.join(validSecondArgs)} | Example usage: _genshin weapons {random.choice(validSecondArgs)}")
                 return
         
-            if not self.CheckUserRowExists(user):
-                bot.send_message(channel, f"{user}, you are not registered! Use _genshin register to register! paimonWhale")
+            if not self.CheckUserRowExists(targetUser):
+                bot.send_message(channel, f"{user}, {addressingMethod} are not registered! Use _genshin register to register! paimonWhale")
                 return
             else:
-                uid = self.GetTwitchUserID(user)
+                uid = self.GetTwitchUserID(targetUser)
 
                 if secondArg == "5star":
                     self.cursor.execute("SELECT owned5StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                     weaponData = json.loads(self.cursor.fetchone()[0])
 
                     if len(weaponData.items()) == 0:
-                        bot.send_message(channel, f"{user}, you have no 5 star weapons to show. QiqiSleep")
+                        bot.send_message(channel, f"{user}, {addressingMethod} have no 5 star weapons to show. QiqiSleep")
                         return
 
                     targetString = ""
@@ -891,7 +918,7 @@ class GenshinCommand(Command):
                     weaponData = json.loads(self.cursor.fetchone()[0])
 
                     if len(weaponData.items()) == 0:
-                        bot.send_message(channel, f"{user}, you have no 4 star weapons to show. QiqiSleep")
+                        bot.send_message(channel, f"{user}, {addressingMethod} have no 4 star weapons to show. QiqiSleep")
                         return
 
                     targetString = ""
@@ -936,7 +963,7 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
             elif secondArg == "fiftyfiftieswon":
-                self.cursor.execute("SELECT username, fiftyFiftiesWon FROM wishstats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, fiftyFiftiesWon FROM wishstats ORDER BY fiftyFiftiesWon DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -951,7 +978,7 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
             elif secondArg == "fiftyfiftieslost":
-                self.cursor.execute("SELECT username, fiftyFiftiesLost FROM wishstats ORDER BY wishesDone DESC LIMIT 10")
+                self.cursor.execute("SELECT username, fiftyFiftiesLost FROM wishstats ORDER BY fiftyFiftiesLost DESC LIMIT 10")
                 result = self.cursor.fetchmany(10)
 
                 targetStr = ""
@@ -976,12 +1003,20 @@ class GenshinCommand(Command):
             results = self.cursor.fetchone()
 
             bot.send_message(channel, f"{user}, Your current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} HungryPaimon")
-        elif firstArg in ["stats", "mystats"]:
-            if not self.CheckUserRowExists(user):
-                bot.send_message(channel, f"{user}, you are not registered! Use _genshin register to register! paimonWhale")
+        elif firstArg == "stats":
+            targetUser = user
+            try:
+                targetUser = args[2]
+            except IndexError:
+                targetUser = user
+
+            targetUser = targetUser.strip("@,")
+
+            if not self.CheckUserRowExists(targetUser):
+                bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use _genshin register to register! paimonWhale")
                 return
 
-            uid = self.GetTwitchUserID(user)
+            uid = self.GetTwitchUserID(targetUser)
 
             self.cursor.execute("SELECT wishesDone, fiftyFiftiesWon, fiftyFiftiesLost, owned5StarCharacters, owned5StarWeapons, owned4StarCharacters, owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
             results = self.cursor.fetchone()
@@ -994,8 +1029,10 @@ class GenshinCommand(Command):
             owned4StarCharacters = json.loads(results[5])
             owned4StarWeapons = json.loads(results[6])
 
-            bot.send_message(channel, f"{user}, You have done {wishesDone} wishes so far. You won {fiftyFiftiesWon} 50-50s and lost {fiftyFiftiesLost}. \
-            You own {len(owned5StarCharacters)} 5 star characters, {len(owned5StarWeapons)} 5 star weapons, {len(owned4StarCharacters)} 4 star characters \
+            addressingMethod = "You" if targetUser == user else "They"
+
+            bot.send_message(channel, f"{user}, {addressingMethod} have done {wishesDone} wishes so far. {addressingMethod} won {fiftyFiftiesWon} 50-50s and lost {fiftyFiftiesLost}. \
+            {addressingMethod} own {len(owned5StarCharacters)} 5 star characters, {len(owned5StarWeapons)} 5 star weapons, {len(owned4StarCharacters)} 4 star characters \
             and {len(owned4StarWeapons)} 4 star weapons. paimonHeh")
         elif firstArg == "register":
             if self.CheckUserRowExists(user):
