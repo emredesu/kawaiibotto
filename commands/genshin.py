@@ -30,7 +30,7 @@ database genshinStats
             "Keqing": "C3"
         }
         JSON owned5StarWeapons {
-            "Primordial Jade Winged-Spear": "R0",
+            "Primordial Jade Winged-Spear": "R1",
             "Aquila Favonius": "R2"
         }
         JSON owned4StarCharacters {
@@ -44,7 +44,7 @@ database genshinStats
         JSON owned4StarWeapons {
             "The Bell": "R5",
             "Favonius Sword": "R2",
-            "Rust": "R0"
+            "Rust": "R1"
         }
         INT wishesSinceLast4StarOnCharacterBanner
         INT wishesSinceLast4StarOnWeaponBanner
@@ -352,7 +352,7 @@ class GenshinCommand(Command):
                                 weaponData = json.loads(self.cursor.fetchone()[0])
 
                                 if acquiredWeapon not in weaponData:
-                                    weaponData[acquiredWeapon] = "R0"
+                                    weaponData[acquiredWeapon] = "R1"
                                 else:
                                     # Reset wish timer if the weapon is already maxed out.
                                     if weaponData[acquiredWeapon] == "R5":
@@ -471,7 +471,7 @@ class GenshinCommand(Command):
                             userString = f"{user}, you got {acquiredWeapon}(5★)! HungryPaimon"
 
                             if acquiredWeapon not in weaponData:
-                                    weaponData[acquiredWeapon] = "R0"
+                                    weaponData[acquiredWeapon] = "R1"
                             else:
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
@@ -543,7 +543,7 @@ class GenshinCommand(Command):
                             userString = f"{user}, you got {acquiredWeapon}(4★)! HungryPaimon"
 
                             if acquiredWeapon not in weaponData:
-                                    weaponData[acquiredWeapon] = "R0"
+                                    weaponData[acquiredWeapon] = "R1"
                             else:
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
@@ -607,7 +607,7 @@ class GenshinCommand(Command):
                             userString += f" and got {acquiredWeapon}(5★)!"
 
                             if acquiredWeapon not in weaponData:
-                                weaponData[acquiredWeapon] = "R0"
+                                weaponData[acquiredWeapon] = "R1"
                             else:
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
@@ -635,7 +635,7 @@ class GenshinCommand(Command):
                             userString = f"{user}, You lost the 75-25 and got {acquiredWeapon}(5★)! paimonTantrum "
 
                             if acquiredWeapon not in weaponData:
-                                weaponData[acquiredWeapon] = "R0"
+                                weaponData[acquiredWeapon] = "R1"
                             else:
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
@@ -679,7 +679,7 @@ class GenshinCommand(Command):
                             userString += f" and got {acquiredWeapon}(4★)!"
 
                             if acquiredWeapon not in weaponData:
-                                    weaponData[acquiredWeapon] = "R0"
+                                    weaponData[acquiredWeapon] = "R1"
                             else:
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
@@ -719,7 +719,7 @@ class GenshinCommand(Command):
                                 weaponData = json.loads(self.cursor.fetchone()[0])
 
                                 if acquiredWeapon not in weaponData:
-                                    weaponData[acquiredWeapon] = "R0"
+                                    weaponData[acquiredWeapon] = "R1"
                                 else:
                                     # Reset wish timer if the weapon is already maxed out.
                                     if weaponData[acquiredWeapon] == "R5":
