@@ -240,7 +240,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET=lastWishTime SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
                                     self.database.commit()
                                     
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish now instead. paimonHeh"
