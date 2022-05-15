@@ -289,7 +289,7 @@ class GenshinCommand(Command):
                             self.database.commit()
 
                             bot.send_message(channel, userString)
-                    elif (randomNumber > self.characterBanner5StarChance and randomNumber < self.characterBanner5StarChance + self.characterBanner4StarChance) or wishesSinceLast4Star >= 10:
+                    elif (randomNumber > self.characterBanner5StarChance and randomNumber < self.characterBanner5StarChance + self.characterBanner4StarChance) or wishesSinceLast4Star >= 9:
                         # We got a 4 star!
 
                         # Increment the pity counter.
@@ -493,7 +493,7 @@ class GenshinCommand(Command):
 
                             bot.send_message(channel, userString)
                
-                    elif (randomNumber > self.standardBanner5StarChance and randomNumber < self.standardBanner4StarChance + self.standardBanner5StarChance) or wishesSinceLast4Star >= 10:
+                    elif (randomNumber > self.standardBanner5StarChance and randomNumber < self.standardBanner4StarChance + self.standardBanner5StarChance) or wishesSinceLast4Star >= 9:
                         # We got a 4 star.
 
                         # Increment the pity counter.
@@ -656,7 +656,7 @@ class GenshinCommand(Command):
                             self.database.commit()
 
                             bot.send_message(channel, userString)
-                    elif (randomNumber > self.weaponBanner5StarChance and randomNumber < self.weaponBanner5StarChance + self.weaponBanner5StarChance) or wishesSinceLast4Star >= 10:
+                    elif (randomNumber > self.weaponBanner5StarChance and randomNumber < self.weaponBanner5StarChance + self.weaponBanner5StarChance) or wishesSinceLast4Star >= 9:
                         # We got a 4 star.
 
                         # Increment the pity counter.
