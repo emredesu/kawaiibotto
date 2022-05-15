@@ -215,7 +215,7 @@ class GenshinCommand(Command):
                         for i in range(currentPityCounter - self.characterBanner5StarSoftPityStart):
                             currentFiveStarChance += random.uniform(5, 7)
 
-                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.characterBanner5StarHardPity:
+                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.characterBanner5StarHardPity - 1:
                         # We got a 5 star!
 
                         # Get data regarding to 5 star characters for the user.
@@ -426,7 +426,7 @@ class GenshinCommand(Command):
 
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
 
-                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.standardBannerHardPity:
+                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.standardBannerHardPity - 1:
                         # We got a 5 star!
                         isCharacter = True if random.choice([0, 1]) == 0 else False
                         if isCharacter:
@@ -591,7 +591,7 @@ class GenshinCommand(Command):
 
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
 
-                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.weaponBanner5StarHardPity:
+                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.weaponBanner5StarHardPity - 1:
                         # We got a 5 star!
 
                         # Get data related to the owned 5 star weapons
