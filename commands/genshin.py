@@ -993,16 +993,24 @@ class GenshinCommand(Command):
                 
                 bot.send_message(channel, targetStr)
         elif firstArg in ["pity", "pitycheck", "pitycounter"]:
-            if not self.CheckUserRowExists(user):
-                bot.send_message(channel, f"{user}, you are not registered! Use _genshin register to register! paimonWhale")
+            targetUser = user
+            try:
+                targetUser = args[2]
+            except IndexError:
+                pass
+
+            if not self.CheckUserRowExists(targetUser):
+                bot.send_message(channel, f"{user}, {'you' if targetUser == user else 'they'} are not registered! Use _genshin register to register! paimonWhale")
                 return
 
-            uid = self.GetTwitchUserID(user)
+            uid = self.GetTwitchUserID(targetUser)
 
             self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter FROM wishstats WHERE userId=%s", (uid,))
             results = self.cursor.fetchone()
 
-            bot.send_message(channel, f"{user}, Your current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} HungryPaimon")
+            addressingMethod = "Your" if targetUser == user else "Their"
+
+            bot.send_message(channel, f"{user}, {addressingMethod} current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} HungryPaimon")
         elif firstArg == "stats":
             targetUser = user
             try:
