@@ -54,7 +54,7 @@ database genshinStats
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
     COOLDOWN = 0
-    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data and _genshin pity to check your pity counters. Every user gets a new wish every 1/2 hour. HungryPaimon"
+    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data, _genshin pity to check your pity counters and _genshin guarantee to check your guarantees. You can add a username at the end of stat commands to check for another user. Every user gets a new wish every 1/2 hour. HungryPaimon"
 
 
     successfulInit = True
@@ -170,13 +170,13 @@ class GenshinCommand(Command):
 
         args = message.split()
 
-        validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "update"]
+        validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "guarantee", "help", "update"]
 
         firstArg = None
         try:
             firstArg = args[1]
         except IndexError:
-            bot.send_message(channel, f"{user}, Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data and _genshin pity to check your pity counters. Every user gets a new wish every 1/2 hour. HungryPaimon")
+            bot.send_message(channel, f"{user}, {self.DESCRIPTION.removeprefix('A fully fledged Genshin wish simulator with progress tracking!')}")
             return
 
         if firstArg not in validFirstArgs:
@@ -1016,7 +1016,7 @@ class GenshinCommand(Command):
             try:
                 targetUser = args[2]
             except IndexError:
-                targetUser = user
+                pass
 
             targetUser = targetUser.strip("@,")
 
@@ -1042,6 +1042,36 @@ class GenshinCommand(Command):
             bot.send_message(channel, f"{user}, {addressingMethod} have done {wishesDone} wishes so far. {addressingMethod} won {fiftyFiftiesWon} 50-50s and lost {fiftyFiftiesLost}. \
             {addressingMethod} own {len(owned5StarCharacters)} 5 star characters, {len(owned5StarWeapons)} 5 star weapons, {len(owned4StarCharacters)} 4 star characters \
             and {len(owned4StarWeapons)} 4 star weapons. paimonHeh")
+        elif firstArg == "guarantee":
+            targetUser = user
+            try:
+                targetUser = args[2]
+            except IndexError:
+                pass
+
+            if not self.CheckUserRowExists(targetUser):
+                bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use _genshin register to register! paimonWhale")
+                return
+
+            uid = self.GetTwitchUserID(targetUser)
+
+            self.cursor.execute("SELECT has5StarGuaranteeOnCharacterBanner, has5StarGuaranteeOnWeaponBanner, has4StarGuaranteeOnCharacterBanner, has4StarGuaranteeOnWeaponBanner from wishstats where userId=%s", (uid,))
+            result = self.cursor.fetchone()
+
+            has5StarGuaranteeOnCharacterBanner = result[0]
+            has5StarGuaranteeOnWeaponBanner = result[1]
+            has4StarGuaranteeOnCharacterBanner = result[2]
+            has4StarGuaranteeOnWeaponBanner = result[3]
+
+            addressingMethod = "Your" if targetUser == user else "Their"
+
+            positiveEmoji = "✅"
+            negativeEmoji = "❌"
+            bot.send_message(channel, f"{user}, {addressingMethod} current guarantee standings: Character banner 5 star {positiveEmoji if has5StarGuaranteeOnCharacterBanner else negativeEmoji} | \
+            Character banner 4 star {positiveEmoji if has4StarGuaranteeOnCharacterBanner else negativeEmoji} | Weapon banner 5 star {positiveEmoji if has5StarGuaranteeOnWeaponBanner else negativeEmoji} | \
+            Weapon banner 4 star {positiveEmoji if has4StarGuaranteeOnWeaponBanner else negativeEmoji}")
+        elif firstArg == "help":
+            bot.send_message(channel, f"{user}, {self.DESCRIPTION}")
         elif firstArg == "register":
             if self.CheckUserRowExists(user):
                 bot.send_message(channel, f"{user}, you are already registered! paimonEHE")
