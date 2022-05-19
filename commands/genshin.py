@@ -629,7 +629,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                 
                             # Update the database with the new weapon.
-                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false WHERE userId=%s", (json.dumps(weaponData), uid))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false, weaponBannerPityCounter=0 WHERE userId=%s", (json.dumps(weaponData), uid))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -657,7 +657,7 @@ class GenshinCommand(Command):
                                     userString += f" Your {acquiredWeapon} is now {newRefinement}! paimonHeh"
                                 
                             # Update the database with the new weapon.
-                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false WHERE userId=%s", (json.dumps(weaponData), uid,))
+                            self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false, weaponBannerPityCounter=0 WHERE userId=%s", (json.dumps(weaponData), uid,))
                             self.database.commit()
 
                             bot.send_message(channel, userString)
@@ -675,7 +675,7 @@ class GenshinCommand(Command):
                         weaponData = json.loads(retrievedData[1])
 
                         rateUpWeaponRoll = random.uniform(0, 100)
-                        if rateUpWeaponRoll < self.weaponBanner4StarRateUpProbability or hasGuarantee:
+                        if rateUpWeaponRoll < self.weaponBanner4StarRateUpProbability or hasGuarantee4Star:
                             # We won the 4 star 50-50!
 
                             acquiredWeapon = random.choice(self.bannerData[secondArg]["rateUp4StarWeapons"])
