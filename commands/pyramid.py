@@ -6,6 +6,8 @@ class PyramidCommand(Command):
 	COOLDOWN = 30
 	DESCRIPTION = f"Makes a chat pyramid. {COOLDOWN} seconds of cooldown. Example usage: _pyramid VoHiYo 5"
 
+	pyramidLimit = 10
+
 	def execute(self, bot, user, message, channel):
 		args = message.split()
 
@@ -25,6 +27,10 @@ class PyramidCommand(Command):
 
 			if len(msg) * size > 500:
 				bot.send_message(channel, "That pyramid would exceed Twitch's 500 character limit :<")
+				return
+
+			if size > self.pyramidLimit:
+				bot.send_message(channel, f"Pyramid size can't exceed {self.pyramidLimit}. PunOko")
 				return
 
 		for i in range(1, size + 1):
