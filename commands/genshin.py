@@ -64,10 +64,13 @@ class GenshinCommand(Command):
     database = None
     cursor = None
 
-    gistLink = "https://gist.githubusercontent.com/emredesu/2766beb7e57c55b5d0cee9294f96cfa1/raw/kawaiibottoGenshinWishBanners.json"
+    bannerInfoGistLink = "https://gist.githubusercontent.com/emredesu/2766beb7e57c55b5d0cee9294f96cfa1/raw/kawaiibottoGenshinWishBanners.json"
+    emojiAssociationGistLink = "https://gist.githubusercontent.com/emredesu/e13a6274d9ba9825562b279d00bb1c0b/raw/kawaiibottoGenshinEmojiAssociations.json"
 
     validBannerNames = []
     bannerData = None
+
+    emojiAssociations = None
 
     # Wish math stuff
     characterBanner5StarHardPity = 90
@@ -106,17 +109,18 @@ class GenshinCommand(Command):
             error(f"Fatal error while connecting to the database: {e.__class__.__name__}")
             traceback.print_exc()
             self.successfulInit = False
-    
 
     def UpdateFromGist(self):
         try:
-            jsonData = requests.get(self.gistLink).json()
+            jsonData = requests.get(self.bannerInfoGistLink).json()
             self.bannerData = jsonData
 
             self.validBannerNames.clear()
 
             for bannerName in jsonData:
                 self.validBannerNames.append(bannerName)
+
+            self.emojiAssociations = requests.get(self.emojiAssociationGistLink).json()
         except Exception as e:
             error(f"Fatal error while getting gist data for the Genshin command: {e.__class__.__name__}")
             self.successfulInit = False
@@ -162,6 +166,13 @@ class GenshinCommand(Command):
             return True
         else:
             return str(datetime.timedelta(seconds=self.requiredSecondsBetweenWishes-timePassed.seconds))
+
+    # Returns the associated emoji(s) if it exists in the JSON, otherwise returns an empty string.
+    def GetEmojiAssociation(self, item) -> str:
+        try:
+            return self.emojiAssociations[item]
+        except KeyError:
+            return ""
 
     def execute(self, bot, user, message, channel):
         if not self.successfulInit:
@@ -236,7 +247,7 @@ class GenshinCommand(Command):
                             acquiredCharacter = self.bannerData[secondArg]["rateUp5StarCharacter"]
                             
                             userString = f"{user}, you beat the 50-50" if not hasGuarantee else f"{user}, you used up your guarantee"
-                            userString += f" and got {acquiredCharacter}(5★)! HungryPaimon"
+                            userString += f" and got {acquiredCharacter}(5★){self.GetEmojiAssociation(acquiredCharacter)}! HungryPaimon"
 
                             # Check if the user already has the character.
                             # If they have the character at C6, we'll reset their wish timer.
@@ -271,7 +282,7 @@ class GenshinCommand(Command):
                             # We lost the 5 star 50-50 :/
                             acquiredCharacter = random.choice(self.bannerData[secondArg]["all5StarCharacters"])
 
-                            userString = f"{user}, you lost your 50-50 and got {acquiredCharacter}(5★)! paimonTantrum"
+                            userString = f"{user}, you lost your 50-50 and got {acquiredCharacter}(5★){self.GetEmojiAssociation(acquiredCharacter)}! paimonTantrum"
 
                             if acquiredCharacter not in characterData:
                                 characterData[acquiredCharacter] = "C0"
@@ -314,7 +325,7 @@ class GenshinCommand(Command):
                             acquiredCharacter = random.choice(self.bannerData[secondArg]["rateUp4StarCharacters"])
 
                             userString = f"{user}, you won the 50-50" if not hasGuarantee else f"{user}, you used up your 4 star guarantee"
-                            userString += f" and got {acquiredCharacter}(4★)!"
+                            userString += f" and got {acquiredCharacter}(4★){self.GetEmojiAssociation(acquiredCharacter)}!"
 
                             if acquiredCharacter not in characterData:
                                 characterData[acquiredCharacter] = "C0"
@@ -351,7 +362,7 @@ class GenshinCommand(Command):
                             if acquiredItem == "weapon":
                                 acquiredWeapon = random.choice(self.bannerData[secondArg]["all4StarWeapons"])
 
-                                userString += f" and got {acquiredWeapon}(4★)! paimonTantrum"
+                                userString += f" and got {acquiredWeapon}(4★){self.GetEmojiAssociation(acquiredCharacter)}! paimonTantrum"
 
                                 self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                                 weaponData = json.loads(self.cursor.fetchone()[0])
@@ -381,7 +392,7 @@ class GenshinCommand(Command):
                             else:
                                 acquiredCharacter = random.choice(self.bannerData[secondArg]["all4StarCharacters"])
 
-                                userString += f" and got {acquiredCharacter}(4★)! paimonTantrum"
+                                userString += f" and got {acquiredCharacter}(4★){self.GetEmojiAssociation(acquiredCharacter)}! paimonTantrum"
 
                                 if acquiredCharacter not in characterData:
                                     characterData[acquiredCharacter] = "C0"
@@ -442,7 +453,7 @@ class GenshinCommand(Command):
 
                             acquiredCharacter = random.choice(self.bannerData[secondArg]["all5StarCharacters"])
 
-                            userString = f"{user}, you got {acquiredCharacter}(5★)! HungryPaimon"
+                            userString = f"{user}, you got {acquiredCharacter}(5★){self.GetEmojiAssociation(acquiredCharacter)}! HungryPaimon"
 
                             if acquiredCharacter not in characterData:
                                     characterData[acquiredCharacter] = "C0"
@@ -473,7 +484,7 @@ class GenshinCommand(Command):
 
                             acquiredWeapon = random.choice(self.bannerData[secondArg]["all5StarWeapons"])
 
-                            userString = f"{user}, you got {acquiredWeapon}(5★)! HungryPaimon"
+                            userString = f"{user}, you got {acquiredWeapon}(5★){self.GetEmojiAssociation(acquiredCharacter)}! HungryPaimon"
 
                             if acquiredWeapon not in weaponData:
                                     weaponData[acquiredWeapon] = "R1"
@@ -514,7 +525,7 @@ class GenshinCommand(Command):
 
                             acquiredCharacter = random.choice(self.bannerData[secondArg]["all4StarCharacters"])
 
-                            userString = f"{user}, you got {acquiredCharacter}(4★)! HungryPaimon"
+                            userString = f"{user}, you got {acquiredCharacter}(4★){self.GetEmojiAssociation(acquiredCharacter)}! HungryPaimon"
 
                             if acquiredCharacter not in characterData:
                                     characterData[acquiredCharacter] = "C0"
@@ -545,7 +556,7 @@ class GenshinCommand(Command):
 
                             acquiredWeapon = random.choice(self.bannerData[secondArg]["all4StarWeapons"])
 
-                            userString = f"{user}, you got {acquiredWeapon}(4★)! HungryPaimon"
+                            userString = f"{user}, you got {acquiredWeapon}(4★){self.GetEmojiAssociation(acquiredCharacter)}! HungryPaimon"
 
                             if acquiredWeapon not in weaponData:
                                     weaponData[acquiredWeapon] = "R1"
@@ -609,7 +620,7 @@ class GenshinCommand(Command):
                             acquiredWeapon = random.choice(self.bannerData[secondArg]["rateUp5StarWeapons"])
 
                             userString = f"{user}, you beat the odds of 75-25" if not hasGuarantee5Star else f"{user}, you used up your guarantee"
-                            userString += f" and got {acquiredWeapon}(5★)!"
+                            userString += f" and got {acquiredWeapon}(5★){self.GetEmojiAssociation(acquiredCharacter)}!"
 
                             if acquiredWeapon not in weaponData:
                                 weaponData[acquiredWeapon] = "R1"
@@ -637,7 +648,7 @@ class GenshinCommand(Command):
                             # We lost the 75-25.
                             acquiredWeapon = random.choice(self.bannerData[secondArg]["all5StarWeapons"])
 
-                            userString = f"{user}, You lost the 75-25 and got {acquiredWeapon}(5★)! paimonTantrum "
+                            userString = f"{user}, You lost the 75-25 and got {acquiredWeapon}(5★){self.GetEmojiAssociation(acquiredCharacter)}! paimonTantrum "
 
                             if acquiredWeapon not in weaponData:
                                 weaponData[acquiredWeapon] = "R1"
@@ -681,7 +692,7 @@ class GenshinCommand(Command):
                             acquiredWeapon = random.choice(self.bannerData[secondArg]["rateUp4StarWeapons"])
 
                             userString = f"{user}, you won the 50-50" if not hasGuarantee else f"{user}, you used up your 4 star guarantee"
-                            userString += f" and got {acquiredWeapon}(4★)!"
+                            userString += f" and got {acquiredWeapon}(4★){self.GetEmojiAssociation(acquiredCharacter)}!"
 
                             if acquiredWeapon not in weaponData:
                                     weaponData[acquiredWeapon] = "R1"
@@ -718,7 +729,7 @@ class GenshinCommand(Command):
                             if acquiredItem == "weapon":
                                 acquiredWeapon = random.choice(self.bannerData[secondArg]["all4StarWeapons"])
 
-                                userString += f" and got {acquiredWeapon}(4★)! paimonTantrum"
+                                userString += f" and got {acquiredWeapon}(4★){self.GetEmojiAssociation(acquiredCharacter)}! paimonTantrum"
 
                                 self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                                 weaponData = json.loads(self.cursor.fetchone()[0])
@@ -751,7 +762,7 @@ class GenshinCommand(Command):
 
                                 acquiredCharacter = random.choice(self.bannerData[secondArg]["all4StarCharacters"])
 
-                                userString += f" and got {acquiredCharacter}(4★)! paimonTantrum"
+                                userString += f" and got {acquiredCharacter}(4★){self.GetEmojiAssociation(acquiredCharacter)}! paimonTantrum"
 
                                 if acquiredCharacter not in characterData:
                                     characterData[acquiredCharacter] = "C0"
