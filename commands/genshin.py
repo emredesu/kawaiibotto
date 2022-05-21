@@ -59,7 +59,7 @@ class GenshinCommand(Command):
 
     successfulInit = True
 
-    requiredSecondsBetweenWishes = 2
+    requiredSecondsBetweenWishes = 1800
 
     database = None
     cursor = None
