@@ -54,12 +54,12 @@ database genshinStats
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
     COOLDOWN = 0
-    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapon) to see what you own and _genshin top to see various data, _genshin stats to check your own data, _genshin pity to check your pity counters and _genshin guarantee to check your guarantees. You can add a username at the end of stat commands to check for another user. Every user gets a new wish every 1/2 hour. HungryPaimon"
+    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapons) to see what you own and _genshin top to see various data, _genshin stats to check your own data, _genshin pity to check your pity counters and _genshin guarantee to check your guarantees. You can add a username at the end of stat commands to check for another user. Every user gets a new wish every 1/2 hour. HungryPaimon"
 
 
     successfulInit = True
 
-    requiredSecondsBetweenWishes = 1800
+    requiredSecondsBetweenWishes = 2
 
     database = None
     cursor = None
