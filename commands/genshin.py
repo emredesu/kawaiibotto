@@ -602,7 +602,7 @@ class GenshinCommand(Command):
 
                     if currentPityCounter > self.weaponBanner5StarSoftPityStart:
                         # For each wish above the soft pity counter, give the user an extra 5-7% chance of getting a 5 star.
-                        for i in range(currentPityCounter - self.standardBannerSoftPityStart):
+                        for i in range(currentPityCounter - self.weaponBanner5StarSoftPityStart):
                             currentFiveStarChance += random.uniform(5, 7)
 
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
