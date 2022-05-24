@@ -1016,12 +1016,14 @@ class GenshinCommand(Command):
 
             uid = self.GetTwitchUserID(targetUser)
 
-            self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter FROM wishstats WHERE userId=%s", (uid,))
+            self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter, wishesSinceLast4StarOnCharacterBanner, \
+            wishesSinceLast4StarOnWeaponBanner, wishesSinceLast4StarOnStandardBanner FROM wishstats WHERE userId=%s", (uid,))
             results = self.cursor.fetchone()
 
             addressingMethod = "Your" if targetUser == user else "Their"
 
-            bot.send_message(channel, f"{user}, {addressingMethod} current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} HungryPaimon")
+            bot.send_message(channel, f"{user}, {addressingMethod} current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} HungryPaimon \
+            Wishes since last 4 star - Character: {results[3]} | Weapon: {results[4]} | Standard: {results[5]} paimonWhale")
         elif firstArg == "stats":
             targetUser = user
             try:
