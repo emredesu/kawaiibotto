@@ -54,7 +54,7 @@ database genshinStats
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
     COOLDOWN = 0
-    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapons) to see what you own and _genshin top to see various data, _genshin stats to check your own data, _genshin pity to check your pity counters and _genshin guarantee to check your guarantees. You can add a username at the end of stat commands to check for another user. Every user gets a new wish every 1/2 hour. HungryPaimon"
+    DESCRIPTION = "A fully fledged Genshin wish simulator with progress tracking! Use _genshin wish (banner) to wish, _genshin (characters/weapons) to see what you own and _genshin top to see various data, _genshin stats to check your own data, _genshin pity to check your pity counters, _genshin guarantee to check your guarantees and _genshin overview to see global stats. You can add a username at the end of stat commands to check for another user. Every user gets a new wish every 1/2 hour. HungryPaimon"
 
 
     successfulInit = True
@@ -181,7 +181,7 @@ class GenshinCommand(Command):
 
         args = message.split()
 
-        validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "guarantee", "help", "update"]
+        validFirstArgs = ["wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "guarantee", "help", "overview", "update"]
 
         firstArg = None
         try:
@@ -1093,6 +1093,19 @@ class GenshinCommand(Command):
             self.CreateUserTableEntry(user)
 
             bot.send_message(channel, f"{user}, you have been registered successfully! paimonHeh")
+        elif firstArg == "overview":
+            self.cursor.execute("select SUM(wishesDone), SUM(fiftyFiftiesWon), SUM(fiftyFiftiesLost), COUNT(*) from wishstats;")
+            result = self.cursor.fetchone()
+
+            totalWishesDone = result[0]
+            totalFiftyFiftiesWon = result[1]
+            totalFiftyFiftiesLost = result[2]
+            totalUserCount = result[3]
+
+            bot.send_message(channel, f"{totalUserCount} users in the database have collectively done {totalWishesDone} wishes. {totalFiftyFiftiesWon} 50-50s were won \
+            out of the total {totalFiftyFiftiesWon + totalFiftyFiftiesLost}. That's a {round((totalFiftyFiftiesWon / (totalFiftyFiftiesWon + totalFiftyFiftiesLost))*100, 2)}% win \
+            rate! HungryPaimon")
+
         elif firstArg == "update":
             if user != "emredesu":
                 bot.send_message(channel, "🤨")
