@@ -256,7 +256,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
                                     
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish now instead. paimonHeh"
@@ -289,7 +289,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, you get a free wish now instead. paimonHeh"
@@ -332,7 +332,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -373,7 +373,7 @@ class GenshinCommand(Command):
                                     # Reset wish timer if the weapon is already maxed out.
                                     if weaponData[acquiredWeapon] == "R5":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -399,7 +399,7 @@ class GenshinCommand(Command):
                                 else:
                                     if characterData[acquiredCharacter] == "C6":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -460,7 +460,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -492,7 +492,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -532,7 +532,7 @@ class GenshinCommand(Command):
                             else:
                                 if characterData[acquiredCharacter] == "C6":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
@@ -564,7 +564,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -628,7 +628,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -656,7 +656,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -700,7 +700,7 @@ class GenshinCommand(Command):
                                 # Reset wish timer if the weapon is already maxed out.
                                 if weaponData[acquiredWeapon] == "R5":
                                     # Reset the user's wish timer.
-                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                     self.database.commit()
 
                                     userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -740,7 +740,7 @@ class GenshinCommand(Command):
                                     # Reset wish timer if the weapon is already maxed out.
                                     if weaponData[acquiredWeapon] == "R5":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredWeapon} at R5 before, so you get a free wish instead. paimonHeh"
@@ -769,7 +769,7 @@ class GenshinCommand(Command):
                                 else:
                                     if characterData[acquiredCharacter] == "C6":
                                         # Reset the user's wish timer.
-                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), \"2:0:0\") WHERE userId=%s", (uid,))
+                                        self.cursor.execute("UPDATE wishstats SET lastWishTime=SUBTIME(NOW(), '2:0:0') WHERE userId=%s", (uid,))
                                         self.database.commit()
 
                                         userString += f" However, you already had {acquiredCharacter} at C6 before, so you get a free wish instead. paimonHeh"
