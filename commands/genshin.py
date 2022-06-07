@@ -59,7 +59,7 @@ class GenshinCommand(Command):
 
     successfulInit = True
 
-    requiredSecondsBetweenWishes = 2
+    requiredSecondsBetweenWishes = 1800
 
     database = None
     cursor = None
@@ -244,8 +244,6 @@ class GenshinCommand(Command):
                     retrievedData = self.cursor.fetchone()
                     currentPityCounter = retrievedData[0]
                     wishesSinceLast4Star = retrievedData[1]
-
-                    log(f"Banner: {secondArg} | Pity: {currentPityCounter} | 4 Star nth Wish: {wishesSinceLast4Star + 1}")
 
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
 
@@ -482,8 +480,6 @@ class GenshinCommand(Command):
                     currentPityCounter = retrievedData[0]
                     wishesSinceLast4Star = retrievedData[1]
 
-                    log(f"Banner: {secondArg} | Pity: {currentPityCounter} | 4 Star nth Wish: {wishesSinceLast4Star + 1}")
-
                     currentFiveStarChance = self.standardBanner5StarChance
 
                     if currentPityCounter > self.standardBannerSoftPityStart:
@@ -669,8 +665,6 @@ class GenshinCommand(Command):
                     hasGuarantee5Star = retrievedData[1]
                     hasGuarantee4Star = retrievedData[2]
                     wishesSinceLast4Star = retrievedData[3]
-
-                    log(f"Banner: {secondArg} | Pity: {currentPityCounter} | 4 Star nth Wish: {wishesSinceLast4Star + 1}")
 
                     currentFiveStarChance = self.weaponBanner5StarChance
 
