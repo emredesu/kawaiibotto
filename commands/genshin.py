@@ -75,8 +75,12 @@ class GenshinCommand(Command):
     # Wish math stuff
     characterBanner5StarHardPity = 90
     characterBanner5StarSoftPityStart = 75
+    charaterBanner4StarSoftPityStart = 9
+
     weaponBanner5StarHardPity = 80
     weaponBanner5StarSoftPityStart = 63
+    weaponBanner4StarSoftPityStart = 8
+
     standardBannerHardPity = 90
     standardBannerSoftPityStart = 75
 
@@ -127,7 +131,9 @@ class GenshinCommand(Command):
 
     def GetTwitchUserID(self, username) -> int: 
         url = f"https://api.twitch.tv/helix/users?login={username}"
+
         data = requests.get(url, headers=TWITCH_API_HEADERS).json()
+
         try:
             userid = data["data"][0]["id"]
             return int(userid)
@@ -216,8 +222,14 @@ class GenshinCommand(Command):
             canUserWish = self.GetUserCanWish(user)
 
             if type(canUserWish) is bool and canUserWish:
-                uid = self.GetTwitchUserID(user)
+                uid = None
+                try:
+                    uid = self.GetTwitchUserID(user)
+                except:
+                    bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error! paimonTantrum")
+                    return
 
+                # ----- Character banner -----
                 if "character" in secondArg:
                     self.cursor.execute(f"SELECT characterBannerPityCounter, wishesSinceLast4StarOnCharacterBanner FROM wishstats where userId=%s", (uid,))
                     retrievedData = self.cursor.fetchone()
@@ -433,7 +445,9 @@ class GenshinCommand(Command):
                         # Increment the pity counters for 4 star and 5 star.
                         self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnCharacterBanner=wishesSinceLast4StarOnCharacterBanner+1, characterBannerPityCounter=characterBannerPityCounter+1 WHERE userId=%s", (uid,))
 
-                        bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep")                      
+                        bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep")
+
+                # ----- Standard banner -----                    
                 elif "standard" in secondArg:
                     self.cursor.execute("SELECT standardBannerPityCounter, wishesSinceLast4StarOnStandardBanner FROM wishstats where userId=%s", (uid,))
                     retrievedData = self.cursor.fetchone()
@@ -598,9 +612,9 @@ class GenshinCommand(Command):
                         self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnStandardBanner=wishesSinceLast4StarOnStandardBanner+1, standardBannerPityCounter=standardBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                         bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep") 
-                else:
-                    # Weapon banner
 
+                # ----- Weapon banner -----
+                else:
                     # Get data regarding the weapon banner.
                     self.cursor.execute("SELECT weaponBannerPityCounter, has5StarGuaranteeOnWeaponBanner, has4StarGuaranteeOnWeaponBanner, wishesSinceLast4StarOnWeaponBanner from wishstats WHERE userId=%s", (uid,))
                     retrievedData = self.cursor.fetchone()
@@ -814,8 +828,13 @@ class GenshinCommand(Command):
                         bot.send_message(channel, f"{user}, you got a {acquiredTrash}(3★) QiqiSleep")
 
                 if shouldUpdateWishTime:
-                    self.cursor.execute("UPDATE wishstats SET lastWishTime=NOW(), wishesDone=wishesDone+1 WHERE userId=%s", (self.GetTwitchUserID(user),))
-                    self.database.commit()
+                    try:
+                        self.cursor.execute("UPDATE wishstats SET lastWishTime=NOW(), wishesDone=wishesDone+1 WHERE userId=%s", (self.GetTwitchUserID(user),))
+                        self.database.commit()
+                    except:
+                        # If Twitch API proves problematic, resort back to using user's username.
+                        self.cursor.execute("UPDATE wishstats SET lastWishTime=NOW(), wishesDone=wishesDone+1 WHERE username=%s", (user,))
+                        self.database.commit()
             else:
                 bot.send_message(channel, f"{user}, You cannot wish yet - your next wish will be in: {canUserWish} paimonTantrum")
                 return
@@ -848,7 +867,12 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, {addressingMethod} are not registered! Use _genshin register to register! paimonWhale")
                 return
             else:
-                uid = self.GetTwitchUserID(targetUser)
+                uid = None
+                try:
+                    uid = self.GetTwitchUserID(targetUser)
+                except:
+                    bot.send_message(channel, f"{user}, unable to show characters due to a Twitch API error! paimonTantrum")
+                    return
 
                 if secondArg == "5star":
                     self.cursor.execute("SELECT owned5StarCharacters FROM wishstats WHERE userId=%s", (uid,))
@@ -919,7 +943,12 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, {addressingMethod} are not registered! Use _genshin register to register! paimonWhale")
                 return
             else:
-                uid = self.GetTwitchUserID(targetUser)
+                uid = None
+                try:
+                    uid = self.GetTwitchUserID(targetUser)
+                except:
+                    bot.send_message(channel, f"{user}, unable to show weapons due to a Twitch API error! paimonTantrum")
+                    return
 
                 if secondArg == "5star":
                     self.cursor.execute("SELECT owned5StarWeapons FROM wishstats WHERE userId=%s", (uid,))
@@ -1031,7 +1060,12 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, {'you' if targetUser == user else 'they'} are not registered! Use _genshin register to register! paimonWhale")
                 return
 
-            uid = self.GetTwitchUserID(targetUser)
+            uid = None
+            try:
+                uid = self.GetTwitchUserID(targetUser)
+            except:
+                bot.send_message(channel, f"{user}, unable to show pity due to a Twitch API error! paimonTantrum")
+                return
 
             self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter, wishesSinceLast4StarOnCharacterBanner, \
             wishesSinceLast4StarOnWeaponBanner, wishesSinceLast4StarOnStandardBanner FROM wishstats WHERE userId=%s", (uid,))
@@ -1054,7 +1088,12 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use _genshin register to register! paimonWhale")
                 return
 
-            uid = self.GetTwitchUserID(targetUser)
+            uid = None
+            try:
+                uid = self.GetTwitchUserID(targetUser)
+            except:
+                bot.send_message(channel, f"{user}, unable to show stats due to a Twitch API error! paimonTantrum")
+                return
 
             self.cursor.execute("SELECT wishesDone, fiftyFiftiesWon, fiftyFiftiesLost, owned5StarCharacters, owned5StarWeapons, owned4StarCharacters, owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
             results = self.cursor.fetchone()
@@ -1083,7 +1122,12 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use _genshin register to register! paimonWhale")
                 return
 
-            uid = self.GetTwitchUserID(targetUser)
+            uid = None
+            try:
+                uid = self.GetTwitchUserID(targetUser)
+            except:
+                bot.send_message(channel, f"{user}, unable to show guarantee standings due to a Twitch API error! paimonTantrum")
+                return
 
             self.cursor.execute("SELECT has5StarGuaranteeOnCharacterBanner, has5StarGuaranteeOnWeaponBanner, has4StarGuaranteeOnCharacterBanner, has4StarGuaranteeOnWeaponBanner from wishstats where userId=%s", (uid,))
             result = self.cursor.fetchone()
