@@ -59,7 +59,7 @@ class GenshinCommand(Command):
 
     successfulInit = True
 
-    requiredSecondsBetweenWishes = 1800
+    requiredSecondsBetweenWishes = 2
 
     database = None
     cursor = None
@@ -72,17 +72,22 @@ class GenshinCommand(Command):
 
     emojiAssociations = None
 
-    # Wish math stuff
+    # ----- Wish math stuff -----
     characterBanner5StarHardPity = 90
     characterBanner5StarSoftPityStart = 75
-    charaterBanner4StarSoftPityStart = 9
+    characterBanner4StarSoftPityStart = 9
+    characterBanner4StarHardPity = 10
 
     weaponBanner5StarHardPity = 80
     weaponBanner5StarSoftPityStart = 63
     weaponBanner4StarSoftPityStart = 8
+    weaponBanner4StarSoftPityChanceIncrease = 9
+    weaponBanner4StarHardPity = 10
 
     standardBannerHardPity = 90
     standardBannerSoftPityStart = 75
+    standardBanner4StarSoftPityStart = 9
+    standardBanner4StarHardPity = 10
 
     characterBanner5StarRateUpProbability = 50
     characterBanner4StarRateUpProbability = 50
@@ -93,14 +98,18 @@ class GenshinCommand(Command):
     # Character banner
     characterBanner5StarChance = 0.6
     characterBanner4StarChance = 5.1
+    characterBanner4StarChanceWithSoftPity = 45
 
     # Weapon banner
     weaponBanner5StarChance = 0.7
     weaponBanner4StarChance = 6
+    weaponBanner4StarChanceWithSoftPity8thRoll = 55
+    weaponBanner4StarChanceWithSoftPity9thRoll = 95
 
     # Standard banner
     standardBanner5StarChance = 0.6
     standardBanner4StarChance = 5.1
+    standardBanner4StarChanceWithSoftPity = 45
 
     def __init__(self, commands):
         super().__init__(commands)
@@ -236,6 +245,8 @@ class GenshinCommand(Command):
                     currentPityCounter = retrievedData[0]
                     wishesSinceLast4Star = retrievedData[1]
 
+                    log(f"Banner: {secondArg} | Pity: {currentPityCounter} | 4 Star nth Wish: {wishesSinceLast4Star + 1}")
+
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
 
                     currentFiveStarChance = self.characterBanner5StarChance
@@ -244,8 +255,25 @@ class GenshinCommand(Command):
                         # For each wish above the soft pity counter, give the user an extra 5-7% chance of getting a 5 star.
                         for i in range(currentPityCounter - self.characterBanner5StarSoftPityStart):
                             currentFiveStarChance += random.uniform(5, 7)
+                        
+                    # Check if the user has gotten a 5 star.
+                    userGotA5Star = randomNumber < currentFiveStarChance or currentPityCounter >= self.characterBanner5StarHardPity - 1
 
-                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.characterBanner5StarHardPity - 1:
+                    userGotA4Star = None
+                    # If the user hasn't gotten a 5 star, check if they got a 4 star.
+                    if not userGotA5Star:
+                        currentFourStarChance = self.characterBanner4StarChance
+
+                        # Soft pity check
+                        if wishesSinceLast4Star + 1 == self.characterBanner4StarSoftPityStart:
+                            currentFourStarChance = self.characterBanner4StarChanceWithSoftPity
+                        # Hard pity check
+                        elif wishesSinceLast4Star + 1 >= self.characterBanner4StarHardPity:
+                            currentFourStarChance = 100
+                        
+                        userGotA4Star = randomNumber < currentFourStarChance
+
+                    if userGotA5Star:
                         # We got a 5 star!
 
                         # Get data regarding to 5 star characters for the user.
@@ -321,7 +349,7 @@ class GenshinCommand(Command):
                             self.database.commit()
 
                             bot.send_message(channel, userString)
-                    elif (randomNumber > self.characterBanner5StarChance and randomNumber < self.characterBanner5StarChance + self.characterBanner4StarChance) or wishesSinceLast4Star >= 9:
+                    elif userGotA4Star:
                         # We got a 4 star!
 
                         # Increment the pity counter.
@@ -454,6 +482,8 @@ class GenshinCommand(Command):
                     currentPityCounter = retrievedData[0]
                     wishesSinceLast4Star = retrievedData[1]
 
+                    log(f"Banner: {secondArg} | Pity: {currentPityCounter} | 4 Star nth Wish: {wishesSinceLast4Star + 1}")
+
                     currentFiveStarChance = self.standardBanner5StarChance
 
                     if currentPityCounter > self.standardBannerSoftPityStart:
@@ -463,7 +493,24 @@ class GenshinCommand(Command):
 
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
 
-                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.standardBannerHardPity - 1:
+                    # Check if the user has gotten a 5 star.
+                    userGotA5Star = randomNumber < currentFiveStarChance or currentPityCounter >= self.standardBannerHardPity - 1
+
+                    userGotA4Star = None
+                    # If the user hasn't gotten a 5 star, check if they got a 4 star.
+                    if not userGotA5Star:
+                        currentFourStarChance = self.standardBanner4StarChance
+
+                        # Soft pity check
+                        if wishesSinceLast4Star + 1 == self.standardBanner4StarSoftPityStart:
+                            currentFourStarChance = self.standardBanner4StarChanceWithSoftPity
+                        # Hard pity check
+                        elif wishesSinceLast4Star + 1 >= self.standardBanner4StarHardPity:
+                            currentFourStarChance = 100
+                        
+                        userGotA4Star = randomNumber < currentFourStarChance
+
+                    if userGotA5Star:
                         # We got a 5 star!
                         isCharacter = True if random.choice([0, 1]) == 0 else False
                         if isCharacter:
@@ -532,7 +579,7 @@ class GenshinCommand(Command):
 
                             bot.send_message(channel, userString)
                
-                    elif (randomNumber > self.standardBanner5StarChance and randomNumber < self.standardBanner4StarChance + self.standardBanner5StarChance) or wishesSinceLast4Star >= 9:
+                    elif userGotA4Star:
                         # We got a 4 star.
 
                         # Increment the pity counter.
@@ -623,6 +670,8 @@ class GenshinCommand(Command):
                     hasGuarantee4Star = retrievedData[2]
                     wishesSinceLast4Star = retrievedData[3]
 
+                    log(f"Banner: {secondArg} | Pity: {currentPityCounter} | 4 Star nth Wish: {wishesSinceLast4Star + 1}")
+
                     currentFiveStarChance = self.weaponBanner5StarChance
 
                     if currentPityCounter > self.weaponBanner5StarSoftPityStart:
@@ -632,7 +681,26 @@ class GenshinCommand(Command):
 
                     randomNumber = random.uniform(0, 100) # Roll a random float between 0 and 100.
 
-                    if randomNumber < currentFiveStarChance or currentPityCounter >= self.weaponBanner5StarHardPity - 1:
+                    # Check if the user has gotten a 5 star.
+                    userGotA5Star = randomNumber < currentFiveStarChance or currentPityCounter >= self.weaponBanner5StarHardPity - 1
+
+                    userGotA4Star = None
+                    # If the user hasn't gotten a 5 star, check if they got a 4 star.
+                    if not userGotA5Star:
+                        currentFourStarChance = self.weaponBanner4StarChance
+
+                        # Soft pity check
+                        if wishesSinceLast4Star + 1 == self.weaponBanner4StarSoftPityStart:
+                            currentFourStarChance = self.weaponBanner4StarChanceWithSoftPity8thRoll
+                        elif wishesSinceLast4Star + 1 == self.weaponBanner4StarSoftPityChanceIncrease:
+                            currentFourStarChance = self.weaponBanner4StarChanceWithSoftPity9thRoll
+                        # Hard pity check
+                        elif wishesSinceLast4Star + 1 >= self.weaponBanner4StarHardPity:
+                            currentFourStarChance = 100
+                        
+                        userGotA4Star = randomNumber < currentFourStarChance
+
+                    if userGotA5Star:
                         # We got a 5 star!
 
                         # Get data related to the owned 5 star weapons
@@ -699,7 +767,7 @@ class GenshinCommand(Command):
                             self.database.commit()
 
                             bot.send_message(channel, userString)
-                    elif (randomNumber > self.weaponBanner5StarChance and randomNumber < self.weaponBanner5StarChance + self.weaponBanner5StarChance) or wishesSinceLast4Star >= 9:
+                    elif userGotA4Star:
                         # We got a 4 star.
 
                         # Increment the pity counter.
