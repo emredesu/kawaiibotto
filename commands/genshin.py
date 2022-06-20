@@ -1904,7 +1904,7 @@ class GenshinCommand(Command):
             userTradingWith = userData[1]
             userTradeStartTime = userData[2]
 
-            self.cursor.execute("SELECT inTrade, tradingWith, tradeStartTime FROM tradeStats WHERE userId=%s", (targetUID,))
+            self.cursor.execute("SELECT inTrade, tradingWith, tradeStartTime FROM tradestats WHERE userId=%s", (targetUID,))
             targetData = self.cursor.fetchone()
             targetInTrade = targetData[0]
             targetTradingWith = targetData[1]
