@@ -11,8 +11,8 @@ import re
 
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
-    COOLDOWN = 0
-    DESCRIPTION = f"A fully fledged Genshin wish simulator wish progress tracking, a primogem system and more! Help docs in progress! paimonAYAYA"
+    COOLDOWN = 2
+    DESCRIPTION = f"A fully fledged Genshin wish simulator wish progress tracking, a primogem system and more! For all the commands, visit: https://emredesu.github.io/kawaiibotto/ paimonAYAYA"
 
     successfulInit = True
 
@@ -196,7 +196,7 @@ class GenshinCommand(Command):
         try:
             firstArg = args[1]
         except IndexError:
-            bot.send_message(channel, f"{user}, {self.DESCRIPTION.removeprefix('A fully fledged Genshin wish simulator with progress tracking!')}")
+            bot.send_message(channel, f"{user}, {self.DESCRIPTION}")
             return
 
         if firstArg not in validFirstArgs:
@@ -2092,7 +2092,7 @@ class GenshinCommand(Command):
                     if offererItemQuality is not None:
                         if isCharacter:
                             existingConstellation = int(offererItemQuality[-1])
-                            newConstellation = existingConstellation + int(itemQuality[-1])
+                            newConstellation = existingConstellation + int(itemQuality[-1]) + 1 # Add +1 as a character can be C0 as well.
 
                             # Prevent the constellation data from going over 6.
                             if newConstellation > 6:
