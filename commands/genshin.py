@@ -1590,7 +1590,7 @@ class GenshinCommand(Command):
             # Update duelstats entries for both users.
             self.cursor.execute("UPDATE duelstats SET inDuel=TRUE, duelingWith=%s, duelAmount=%s, duelStartTime=NOW(), isInitiator=TRUE WHERE userId=%s", (targetUser, targetAmount, userUID))
             self.database.commit()
-            self.cursor.execute("UPDATE duelstats SET inDuel=TRUE, duelingWith=%s, duelAmount=%s, duelStartTime=NOW() WHERE userId=%s", (user, targetAmount, targetUID))
+            self.cursor.execute("UPDATE duelstats SET inDuel=TRUE, duelingWith=%s, duelAmount=%s, duelStartTime=NOW(), isInitiator=FALSE WHERE userId=%s", (user, targetAmount, targetUID))
             self.database.commit()
 
             # Announce the duel in the chat.
