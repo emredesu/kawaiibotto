@@ -1413,11 +1413,20 @@ class GenshinCommand(Command):
             owned4StarWeapons = json.loads(results[6])
             userPrimogems = results[7]
 
+            self.cursor.execute("SELECT tradesDone FROM tradestats WHERE userId=%s", (uid,))
+            tradesDone = self.cursor.fetchone()[0]
+
+            self.cursor.execute("SELECT duelsWon, duelsLost FROM duelstats WHERE userId=%s", (uid,))
+            duelData = self.cursor.fetchone()
+            duelsWon = duelData[0]
+            duelsLost = duelData[1]
+
             addressingMethod = "You" if targetUser == user else "They"
 
             bot.send_message(channel, f"{user}, {addressingMethod} currently have {userPrimogems} primogems and have done {wishesDone} wishes so far. {addressingMethod} won {fiftyFiftiesWon} 50-50s and lost {fiftyFiftiesLost}. \
             {addressingMethod} own {len(owned5StarCharacters)} 5 star characters, {len(owned5StarWeapons)} 5 star weapons, {len(owned4StarCharacters)} 4 star characters \
-            and {len(owned4StarWeapons)} 4 star weapons. {self.proudEmote}")
+            and {len(owned4StarWeapons)} 4 star weapons. {addressingMethod} have done {tradesDone} successful trades. {addressingMethod} won {duelsWon} duels and \
+            lost {duelsLost} duels. {self.proudEmote}")
         elif firstArg == "guarantee":
             targetUser = user
             try:
@@ -2114,8 +2123,8 @@ class GenshinCommand(Command):
                         
                     self.database.commit()
 
-                    # Trade is complete, so these users are not in a trade anymore - update it so in the database.
-                    self.cursor.execute("UPDATE tradestats SET inTrade=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
+                    # Trade is complete, so these users are not in a trade anymore - update it so in the database. Also add 1 to their tradesDone counter.
+                    self.cursor.execute("UPDATE tradestats SET inTrade=FALSE, tradesDone=tradesDone+1 WHERE userID IN (%s, %s)", (userUID, targetUID))
                     self.database.commit()
 
                     starInt = 5 if itemStarValue == "5star" else 4
