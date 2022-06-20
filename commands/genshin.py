@@ -276,7 +276,7 @@ class GenshinCommand(Command):
                     return
             except IndexError:
                 pass
-            except ValueError:
+            except (ValueError, SyntaxError):
                 bot.send_message(channel, f"{user}, \"{args[3]}\" is not an integer! {self.tantrumEmote} Example usage: _genshin wish {random.choice(validSecondArgs)} {random.randint(1, 10)}")
                 return
 
