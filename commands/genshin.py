@@ -294,7 +294,7 @@ class GenshinCommand(Command):
 
             primogemCost = self.wishCost * wishCount
 
-            if ownedPrimogems > primogemCost:
+            if ownedPrimogems >= primogemCost:
                 # Deduct primogems.
                 self.cursor.execute("UPDATE wishstats SET primogems=primogems-%s WHERE userId=%s", (primogemCost, uid,))
                 self.database.commit()
@@ -1264,7 +1264,9 @@ class GenshinCommand(Command):
             userRankLower = data[2]
             userCount = data[3]
 
-            bot.send_message(channel, f"{user}, {targetUser} has {userPrimogems} and is placed {userRankUpper}/{userCount}. {self.nomEmote}")
+            addressingMethod = "you" if targetUser == user else "they"
+
+            bot.send_message(channel, f"{user}, {targetUser} have {userPrimogems} primogems and is placed {userRankUpper}/{userCount}. {self.nomEmote}")
 
         elif firstArg == "top":
             validSecondArgs = ["wishes", "fiftyfiftieswon", "fiftyfiftieslost", "primogems", "primos", "points"]
@@ -1641,7 +1643,7 @@ class GenshinCommand(Command):
                         return
 
                     # Get opponent's primogem data.
-                    self.cursor.execute("SELECT primogems FROM wishStats WHERE userId=%s", (targetUID,))
+                    self.cursor.execute("SELECT primogems FROM wishstats WHERE userId=%s", (targetUID,))
                     opponentPrimogems = self.cursor.fetchone()[0]
 
                     # See if both sides still have enough primogems. If not, cancel the duel.
@@ -2025,7 +2027,7 @@ class GenshinCommand(Command):
                         return
 
                     # Get trade offerer's primogem data.
-                    self.cursor.execute("SELECT primogems FROM wishStats WHERE userId=%s", (targetUID,))
+                    self.cursor.execute("SELECT primogems FROM wishstats WHERE userId=%s", (targetUID,))
                     offererPrimogems = self.cursor.fetchone()[0]
 
                     # See if the offerer still has enough primogems. If not, cancel the trade.
