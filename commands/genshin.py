@@ -1266,7 +1266,7 @@ class GenshinCommand(Command):
 
             addressingMethod = "you" if targetUser == user else "they"
 
-            bot.send_message(channel, f"{user}, {targetUser} have {userPrimogems} primogems and is placed {userRankUpper}/{userCount}. {self.nomEmote}")
+            bot.send_message(channel, f"{user}, {addressingMethod} have {userPrimogems} primogems and is placed {userRankUpper}/{userCount}. {self.nomEmote}")
 
         elif firstArg == "top":
             validSecondArgs = ["wishes", "fiftyfiftieswon", "fiftyfiftieslost", "primogems", "primos", "points"]
@@ -1485,7 +1485,7 @@ class GenshinCommand(Command):
 
             self.CreateUserTableEntry(user)
 
-            bot.send_message(channel, f"{user}, you have been registered successfully! paim{self.proudEmote}onHeh You got {self.primogemAmountOnRegistration} primogems as a welcome bonus! {self.primogemEmote}")
+            bot.send_message(channel, f"{user}, you have been registered successfully! {self.proudEmote} You got {self.primogemAmountOnRegistration} primogems as a welcome bonus! {self.primogemEmote}")
         elif firstArg == "overview":
             self.cursor.execute("select SUM(wishesDone), SUM(fiftyFiftiesWon), SUM(fiftyFiftiesLost), COUNT(*) from wishstats;")
             result = self.cursor.fetchone()
