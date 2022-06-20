@@ -12,7 +12,7 @@ import re
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
     COOLDOWN = 2
-    DESCRIPTION = f"A fully fledged Genshin wish simulator wish progress tracking, a primogem system and more! For all the commands, visit: https://emredesu.github.io/kawaiibotto/ paimonAYAYA"
+    DESCRIPTION = f"A fully fledged Genshin wish simulator with wish progress tracking, a primogem system and more! For all the commands, visit: https://emredesu.github.io/kawaiibotto/ paimonAYAYA"
 
     successfulInit = True
 
@@ -1670,7 +1670,7 @@ class GenshinCommand(Command):
                     loserUID = userUID if winner != user else targetUID
 
                     # Update primogems.
-                    self.cursor.execute("UPDATE wishstats SET primogems = (CASE WHEN userId=%s THEN primogems+%s WHEN userId=%s THEN primogems-%s END)", (winnerUID, duelAmount, loserUID, duelAmount))
+                    self.cursor.execute("UPDATE wishstats SET primogems = (CASE WHEN userId=%s THEN primogems+%s WHEN userId=%s THEN primogems-%s END) WHERE userID IN (%s, %s)", (winnerUID, duelAmount, loserUID, duelAmount, userUID, targetUID))
                     self.database.commit()
 
                     # Update duels won/lost stats.
@@ -1815,7 +1815,7 @@ class GenshinCommand(Command):
                 return
             
             # Update primogems.
-            self.cursor.execute("UPDATE wishstats SET primogems = (CASE WHEN userId=%s THEN primogems+%s WHEN userId=%s THEN primogems-%s END)", (targetUID, targetAmount, userUID, targetAmount))
+            self.cursor.execute("UPDATE wishstats SET primogems = (CASE WHEN userId=%s THEN primogems+%s WHEN userId=%s THEN primogems-%s END) WHERE userId IN (%s, %s)", (targetUID, targetAmount, userUID, targetAmount, userUID, targetUID))
             self.database.commit()
 
             # Announce the successful exchange.
@@ -2131,7 +2131,7 @@ class GenshinCommand(Command):
 
                     starInt = 5 if itemStarValue == "5star" else 4
 
-                    bot.send_message(channel, f"{userTradingWith}, bought {itemName}({starInt}⭐)[{offererItemsData[itemName]}] for {primogemOffer} primogems! {self.proudEmote}")
+                    bot.send_message(channel, f"{userTradingWith} bought {itemName}({starInt}⭐)[{offererItemsData[itemName]}] from {user} for {primogemOffer} primogems! {self.proudEmote}")
 
         elif firstArg == "tradedeny":
             userUID = None
