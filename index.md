@@ -3,6 +3,10 @@
 ### _genshin claim | _genshin redeem
 - Claim 160 primogems every 30 minutes.
 
+### _genshin wish (banner) (count)
+- Wish on the banner (count) times. 
+- Each wish costs 160 primogems.
+
 ### _genshin characters/weapons 4star/5star
 - View which characters or weapons you own within the supplied quality.
 
