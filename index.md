@@ -1,37 +1,58 @@
-## Welcome to GitHub Pages
+## Subcommands for kawaiibotto's "_genshin" command
 
-You can use the [editor on GitHub](https://github.com/emredesu/kawaiibotto/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+### _genshin claim | _genshin redeem
+- Claim 160 primogems every 30 minutes.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### _genshin characters/weapons 4star/5star
+- View which characters or weapons you own within the supplied quality.
 
-### Markdown
+### _genshin top (wishes, fiftyfiftieswon, fiftyfiftieslost, primogems/primos/points)
+- See the top 10 users for the given data type.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### _genshin register
+- Registers you in the database. Only data collected are your username and your Twitch user ID.
 
-```markdown
-Syntax highlighted code block
+### _genshin pity/pitycheck/pitycounter
+- View your pity counters for all banners.
 
-# Header 1
-## Header 2
-### Header 3
+### _genshin stats (optional username)
+- View your own or someone else's stats.
 
-- Bulleted
-- List
+### _genshin guarantee
+- View your guarantee standings for all the banners.
 
-1. Numbered
-2. List
+### _genshin help
+- Directs you to this page!
 
-**Bold** and _Italic_ and `Code` text
+### _genshin overview
+- See various collective data among all users.
 
-[Link](url) and ![Image](src)
-```
+### _genshin duel (target) (amount) | _genshin duel (amount) (target)
+- Invite someone else to a duel for primogems!
+- If one of the users doesn't have the supplied amount, the duel won't happen.
+- The places of the target user and the amount can be swapped.
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+### _genshin duelaccept
+- Accept a duel.
+- If you do not have the same amount of primogems you had at the start of the duel, the duel will be cancelled.
 
-### Jekyll Themes
+### _genshin dueldeny
+- Deny a duel.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/emredesu/kawaiibotto/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### _genshin give/giveprimos/giveprimogems
+- Give your primogems to someone else.
 
-### Support or Contact
+### _genshin trade (user) (itemType) "Name of the Item" (offeredAmount)
+- Offer primogems for someone's owned item.
+- The target user must own the specified item, and you must own the required amount of primogems.
+- If you already own the specified item, buying the same item will increase the constellation/refinement of your existing item (not above C6/R5 though).
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### _genshin tradeaccept
+- Accept a trade offer. 
+- If the offerer doesn't have the same amount of primogems they had at the beginning of the trade, the trade will be cancelled.
+
+### _genshin tradedeny
+- Deny a trade offer.
+
+### _genshin primogems/primos/points
+- View how many primogems you own and see your ranking compared to other users.
