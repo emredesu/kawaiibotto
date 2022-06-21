@@ -7,6 +7,19 @@
 - Wish on the banner (count) times. 
 - Each wish costs 160 primogems.
 
+### Current banners:
+<details>
+  <summary>Click to expand!</summary>
+
+  <p>character1</p>
+<img src="https://pbs.twimg.com/media/FVWj2RrUAAAIuem?format=jpg&name=medium" style="width:50%">
+  <p>weapon1</p>
+<img src="https://pbs.twimg.com/media/FVWmCFsVsAAcU3c?format=jpg&name=medium" style="width:50%">
+  <p>standard</p>
+<img src="https://static.wikia.nocookie.net/gensin-impact/images/b/bd/Wanderlust_Invocation_2020-11-11.png/revision/latest?cb=20201111132059" style="width:50%">
+</details>
+
+
 ### _genshin characters/weapons 4star/5star
 - View which characters or weapons you own within the supplied quality.
 
