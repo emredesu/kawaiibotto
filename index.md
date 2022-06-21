@@ -16,7 +16,7 @@
   <p>weapon1</p>
 <img src="https://pbs.twimg.com/media/FVWmCFsVsAAcU3c?format=jpg&name=medium" style="width:50%">
   <p>standard</p>
-<img src="https://static.wikia.nocookie.net/gensin-impact/images/b/bd/Wanderlust_Invocation_2020-11-11.png/revision/latest?cb=20201111132059" style="width:50%">
+<img src="https://i.imgur.com/GyJOxpo.png" style="width:50%">
 </details>
 
 
