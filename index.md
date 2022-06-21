@@ -9,7 +9,7 @@
 
 ### Current banners:
 <details>
-  <summary>Click to expand!</summary>
+  <summary><b>>Click to expand!</b></summary>
 
   <p>character1</p>
 <img src="https://pbs.twimg.com/media/FVWj2RrUAAAIuem?format=jpg&name=medium" style="width:50%">
