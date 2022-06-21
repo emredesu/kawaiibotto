@@ -1921,17 +1921,12 @@ class GenshinCommand(Command):
                     bot.send_message(channel, f"{user}, {targetUser} is in an active trade with {targetTradingWith}! {self.shockedEmote}")
                     return
         
-            # See if the user and the target has enough primogems.
+            # See if the user has enough primogems.
             self.cursor.execute("SELECT primogems FROM wishstats WHERE userId=%s", (userUID,))
             userPrimogems = self.cursor.fetchone()[0]
-            self.cursor.execute("SELECT primogems FROM wishstats WHERE userId=%s", (targetUID,))
-            targetPrimogems = self.cursor.fetchone()[0]
 
             if userPrimogems < primogemOffer:
                 bot.send_message(channel, f"{user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
-                return
-            elif targetPrimogems < primogemOffer:
-                bot.send_message(channel, f"{user}, they only have {targetPrimogems} primogems! {self.shockedEmote}")
                 return
 
             targetOwnedItemData = None
