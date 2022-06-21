@@ -237,7 +237,7 @@ class GenshinCommand(Command):
                 self.database.commit()
 
                 bot.send_message(channel, f"{user}, you have successfully claimed {claimAmount} primogems! \
-                You now have {ownedPrimogems + self.primogemAmountOnRedeem} primogems! {self.primogemEmote}")
+                You now have {ownedPrimogems + claimAmount} primogems! {self.primogemEmote}")
             else:
                 timeUntilClaim = str(datetime.timedelta(seconds=self.requiredSecondsBetweenRedeems-timePassed.seconds))
                 bot.send_message(channel, f"{user}, you can't claim primogems yet - your next claim will be available in: {timeUntilClaim} {self.sadEmote}")
