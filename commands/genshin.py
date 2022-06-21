@@ -22,6 +22,7 @@ class GenshinCommand(Command):
 
     primogemAmountOnRedeem = 160
     primogemAmountOnRegistration = 1600
+    primogemDeductionPerLateInterval = 20
 
     wishCost = 160
 
@@ -160,21 +161,6 @@ class GenshinCommand(Command):
                                                                                                                                      "noqual", "nobodyxd")) # dummy values
         self.database.commit()
 
-    # Returns True if the user can wish now, otherwise returns the remaining time until the next wish.
-    def GetCanUserClaim(self, username):
-        uid = self.GetTwitchUserID(username)
-
-        self.cursor.execute("SELECT lastRedeemTime FROM wishstats where userId=%s", (uid,))
-
-        result = self.cursor.fetchone()
-        timeNow = datetime.datetime.now()
-
-        timePassed = timeNow - result[0]
-        if timePassed.seconds > self.requiredSecondsBetweenRedeems:
-            return True
-        else:
-            return str(datetime.timedelta(seconds=self.requiredSecondsBetweenRedeems-timePassed.seconds))
-
     # Returns the associated emoji(s) if it exists in the JSON, otherwise returns an empty string.
     def GetEmojiAssociation(self, item) -> str:
         try:
@@ -215,32 +201,48 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                 return
 
-            canUserClaim = None
-            try:
-                canUserClaim = self.GetCanUserClaim(user)
-            except:
-                bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error.")
-                return
-
             uid = None
             try:
                 uid = self.GetTwitchUserID(user)
             except:
                 bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error.")
                 return
-            
-            if type(canUserClaim) is bool and canUserClaim:
-                self.cursor.execute("SELECT primogems FROM wishstats WHERE userId=%s", (uid,))
-                ownedPrimogems = self.cursor.fetchone()[0]
 
-                self.cursor.execute("UPDATE wishstats SET primogems=primogems+%s, lastRedeemTime=NOW() WHERE userId=%s", (self.primogemAmountOnRedeem, uid))
+            self.cursor.execute("SELECT primogems, lastRedeemTime FROM wishstats where userId=%s", (uid,))
+
+            result = self.cursor.fetchone()
+            ownedPrimogems = result[0]
+            lastRedeemTime = result[1]
+
+            timeNow = datetime.datetime.now()
+
+            timePassed = timeNow - lastRedeemTime
+            if timePassed.seconds > self.requiredSecondsBetweenRedeems:
+                intervalsPassed = timePassed.seconds // self.requiredSecondsBetweenRedeems
+                claimAmount = self.primogemAmountOnRedeem
+
+                for i in range(0, intervalsPassed):
+                    if i == 0:
+                        continue
+
+                    amountToBeAdded = self.primogemAmountOnRedeem - (self.primogemDeductionPerLateInterval * i)
+                    
+                    # Prevent the claim amount going into negatives.
+                    if amountToBeAdded < 0:
+                        amountToBeAdded = 0
+                    
+                    claimAmount += amountToBeAdded
+                
+                self.cursor.execute("UPDATE wishstats SET primogems=primogems+%s, lastRedeemTime=NOW() WHERE userId=%s", (claimAmount, uid))
                 self.database.commit()
 
-                bot.send_message(channel, f"{user}, you have successfully claimed {self.primogemAmountOnRedeem} primogems! \
+                bot.send_message(channel, f"{user}, you have successfully claimed {claimAmount} primogems! \
                 You now have {ownedPrimogems + self.primogemAmountOnRedeem} primogems! {self.primogemEmote}")
             else:
-                bot.send_message(channel, f"{user}, you can't claim primogems yet - your next claim will be available in: {canUserClaim} {self.sadEmote}")
+                timeUntilClaim = str(datetime.timedelta(seconds=self.requiredSecondsBetweenRedeems-timePassed.seconds))
+                bot.send_message(channel, f"{user}, you can't claim primogems yet - your next claim will be available in: {timeUntilClaim} {self.sadEmote}")
                 return
+
         elif firstArg == "wish":
             validSecondArgs = self.validBannerNames
             
@@ -2126,7 +2128,13 @@ class GenshinCommand(Command):
 
                     starInt = 5 if itemStarValue == "5star" else 4
 
-                    bot.send_message(channel, f"{userTradingWith} bought {itemName}({starInt}⭐)[{offererItemsData[itemName]}] from {user} for {primogemOffer} primogems! {self.proudEmote}")
+                    targetStr = f"{userTradingWith} bought {itemName}({starInt}⭐)[{itemQuality}] from {user} for {primogemOffer} primogems!"
+                    if offererItemsData[itemName] not in ["C0", "R1"]: # If the item got a constellation/refinement upgrade, announce that too. 
+                        targetStr += f" Their {itemName} is now {offererItemsData[itemName]}!"
+                    
+                    targetStr += f" {self.proudEmote}"
+
+                    bot.send_message(channel, targetStr)
 
         elif firstArg == "tradedeny":
             userUID = None
