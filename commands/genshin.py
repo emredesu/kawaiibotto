@@ -221,7 +221,9 @@ class GenshinCommand(Command):
                 intervalsPassed = timePassed.seconds // self.requiredSecondsBetweenRedeems
                 claimAmount = self.primogemAmountOnRedeem
 
-                for i in range(0, intervalsPassed):
+                loopCount = intervalsPassed + 1
+
+                for i in range(0, loopCount):
                     if i == 0:
                         continue
 
@@ -230,8 +232,21 @@ class GenshinCommand(Command):
                     # Prevent the claim amount going into negatives.
                     if amountToBeAdded < 0:
                         amountToBeAdded = 0
-                    
-                    claimAmount += amountToBeAdded
+                
+                    # If we're on the current interval, the addition is done according to how many minutes have passed rather than the amount of intervals passed.
+                    if i + 1 == loopCount and amountToBeAdded != 0:
+                        minutesPassed = (timePassed.seconds - (intervalsPassed * self.requiredSecondsBetweenRedeems)) // 60
+                        print(f"minutes passed: {minutesPassed}")
+                        earningsPerMinuteThisInterval = amountToBeAdded / (self.requiredSecondsBetweenRedeems / 60)
+                        amountToAddForThisInterval = int(minutesPassed * earningsPerMinuteThisInterval)
+                        if amountToAddForThisInterval > amountToBeAdded:
+                            amountToAddForThisInterval = amountToBeAdded
+                        
+                        claimAmount += amountToAddForThisInterval
+                    else:
+                        claimAmount += amountToBeAdded
+
+                print(f"claim amount: {claimAmount} i: {i}")
                 
                 self.cursor.execute("UPDATE wishstats SET primogems=primogems+%s, lastRedeemTime=NOW() WHERE userId=%s", (claimAmount, uid))
                 self.database.commit()
@@ -901,7 +916,7 @@ class GenshinCommand(Command):
                                             targetString += f"[{newRefinement}⬆] "
                                     
                                 # Update the database with the new weapon.
-                                self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=false, weaponBannerPityCounter=0 WHERE userId=%s", (json.dumps(weaponData), uid,))
+                                self.cursor.execute("UPDATE wishstats SET owned5StarWeapons=%s, has5StarGuaranteeOnWeaponBanner=true, weaponBannerPityCounter=0 WHERE userId=%s", (json.dumps(weaponData), uid,))
                                 self.database.commit()
 
                         elif userGotA4Star:
