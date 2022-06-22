@@ -236,7 +236,6 @@ class GenshinCommand(Command):
                     # If we're on the current interval, the addition is done according to how many minutes have passed rather than the amount of intervals passed.
                     if i + 1 == loopCount and amountToBeAdded != 0:
                         minutesPassed = (timePassed.seconds - (intervalsPassed * self.requiredSecondsBetweenRedeems)) // 60
-                        print(f"minutes passed: {minutesPassed}")
                         earningsPerMinuteThisInterval = amountToBeAdded / (self.requiredSecondsBetweenRedeems / 60)
                         amountToAddForThisInterval = int(minutesPassed * earningsPerMinuteThisInterval)
                         if amountToAddForThisInterval > amountToBeAdded:
@@ -245,8 +244,6 @@ class GenshinCommand(Command):
                         claimAmount += amountToAddForThisInterval
                     else:
                         claimAmount += amountToBeAdded
-
-                print(f"claim amount: {claimAmount} i: {i}")
                 
                 self.cursor.execute("UPDATE wishstats SET primogems=primogems+%s, lastRedeemTime=NOW() WHERE userId=%s", (claimAmount, uid))
                 self.database.commit()
