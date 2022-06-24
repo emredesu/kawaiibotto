@@ -8,10 +8,11 @@ import traceback
 import datetime
 import json
 import re
+from threading import Lock
 
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
-    COOLDOWN = 2
+    COOLDOWN = 0
     DESCRIPTION = f"A fully fledged Genshin wish simulator with wish progress tracking, a primogem system and more! For all the commands, visit: https://emredesu.github.io/kawaiibotto/ paimonAYAYA"
 
     successfulInit = True
@@ -95,6 +96,8 @@ class GenshinCommand(Command):
     thumbsUpEmote = "paimonThumbsUp"
     stabEmote = "paimonStab"
 
+    mutex = Lock()
+
     def __init__(self, commands):
         super().__init__(commands)
         self.UpdateFromGist()
@@ -172,6 +175,8 @@ class GenshinCommand(Command):
         if not self.successfulInit:
             bot.send_message(channel, f"This command has not been initialized properly... sorry! {self.emergencyFoodEmote}")
             return
+
+        self.mutex.acquire()
 
         args = message.split()
 
@@ -2209,3 +2214,5 @@ class GenshinCommand(Command):
             
             self.UpdateFromGist()
             bot.send_message(channel, f"Successfully updated the wish schedule. Current banner names are: {', '.join(self.validBannerNames)}")
+
+        self.mutex.release()
