@@ -32,9 +32,11 @@ class GenshinCommand(Command):
 
     bannerInfoGistLink = "https://gist.githubusercontent.com/emredesu/2766beb7e57c55b5d0cee9294f96cfa1/raw/kawaiibottoGenshinWishBanners.json"
     emojiAssociationGistLink = "https://gist.githubusercontent.com/emredesu/e13a6274d9ba9825562b279d00bb1c0b/raw/kawaiibottoGenshinEmojiAssociations.json"
+    bannerImagesGistLink = "https://gist.githubusercontent.com/emredesu/9afb788b25c155ce2c6c53170a02d955/raw/kawaiibottoBannerImageLinks.json"
 
     validBannerNames = []
     bannerData = None
+    bannerImageLinks = None
 
     emojiAssociations = None
 
@@ -114,6 +116,7 @@ class GenshinCommand(Command):
         try:
             jsonData = requests.get(self.bannerInfoGistLink).json()
             self.bannerData = jsonData
+            self.bannerImageLinks = requests.get(self.bannerImagesGistLink).json()
 
             self.validBannerNames.clear()
 
@@ -180,7 +183,8 @@ class GenshinCommand(Command):
 
         with self.mutex:
             validFirstArgs = ["claim", "redeem", "wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "guarantee", "help", 
-            "overview", "duel", "duelaccept", "dueldeny", "give", "giveprimos", "giveprimogems", "trade", "tradeaccept", "tradedeny", "primogems", "primos", "points", "update"]
+            "overview", "duel", "duelaccept", "dueldeny", "give", "giveprimos", "giveprimogems", "trade", "tradeaccept", "tradedeny", "primogems", "primos", "points",
+            "banner", "banners", "update"]
 
             firstArg = None
             try:
@@ -1597,7 +1601,7 @@ class GenshinCommand(Command):
                         bot.send_message(channel, f"{user}, {targetUser} is currently dueling with {targetDuelingWith}! {self.sadEmote}")
                         return
                 elif userPrimogems < targetAmount:
-                    bot.send_message(channel, f"{user}, you only have {userPrimogems}! {self.shockedEmote}")
+                    bot.send_message(channel, f"{user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
                     return
                 elif targetPrimogems < targetAmount:
                     bot.send_message(channel, f"{user}, {targetUser} only has {targetPrimogems} primogems! {self.shockedEmote}")
@@ -2205,6 +2209,14 @@ class GenshinCommand(Command):
                 else:
                     bot.send_message(channel, f"{user}, you have no active trade offers to deny! {self.angryEmote}")
                     return
+
+            elif firstArg in ["banner", "banners"]:
+                message = ""
+
+                for key, value in self.bannerImageLinks.items():
+                    message += f"| {key}: {value} "
+                
+                bot.send_message(channel, f"{user}, Current banners are: {message}")
 
             elif firstArg == "update":
                 if user != "emredesu":
