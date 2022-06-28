@@ -6,6 +6,11 @@ TWITCH_API_HEADERS = {"Authorization": "Bearer {}".format(OAUTH_TOKEN), "Client-
 WOLFRAM_APP_ID = ""
 OCR_SPACE_APIKEY = ""
 
+# Genshin command specific values
+GENSHIN_MYSQL_DB_HOST = ""
+GENSHIN_MYSQL_DB_USERNAME = ""
+GENSHIN_MYSQL_DB_PASSWORD = ""
+
 # Command prefix
 COMMAND_PREFIX = "_"
 
@@ -20,3 +25,6 @@ channels = []
 # Debug channel will be the place where the bot reports once it's online.
 debug_channel = ""
 channels.append(debug_channel)
+
+# Authorized user that will have more control over some commands.
+AUTHORIZED_USER = ""
