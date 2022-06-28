@@ -52,7 +52,7 @@
 ### _genshin give/giveprimos/giveprimogems
 - Give your primogems to someone else.
 
-### _genshin trade (user) (itemType) <b>"Name of the Item"</b> (offeredAmount)
+### _genshin trade (user) (itemType) {%"Name of the Item"%} (offeredAmount)
 - Offer primogems for someone's owned item.
 - The target user must own the specified item, and you must own the required amount of primogems.
 - If you already own the specified item, buying the same item will increase the constellation/refinement of your existing item (not above C6/R5 though).
