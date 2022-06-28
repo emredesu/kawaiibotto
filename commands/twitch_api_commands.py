@@ -61,8 +61,6 @@ class EmotesCommand(Command):
 
 	def execute(self, bot, user, message, channel):
 		args = message.split()
-        
-        username = None
 
 		try:
 			username = args[1]
