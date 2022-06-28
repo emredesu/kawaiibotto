@@ -1,6 +1,6 @@
 from commands.command import Command
 from messagetypes import error, log
-from globals import TWITCH_API_HEADERS, USERNAME as botUsername
+from globals import TWITCH_API_HEADERS, USERNAME as botUsername, GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, AUTHORIZED_USER
 import random
 import requests
 import mysql.connector
@@ -105,7 +105,7 @@ class GenshinCommand(Command):
         self.UpdateFromGist()
 
         try:
-            self.database = mysql.connector.connect(host="localhost", user="root", password="makiisthebestgirl", database="genshinStats")
+            self.database = mysql.connector.connect(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="genshinStats")
             self.cursor = self.database.cursor()
         except Exception as e:
             error(f"Fatal error while connecting to the database: {e.__class__.__name__}")
@@ -2219,7 +2219,7 @@ class GenshinCommand(Command):
                 bot.send_message(channel, f"{user}, Current banners are: {message}")
 
             elif firstArg == "update":
-                if user != "emredesu":
+                if user != AUTHORIZED_USER:
                     bot.send_message(channel, "🤨")
                     return
                 
