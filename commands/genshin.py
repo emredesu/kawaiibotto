@@ -225,8 +225,8 @@ class GenshinCommand(Command):
                 timeNow = datetime.datetime.now()
 
                 timePassed = timeNow - lastRedeemTime
-                if timePassed.seconds > self.requiredSecondsBetweenRedeems:
-                    intervalsPassed = timePassed.seconds // self.requiredSecondsBetweenRedeems
+                if int(timePassed.total_seconds()) > self.requiredSecondsBetweenRedeems:
+                    intervalsPassed = int(timePassed.total_seconds()) // self.requiredSecondsBetweenRedeems
                     claimAmount = self.primogemAmountOnRedeem
 
                     loopCount = intervalsPassed + 1
@@ -243,7 +243,7 @@ class GenshinCommand(Command):
                     
                         # If we're on the current interval, the addition is done according to how many minutes have passed rather than the amount of intervals passed.
                         if i + 1 == loopCount and amountToBeAdded != 0:
-                            minutesPassed = (timePassed.seconds - (intervalsPassed * self.requiredSecondsBetweenRedeems)) // 60
+                            minutesPassed = (int(timePassed.total_seconds()) - (intervalsPassed * self.requiredSecondsBetweenRedeems)) // 60
                             earningsPerMinuteThisInterval = amountToBeAdded / (self.requiredSecondsBetweenRedeems / 60)
                             amountToAddForThisInterval = int(minutesPassed * earningsPerMinuteThisInterval)
                             if amountToAddForThisInterval > amountToBeAdded:
@@ -259,7 +259,7 @@ class GenshinCommand(Command):
                     bot.send_message(channel, f"{user}, you have successfully claimed {claimAmount} primogems! \
                     You now have {ownedPrimogems + claimAmount} primogems! {self.primogemEmote}")
                 else:
-                    timeUntilClaim = str(datetime.timedelta(seconds=self.requiredSecondsBetweenRedeems-timePassed.seconds))
+                    timeUntilClaim = str(datetime.timedelta(seconds=self.requiredSecondsBetweenRedeems-int(timePassed.total_seconds())))
                     bot.send_message(channel, f"{user}, you can't claim primogems yet - your next claim will be available in: {timeUntilClaim} {self.sadEmote}")
                     return
 
@@ -1593,11 +1593,11 @@ class GenshinCommand(Command):
 
                 # Do necessary checks before initiating the duel.
                 if userInDuel:
-                    if (timeNow - userDuelStartTime).seconds < self.duelTimeout:  # Since the functionality to timeout the duels would be too costly and unnecessary (and not because I'm lazy kappa), we just check the time differential.
+                    if int((timeNow - userDuelStartTime).total_seconds()) < self.duelTimeout:  # Since the functionality to timeout the duels would be too costly and unnecessary (and not because I'm lazy kappa), we just check the time differential.
                         bot.send_message(channel, f"{user}, you are already dueling with {userDuelingWith}! {self.angryEmote}")
                         return
                 elif targetInDuel:
-                    if (timeNow - targetDuelStartTime).seconds < self.duelTimeout:
+                    if int((timeNow - targetDuelStartTime).total_seconds()) < self.duelTimeout:
                         bot.send_message(channel, f"{user}, {targetUser} is currently dueling with {targetDuelingWith}! {self.sadEmote}")
                         return
                 elif userPrimogems < targetAmount:
@@ -1649,7 +1649,7 @@ class GenshinCommand(Command):
                 timeNow = datetime.datetime.now()
 
                 if inDuel:
-                    if (timeNow - duelStartTime).seconds < self.duelTimeout:
+                    if int((timeNow - duelStartTime).total_seconds()) < self.duelTimeout:
                         # The duel is valid, we can continue.
 
                         # The duel initiator cannot accept the duel they started.
@@ -1751,7 +1751,7 @@ class GenshinCommand(Command):
                     return
 
                 if inDuel:
-                    if (timeNow - duelStartTime).seconds < self.duelTimeout and not isInitiator:
+                    if int((timeNow - duelStartTime).total_seconds()) < self.duelTimeout and not isInitiator:
                         # Valid duel, move on with the denial.
                         self.cursor.execute("UPDATE duelstats SET inDuel=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
                         self.database.commit()
@@ -1935,11 +1935,11 @@ class GenshinCommand(Command):
                 timeNow = datetime.datetime.now()
 
                 if userInTrade:
-                    if (timeNow - userTradeStartTime).seconds < self.tradeTimeout:
+                    if int((timeNow - userTradeStartTime).total_seconds()) < self.tradeTimeout:
                         bot.send_message(channel, f"{user}, you are already in an active trade with {userTradingWith}! {self.angryEmote}")
                         return
                 elif targetInTrade:
-                    if (timeNow - targetTradeStartTime).seconds < self.tradeTimeout:
+                    if int((timeNow - targetTradeStartTime).total_seconds()) < self.tradeTimeout:
                         bot.send_message(channel, f"{user}, {targetUser} is in an active trade with {targetTradingWith}! {self.shockedEmote}")
                         return
             
@@ -2028,7 +2028,7 @@ class GenshinCommand(Command):
                 timeNow = datetime.datetime.now()
 
                 if userInTrade:
-                    if (timeNow - tradeStartTime).seconds < self.tradeTimeout:
+                    if int((timeNow - tradeStartTime).total_seconds()) < self.tradeTimeout:
                         # The trade is valid, we can continue.
 
                         # The trade initiator cannot accept the trade they started.
@@ -2193,7 +2193,7 @@ class GenshinCommand(Command):
                     return
 
                 if inTrade:
-                    if (timeNow - tradeStartTime).seconds < self.tradeTimeout:
+                    if int((timeNow - tradeStartTime).total_seconds()) < self.tradeTimeout:
                         if isBuying:
                             bot.send_message(channel, f"{user}, you can't deny the trade you started! You have to wait for {tradingWith} to respond to the trade or wait until the timeout! {self.angryEmote}")
                             return
