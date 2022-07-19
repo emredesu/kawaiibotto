@@ -549,7 +549,7 @@ class GenshinCommand(Command):
                                         acquiredCharacter = random.choice(self.bannerData[secondArg]["all4StarCharacters"])
 
                                         if not isMultiWish:
-                                            targetString += f" and got {acquiredCharacter}(4⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.shockedEmote}"
+                                            targetString += f"You lost the 4 star 50-50 and got {acquiredCharacter}(4⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.shockedEmote}"
                                         else:
                                             targetString += f"| {acquiredCharacter}(4⭐)"
 
