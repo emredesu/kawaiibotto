@@ -374,9 +374,9 @@ class GenshinCommand(Command):
                                     
                                     if not isMultiWish:
                                         targetString = f"{user}, you beat the 50-50" if not hasGuarantee else f"{user}, you used up your guarantee"
-                                        targetString += f" and got {acquiredCharacter}(5⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
+                                        targetString += f" and got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
                                     else:
-                                        targetString += f"| {acquiredCharacter}(5⭐)"
+                                        targetString += f"| {acquiredCharacter}(5🌟)"
 
                                     # Check if the user already has the character.
                                     # If they have the character at C6, we'll give them a claim worth of primogems.
@@ -416,9 +416,9 @@ class GenshinCommand(Command):
                                     acquiredCharacter = random.choice(self.bannerData[secondArg]["all5StarCharacters"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you lost your 50-50 and got {acquiredCharacter}(5⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.shockedEmote}"
+                                        targetString = f"{user}, you lost your 50-50 and got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.shockedEmote}"
                                     else:
-                                        targetString += f"| {acquiredCharacter}(5⭐)"
+                                        targetString += f"| {acquiredCharacter}(5🌟)"
 
                                     if acquiredCharacter not in characterData:
                                         characterData[acquiredCharacter] = "C0"
@@ -640,9 +640,9 @@ class GenshinCommand(Command):
                                     acquiredCharacter = random.choice(self.bannerData[secondArg]["all5StarCharacters"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you got {acquiredCharacter}(5⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
+                                        targetString = f"{user}, you got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
                                     else:
-                                        targetString += f"| {acquiredCharacter}(5⭐)"
+                                        targetString += f"| {acquiredCharacter}(5🌟)"
 
                                     if acquiredCharacter not in characterData:
                                             characterData[acquiredCharacter] = "C0"
@@ -678,9 +678,9 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["all5StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you got {acquiredWeapon}(5⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.neutralEmote}"
+                                        targetString = f"{user}, you got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}! {self.neutralEmote}"
                                     else:
-                                        targetString += f"| {acquiredWeapon}(5⭐)"
+                                        targetString += f"| {acquiredWeapon}(5🌟)"
 
                                     if acquiredWeapon not in weaponData:
                                             weaponData[acquiredWeapon] = "R1"
@@ -858,9 +858,9 @@ class GenshinCommand(Command):
 
                                     if not isMultiWish:
                                         targetString = f"{user}, you beat the odds of 75-25" if not hasGuarantee5Star else f"{user}, you used up your guarantee"
-                                        targetString += f" and got {acquiredWeapon}(5⭐){self.GetEmojiAssociation(acquiredWeapon)}!"
+                                        targetString += f" and got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}!"
                                     else:
-                                        targetString += f"| {acquiredWeapon}(5⭐)"
+                                        targetString += f"| {acquiredWeapon}(5🌟)"
 
                                     if acquiredWeapon not in weaponData:
                                         weaponData[acquiredWeapon] = "R1"
@@ -893,9 +893,9 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["all5StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, You lost the 75-25 and got {acquiredWeapon}(5⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.shockedEmote}"
+                                        targetString = f"{user}, You lost the 75-25 and got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}! {self.shockedEmote}"
                                     else:
-                                        targetString += f"| {acquiredWeapon}(5⭐)"
+                                        targetString += f"| {acquiredWeapon}(5🌟)"
 
                                     if acquiredWeapon not in weaponData:
                                         weaponData[acquiredWeapon] = "R1"
