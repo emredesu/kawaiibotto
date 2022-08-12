@@ -12,7 +12,7 @@ class RandomQuoteCommand(Command):
 		super().__init__(commands)
 		try:
 			channels_data = requests.get("https://logs.ivr.fi/channels").json()
-		except requests.exceptions.ConnectionError:
+		except:
 			error("can't import RandomQuoteCommand, ivr.fi API is down ;w;")
 			return
 		else:
