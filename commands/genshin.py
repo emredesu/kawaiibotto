@@ -1951,6 +1951,29 @@ class GenshinCommand(Command):
                     bot.send_message(channel, f"{user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
                     return
 
+                # Check if the trade initiator has already maxed out the aformentioned item. If they do, don't let them initiate the trade.
+                userOwnedItemData = None
+                if itemType == "character":
+                    self.cursor.execute("SELECT owned5StarCharacters, owned4StarCharacters FROM wishstats where userId=%s", (userUID,))
+                else:
+                    self.cursor.execute("SELECT owned5StarWeapons, owned4StarWeapons FROM wishstats where userId=%s", (userUID,))
+
+                userOwnedItemData = self.cursor.fetchone()
+                userOwned5Stars = json.loads(userOwnedItemData[0])
+                userOwned4Stars = json.loads(userOwnedItemData[1])
+
+                userConstellationOrRefinementValue = None
+
+                if itemName in userOwned5Stars:
+                    userConstellationOrRefinementValue = userOwned5Stars[itemName]
+                elif itemName in userOwned4Stars:
+                    userConstellationOrRefinementValue = userOwned4Stars[itemName]
+
+                if userConstellationOrRefinementValue is not None and (userConstellationOrRefinementValue == "C6" or userConstellationOrRefinementValue == "R5"):
+                    bot.send_message(channel, f"{user}, You already have {itemName} at {userConstellationOrRefinementValue}, which is already the maximum value for the \"{itemType}\" type! {self.angryEmote}")
+                    return
+
+                # See if the target has the amentioned item.
                 targetOwnedItemData = None
                 if itemType == "character":
                     self.cursor.execute("SELECT owned5StarCharacters, owned4StarCharacters FROM wishstats where userId=%s", (targetUID,))
