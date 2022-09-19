@@ -4,9 +4,9 @@ import wolframalpha
 
 
 class QueryCommand(Command):
-	COMMAND_NAME = "query"
+	COMMAND_NAME = ["query", "math", "maths"]
 	COOLDOWN = 3
-	DESCRIPTION = "Ask Wolfram-Alpha a question! Make sure you're as clear as possible. Example usage: _query Convert 1 euro to Turkish liras"
+	DESCRIPTION = "Ask Wolfram-Alpha a question! Make sure your question is as clear and concise as possible. Example usage: _query Convert 1 Euro to Turkish liras"
 
 	def execute(self, bot, user, message, channel):
 		client = wolframalpha.Client(WOLFRAM_APP_ID)
@@ -15,11 +15,11 @@ class QueryCommand(Command):
 		result = client.query(question)
 
 		if result["@success"] == "false":
-			bot.send_message(channel, f"{user}, Wolfram-Alpha did not understand your question ;w;")
+			bot.send_message(channel, f"{user}, Wolfram-Alpha did not understand your question.")
 			return
 		else:
 			try:
 				result_text = next(result.results).text.replace("\n", " ")
 				bot.send_message(channel, f"/me Query result: {result_text}")
 			except StopIteration:
-				bot.send_message(channel, f"{user}, No proper answer was found for your query ;w;")
+				bot.send_message(channel, f"{user}, No proper answer was found for your query.")
