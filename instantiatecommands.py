@@ -9,7 +9,6 @@ from commands.sourcecode import SourceCodeCommand
 from commands.commands import CommandsCommand
 from commands.help import HelpCommand
 from commands.code import CodeCommand
-from commands.math import MathCommand
 from commands.translate import TranslateCommand
 from commands.urban import UrbanCommand
 from commands.define import DefineCommand
@@ -33,7 +32,6 @@ def instantiate_commands(commands):
 	HelpCommand(commands)
 	CodeCommand(commands)
 	ProfilePictureCommand(commands)
-	MathCommand(commands)
 	TranslateCommand(commands)
 	UrbanCommand(commands)
 	DefineCommand(commands)
