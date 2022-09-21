@@ -4,7 +4,7 @@ import wolframalpha
 
 
 class QueryCommand(Command):
-	COMMAND_NAME = ["query", "math", "maths"]
+	COMMAND_NAME = "query"
 	COOLDOWN = 3
 	DESCRIPTION = "Ask Wolfram-Alpha a question! Make sure your question is as clear and concise as possible. Example usage: _query Convert 1 Euro to Turkish liras"
 
