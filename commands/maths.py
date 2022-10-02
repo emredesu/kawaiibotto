@@ -1,5 +1,6 @@
 from commands.command import Command
 import requests
+import urllib
 
 class MathsCommand(Command):
 	COMMAND_NAME = ["maths", "math", "eval"]
@@ -11,6 +12,7 @@ class MathsCommand(Command):
 		args.pop(0)
 
 		expression = "".join(args)
+		expression = urllib.parse.quote(expression)
 
 		if not expression:
 			bot.send_message(channel, f"{user}, no expression was given!")
