@@ -1,6 +1,8 @@
 from commands.command import Command
 from messagetypes import error
 import requests
+import re
+from datetime import datetime
 
 
 class RandomQuoteCommand(Command):
@@ -31,12 +33,25 @@ class RandomQuoteCommand(Command):
 				bot.send_message(channel, "That channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
 				return
 			else:
-				rq_data = requests.get(f"https://api.ivr.fi/logs/rq/{ch}/{person}").json()
+				request = requests.get(f"https://logs.ivr.fi/channel/{ch}/user/{person}/random?json=1")
+				
+				if request.status_code != 200:
+					bot.send_message(channel, f"{user}, API returned {request.status_code}.")
+					return
+
+				rq_data = request.json()["messages"][0]			
 
 				try:
-					bot.send_message(channel, f"{rq_data['time']} ago, #{ch} {rq_data['user']}: {rq_data['message']}")
+					timestamp = rq_data["timestamp"]
+					datetimeObj = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+					deltaTime = datetime.now() - datetimeObj
+
+					dayDifferential = deltaTime.days
+
+					bot.send_message(channel, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
 				except KeyError:
-					bot.send_message(channel, f"API returned {rq_data['status']}: {rq_data['error']}")
+					bot.send_message(channel, f"{user}, API error.")
+					return
 
 
 class EmoteInfoCommand(Command):
@@ -55,7 +70,11 @@ class EmoteInfoCommand(Command):
 			return
 		else:
 			try:
-				data = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}".format(emote)).json()
+				rawData = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}".format(emote))
+				if rawData.status_code != 200:
+					raise KeyError # Intentionally raise a key error to try for an ID.
+
+				data = rawData.json()
 
 				ch = data["channelLogin"]
 
@@ -63,18 +82,35 @@ class EmoteInfoCommand(Command):
 			except KeyError:
 				# On failure, try again with the ?id=true parameter in case the given param is an emote code.
 				try:
-					data = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}?id=true".format(emote)).json()
+					rawData = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}?id=true".format(emote))
+					data = rawData.json()
+
+					if rawData.status_code != 200:
+						raise KeyError
 					
 					ch = data["channelLogin"]
 					emoteName = data["emoteCode"]
 
 					bot.send_message(channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
 				except KeyError:
-					# Give up if that fails too.
-					statusCode = data["statusCode"]
-					errorMessage = data["message"]
+					# Lastly, try to extract the emote code from the given string in case it's an emote URL.
+					emoteCode = ""
+					try:
+						emoteCode = re.findall("v2/(.*)/default", emote)[0]
 
-					bot.send_message(channel, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
+						rawData = requests.get("https://api.ivr.fi/v2/twitch/emotes/{}?id=true".format(emoteCode))
+						data = rawData.json()
+						
+						ch = data["channelLogin"]
+						emoteName = data["emoteCode"]
+
+						bot.send_message(channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+					except (IndexError, KeyError):
+						# Give up.
+						statusCode = data["statusCode"]
+						errorMessage = data["error"]["message"]
+
+						bot.send_message(channel, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
 
 			except requests.exceptions.ConnectionError:
 				bot.send_message(channel, "API is down ;w;")
