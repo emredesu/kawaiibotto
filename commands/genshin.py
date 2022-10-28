@@ -975,11 +975,6 @@ class GenshinCommand(Command):
                                     # Update the database with the final data.
                                     self.cursor.execute("UPDATE wishstats SET owned4StarWeapons=%s, has4StarGuaranteeOnWeaponBanner=false, wishesSinceLast4StarOnWeaponBanner=0 WHERE userId=%s", (json.dumps(weaponData), uid))
                                     self.database.commit()
-
-                                    # 50-50 win/lose counting
-                                    if not hasGuarantee:
-                                        self.cursor.execute("UPDATE wishstats SET fiftyFiftiesWon=fiftyFiftiesWon+1 WHERE userId=%s", (uid,))
-                                        self.database.commit()
                                 else:
                                     # We lost the 4 star 50-50 :/
 
@@ -1060,7 +1055,7 @@ class GenshinCommand(Command):
                                         self.database.commit()
 
                                     # Finally, update the database data to have pity for the next 4 star.
-                                    self.cursor.execute("UPDATE wishstats SET has4StarGuaranteeOnWeaponBanner=true, wishesSinceLast4StarOnWeaponBanner=0, fiftyFiftiesLost=fiftyFiftiesLost+1 WHERE userId=%s", (uid,))
+                                    self.cursor.execute("UPDATE wishstats SET has4StarGuaranteeOnWeaponBanner=true, wishesSinceLast4StarOnWeaponBanner=0 WHERE userId=%s", (uid,))
                                     self.database.commit()                        
                             else:
                                 acquiredTrash = random.choice(self.bannerData[secondArg]["all3StarWeapons"])
