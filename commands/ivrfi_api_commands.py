@@ -24,7 +24,7 @@ class RandomQuoteCommand(Command):
 		args = message.split()
 
 		try:
-			person = args[1]
+			person = args[1].replace("@", "")
 			ch = args[2]
 		except IndexError:
 			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username) (channel)")
