@@ -1283,7 +1283,7 @@ class GenshinCommand(Command):
 
                 addressingMethod = "you" if targetUser == user else "they"
 
-                bot.send_message(channel, f"{user}, {addressingMethod} have {userPrimogems} primogems and is placed {userRankUpper}/{userCount}. {self.nomEmote}")
+                bot.send_message(channel, f"{user}, {addressingMethod} have {userPrimogems} primogems and are placed {userRankUpper}/{userCount}. {self.nomEmote}")
 
             elif firstArg == "top":
                 validSecondArgs = ["wishes", "fiftyfiftieswon", "fiftyfiftieslost", "primogems", "primos", "points"]
