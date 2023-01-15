@@ -4,7 +4,7 @@
 - Claim 160 primogems every 30 minutes.
 - Claiming late will yield in a reduced primogem reward of -20 primogems for every interval missed. For example: if you claimed now and did your next claim in 2 hours, you would have missed 3 intervals, which would give you 160 + 140 + 120 = 420 primogems.
 - Primogem accumulation will stop after 4 hours (8 intervals) have passed, and the maximum amount that can be claimed will be 720 primogems.
-- Primogem amount for the current interval will be done using minutes passed instead of intervals passed. For example if you would earn 140 primogems in this interval after it's over but you claimed in when only 15 minutes have passed, you would instead get 70 primogems added to the total. 
+- Primogem amount calculation for the current interval will be done using minutes passed instead of intervals passed. For example if you would earn 140 primogems in this interval after it's over but you claimed in when only 15 minutes have passed, you would instead get 70 primogems added to the total. 
 
 ### _genshin wish (banner) (count)
 - Wish on the banner (count) times. 
