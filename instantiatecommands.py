@@ -16,7 +16,7 @@ from commands.ocr import OCRCommand
 from commands.genshin import GenshinCommand
 from commands.echo import EchoCommand
 from commands.maths import MathsCommand
-
+from commands.gpt import ChatBotCommand
 
 def instantiate_commands(commands):
 	HelloWorldCommand(commands)
@@ -40,3 +40,4 @@ def instantiate_commands(commands):
 	GenshinCommand(commands)
 	EchoCommand(commands)
 	MathsCommand(commands)
+	ChatBotCommand(commands)
