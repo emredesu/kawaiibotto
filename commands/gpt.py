@@ -1,5 +1,6 @@
 from commands.command import Command
 from globals import OPENAI_APIKEY
+import messagetypes
 import openai
 
 class ChatBotCommand(Command):
@@ -13,9 +14,17 @@ class ChatBotCommand(Command):
 
 	def execute(self, bot, user, message, channel):
 		maxTokens = 1000
+		unhingedTag = "unhinged:true"
+
+		currentEngine = "text-davinci-003"
 
 		args = message.split()
 		args.pop(0)
+
+		if unhingedTag in args:
+			messagetypes.log("Swapped to unhinged version of GPT for the following instance of command invocation:")
+			currentEngine = "text-davinci-001"
+			args.pop(args.index(unhingedTag))
 
 		userPrompt = " ".join(args)
 		if not userPrompt:
@@ -23,10 +32,11 @@ class ChatBotCommand(Command):
 			return
         
 		try:
-			completionResult = openai.Completion.create(engine="text-davinci-001", prompt=userPrompt, max_tokens=maxTokens)
+			completionResult = openai.Completion.create(engine=currentEngine, prompt=userPrompt, max_tokens=maxTokens)
 			bot.send_message(channel, f"{user}," + completionResult.choices[0].text)
-		except:
+		except Exception as e:
 			bot.send_message(channel, f"{user}, An error occured.")
+			messagetypes.error(f"{e}")
 			return
 
 class ImageGenCommand(Command):
