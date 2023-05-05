@@ -18,7 +18,7 @@
 ### _genshin characters/weapons 4star/5star
 - View which characters or weapons you own within the supplied quality.
 
-### _genshin top (wishes, fiftyfiftieswon, fiftyfiftieslost, primogems/primos/points)
+### _genshin top (wishes, fiftyfiftieswon, fiftyfiftieslost, primogems/primos/points, rouletteswon, rouletteslost, slotswon, slotslost)
 - See the top 10 users for the given data type.
 
 ### _genshin register
@@ -68,3 +68,10 @@
 
 ### _genshin primogems/primos/points
 - View how many primogems you own and see your ranking compared to other users.
+
+### _genshin roulette (amount)
+- Roulette your primogems for a 45% chance to double them!
+
+### _genshin slots (amount)
+- Play slots on your primogems for a chance to tentold them!
+
