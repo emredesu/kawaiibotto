@@ -73,5 +73,5 @@
 - Roulette your primogems for a 45% chance to double them!
 
 ### _genshin slots (amount)
-- Play slots on your primogems for a chance to tentold them!
+- Play slots on your primogems for a chance to tenfold them!
 
