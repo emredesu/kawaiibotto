@@ -104,7 +104,7 @@ class GenshinCommand(Command):
 
     # Slots values
     slotsElements = [neutralEmote, danceEmote, loserEmote, tantrumEmote, primogemEmote, proudEmote, ayayaEmote, derpEmote, nomEmote, stabEmote]
-    slotsWinMultiplier = 10
+    slotsWinMultiplier = 100
 
     mutex = Lock()
 
