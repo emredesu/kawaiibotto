@@ -223,7 +223,7 @@ class GenshinCommand(Command):
         with self.mutex:
             validFirstArgs = ["claim", "redeem", "wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "guarantee", "help", 
             "overview", "duel", "duelaccept", "dueldeny", "give", "giveprimos", "giveprimogems", "trade", "tradeaccept", "tradedeny", "primogems", "primos", "points",
-            "banner", "banners", "update", "gamble", "roulette", "slots", "updatename"]
+            "banner", "banners", "update", "gamble", "roulette", "slots", "slot", "updatename"]
 
             firstArg = None
             try:
@@ -1444,7 +1444,7 @@ class GenshinCommand(Command):
 
                    bot.send_message(channel, targetStr)
                 elif secondArg in "slotslost":
-                   self.cursor.execute("SELECT username, slotsLost FROM gamblestats ORDER BY slotsWon DESC LIMIT 10")
+                   self.cursor.execute("SELECT username, slotsLost FROM gamblestats ORDER BY slotsLost DESC LIMIT 10")
                    result = self.cursor.fetchmany(10)
 
                    targetStr = ""
@@ -2407,7 +2407,7 @@ class GenshinCommand(Command):
 
                     bot.send_message(channel, f"{user} has lost {lostPrimogems} primogems in roulette, and they now have {ownedPrimogems - lostPrimogems} primogems! {self.shockedEmote}")
             
-            elif firstArg == "slots":
+            elif firstArg in ["slot", "slots"]:
                 userExists = None
                 try:
                     userExists = self.CheckUserRowExists(user)
