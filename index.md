@@ -39,10 +39,9 @@
 ### _genshin overview
 - See various collective data among all users.
 
-### _genshin duel (target) (amount) | _genshin duel (amount) (target)
+### _genshin duel (target) (amount)
 - Invite someone else to a duel for primogems!
 - If one of the users doesn't have the supplied amount, the duel won't happen.
-- The places of the target user and the amount can be swapped.
 
 ### _genshin duelaccept
 - Accept a duel.
