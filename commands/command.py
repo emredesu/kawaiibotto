@@ -6,7 +6,7 @@ class Command:
 	COOLDOWN = 0
 	DESCRIPTION = ""
 
-	last_used = 0
+	lastUseTimePerUser = {}
 
 	def execute(self, bot, user, message, channel):
 		pass
