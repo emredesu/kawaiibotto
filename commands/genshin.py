@@ -12,7 +12,7 @@ from threading import Lock
 
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
-    COOLDOWN = 0
+    COOLDOWN = 5
     DESCRIPTION = f"A fully fledged Genshin wish simulator with wish progress tracking, a primogem system and more! For all the commands, visit: https://emredesu.github.io/kawaiibotto/ paimonAYAYA"
 
     successfulInit = True
@@ -101,10 +101,12 @@ class GenshinCommand(Command):
     # Roulette values
     rouletteWinChancePercentage = 45
     rouletteWinMultiplier = 1
+    rouletteMinBet = 50
 
     # Slots values
     slotsElements = [neutralEmote, danceEmote, loserEmote, tantrumEmote, primogemEmote, proudEmote, ayayaEmote, derpEmote, nomEmote, stabEmote]
     slotsWinMultiplier = 100
+    slotsMinBet = 100
 
     mutex = Lock()
 
@@ -2380,6 +2382,14 @@ class GenshinCommand(Command):
                 if betAmount == -1:
                     bot.send_message(channel, f"{user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                     return
+                
+                if betAmount < 0:
+                    bot.send_message(channel, f"{user}, no loans! {self.angryEmote}")
+                    return
+
+                if betAmount < self.rouletteMinBet:
+                    bot.send_message(channel, f"{user}, minimum bet for roulette is {self.rouletteMinBet} primogems. {self.sadEmote}")
+                    return
 
                 # Check if user has enough primogems.
                 if ownedPrimogems < betAmount:
@@ -2446,6 +2456,14 @@ class GenshinCommand(Command):
 
                 if betAmount == -1:
                     bot.send_message(channel, f"{user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
+                    return
+
+                if betAmount < 0:
+                    bot.send_message(channel, f"{user}, no loans! {self.angryEmote}")
+                    return
+
+                if betAmount < self.slotsMinBet:
+                    bot.send_message(channel, f"{user}, minimum bet for slots is {self.slotsMinBet} primogems. {self.sadEmote}")
                     return
 
                 # Check if user has enough primogems.
