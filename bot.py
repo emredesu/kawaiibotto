@@ -151,10 +151,11 @@ class kawaiibotto:
 			return True
 
 	def execute_command(self, cmnd, user, message, channel):
+		cmnd.lastUseTimePerUser[user] = time.time()
+
 		try:
 			cmnd.execute(self, user, message, channel)
 			log(f"{user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {channel}")
-			cmnd.lastUseTimePerUser[user] = time.time()
 		except Exception as e:
 			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
 			self.send_message(channel, f"{user}, the execution of that command failed! The error has been logged, and will be fixed soon.")
