@@ -130,24 +130,34 @@ class kawaiibotto:
 					if isinstance(command.COMMAND_NAME, list):	# alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
-								thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel)) # Spawn a new thread for the command 
-								thread.start()
+								if self.CheckCanExecute(command, user):
+									thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel)) # Spawn a new thread for the command 
+									thread.start()
 					else:
 						if command.COMMAND_NAME == invoked_command:
-							thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel))
-							thread.start()
+							if self.CheckCanExecute(command, user):
+								thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel))
+								thread.start()			
 			elif message.startswith("pajaVanish"):
 				self.send_message(channel, f"/timeout {user} 1")
 
+	def CheckCanExecute(self, cmnd, user) -> bool:
+		if user in cmnd.lastUseTimePerUser:
+			if time.time() - cmnd.lastUseTimePerUser[user] > cmnd.COOLDOWN:
+				return True
+			else:
+				return False
+		else:
+			return True
+
 	def execute_command(self, cmnd, user, message, channel):
-		if time.time() - cmnd.last_used > cmnd.COOLDOWN:  # cooldown management
-			try:
-				cmnd.execute(self, user, message, channel)
-				log(f"{user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {channel}")
-				cmnd.last_used = time.time()
-			except Exception as e:
-				error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
-				self.send_message(channel, f"{user}, the execution of that command failed! Sorry for the inconvenience, it will be fixed soon hopefully ;w;")
+		try:
+			cmnd.execute(self, user, message, channel)
+			log(f"{user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {channel}")
+			cmnd.lastUseTimePerUser[user] = time.time()
+		except Exception as e:
+			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
+			self.send_message(channel, f"{user}, the execution of that command failed! The error has been logged, and will be fixed soon.")
 
 	def start(self):
 		self.connect()
