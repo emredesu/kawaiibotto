@@ -74,3 +74,6 @@
 ### _genshin slots (amount)
 - Play slots on your primogems for a 1% chance to hundredfold them!
 
+### _genshin updatename
+- Got a namechange? Run this command to update your username in the database.
+
