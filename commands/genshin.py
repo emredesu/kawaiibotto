@@ -1,6 +1,6 @@
 from commands.command import Command
 from messagetypes import error, log
-from globals import TWITCH_API_HEADERS, USERNAME as botUsername, GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, AUTHORIZED_USER
+from globals import TWITCH_API_HEADERS, USERNAME as botUsername, GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, AUTHORIZED_USER, GENSHIN_COOKIES
 import random
 import requests
 import mysql.connector
@@ -9,6 +9,8 @@ import datetime
 import json
 import re
 from threading import Lock
+import genshin
+import asyncio
 
 class GenshinCommand(Command):
     COMMAND_NAME = ["genshin", "genshit"]
@@ -30,9 +32,7 @@ class GenshinCommand(Command):
     database = None
     cursor = None
 
-    bannerInfoGistLink = "https://gist.githubusercontent.com/emredesu/2766beb7e57c55b5d0cee9294f96cfa1/raw/kawaiibottoGenshinWishBanners.json"
     emojiAssociationGistLink = "https://gist.githubusercontent.com/emredesu/e13a6274d9ba9825562b279d00bb1c0b/raw/kawaiibottoGenshinEmojiAssociations.json"
-    bannerImagesGistLink = "https://gist.githubusercontent.com/emredesu/9afb788b25c155ce2c6c53170a02d955/raw/kawaiibottoBannerImageLinks.json"
 
     validBannerNames = []
     bannerData = None
@@ -108,11 +108,14 @@ class GenshinCommand(Command):
     slotsWinMultiplier = 100
     slotsMinBet = 100
 
+    # Banner data to be pulled.
+    pulledBannerData = {}
+
     mutex = Lock()
 
     def __init__(self, commands):
         super().__init__(commands)
-        self.UpdateFromGist()
+        self.UpdateBannerData()
 
         try:
             self.database = mysql.connector.connect(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="genshinStats")
@@ -121,21 +124,135 @@ class GenshinCommand(Command):
             error(f"Fatal error while connecting to the database: {e.__class__.__name__}")
             traceback.print_exc()
             self.successfulInit = False
+            
+    async def PullBannerData(self):
+        client = genshin.Client(GENSHIN_COOKIES)
+        self.pulledBannerData = await client.get_banner_details(game = genshin.types.Game.GENSHIN)
 
-    def UpdateFromGist(self):
+    def UpdateBannerData(self):
         try:
-            jsonData = requests.get(self.bannerInfoGistLink).json()
-            self.bannerData = jsonData
-            self.bannerImageLinks = requests.get(self.bannerImagesGistLink).json()
+            self.bannerData = {}
+            asyncio.run(self.PullBannerData())
 
-            self.validBannerNames.clear()
+            # We are supporting it in case they decide to add a third character banner, second weapon banner, second standard banner ect. because we can 8)
+            _currCharacterBannerIndex = 0
+            _currWeaponBannerIndex = 0
+            _currStandardBannerIndex = 0
 
-            for bannerName in jsonData:
+            for banner in self.pulledBannerData:
+                if banner.banner_type_name == 200: # Standard banner
+                    name = "standard"
+
+                    addedName = name
+                    #addedName = name + str(_currStandardBannerIndex + 1) Let's keep this here in case they add a second standard banner.
+                    _currStandardBannerIndex += 1
+
+                    # Prepare the standard banner character containers.
+                    self.bannerData[addedName] = {} 
+                    self.bannerData[addedName]["all5StarCharacters"] = []
+                    self.bannerData[addedName]["all5StarWeapons"] = []
+                    self.bannerData[addedName]["all4StarCharacters"] = []
+                    self.bannerData[addedName]["all4StarWeapons"] = []
+                    self.bannerData[addedName]["all3StarWeapons"] = []
+
+                    # Set up 5 star item containers, place the items in the correct container.
+                    for item in banner.r5_items:
+                        if item.type == "Character":
+                            self.bannerData[addedName]["all5StarCharacters"].append(item.name)
+                        elif item.type == "Weapon":
+                            self.bannerData[addedName]["all5StarWeapons"].append(item.name)
+                    
+                    # Set up 4 star item containers, place the items in the correct container.
+                    for item in banner.r4_items:
+                        if item.type == "Character":
+                            self.bannerData[addedName]["all4StarCharacters"].append(item.name)
+                        elif item.type == "Weapon":
+                            self.bannerData[addedName]["all4StarWeapons"].append(item.name)
+                    
+                    # Set up 3 star item container.
+                    for item in banner.r3_items:
+                        self.bannerData[addedName]["all3StarWeapons"].append(item.name)
+
+                elif banner.banner_type == 301 or banner.banner_type == 400: # Character banner
+                    name = "character"
+
+                    addedName = name + str(_currCharacterBannerIndex + 1)
+                    _currCharacterBannerIndex += 1
+
+                    # Prepare the character banner character containers.
+                    self.bannerData[addedName] = {}
+                    self.bannerData[addedName]["rateUp5StarCharacter"] = ""
+                    self.bannerData[addedName]["rateUp4StarCharacters"] = []
+                    self.bannerData[addedName]["all5StarCharacters"] = []
+                    self.bannerData[addedName]["all4StarCharacters"] = []
+                    self.bannerData[addedName]["all4StarWeapons"] = []
+                    self.bannerData[addedName]["all3StarWeapons"] = []
+
+                    # Set up 5 star item containers, place the items in the correct container.
+                    for item in banner.r5_items:
+                        if item.up:
+                            self.bannerData[addedName]["rateUp5StarCharacter"] = item.name
+                        else:
+                            self.bannerData[addedName]["all5StarCharacters"].append(item.name)
+                    
+                    # Set up 4 star item containers, place the items in the correct container.
+                    for item in banner.r4_items:
+                        if item.type == "Character":
+                            if item.up:
+                                self.bannerData[addedName]["rateUp4StarCharacters"].append(item.name)
+                            else:
+                                self.bannerData[addedName]["all4StarCharacters"].append(item.name)
+                        elif item.type == "Weapon":
+                            self.bannerData[addedName]["all4StarWeapons"].append(item.name)
+                    
+                    # Set up 3 star item container.
+                    for item in banner.r3_items:
+                        self.bannerData[addedName]["all3StarWeapons"].append(item.name)
+
+                elif banner.banner_type == 302: # Weapon banner
+                    name = "weapon"
+
+                    addedName = name
+                    #addedName = name + str(_currWeaponBannerIndex + 1) Let's keep this here in case they add a second weapon banner.
+                    _currWeaponBannerIndex += 1
+
+                    self.bannerData[addedName] = {}
+                    self.bannerData[addedName]["rateUp5StarWeapons"] = []
+                    self.bannerData[addedName]["rateUp4StarWeapons"] = []
+                    self.bannerData[addedName]["all5StarWeapons"] = []
+                    self.bannerData[addedName]["all4StarCharacters"] = []
+                    self.bannerData[addedName]["all4StarWeapons"] = []
+                    self.bannerData[addedName]["all3StarWeapons"] = []
+
+                    # Set up 5 star item containers, place the items in the correct container.
+                    for item in banner.r5_items:
+                        if item.up:
+                            self.bannerData[addedName]["rateUp5StarWeapons"].append(item.name)
+                        else:
+                            self.bannerData[addedName]["all5StarWeapons"].append(item.name)
+                    
+                    # Set up 4 star item containers, place the items in the correct container.
+                    for item in banner.r4_items:
+                        if item.type == "Character":
+                            self.bannerData[addedName]["all4StarCharacters"].append(item.name)
+                        elif item.type == "Weapon":
+                            if item.up:
+                                self.bannerData[addedName]["rateUp4StarWeapons"].append(item.name)
+                            else:
+                                self.bannerData[addedName]["all4StarWeapons"].append(item.name)
+                    
+                    # Set up the 3 star item container.
+                    for item in banner.r3_items:
+                        self.bannerData[addedName]["all3StarWeapons"].append(item.name)
+                
+            self.validBannerNames = [] # Clear before adding so that we don't add duplicates.
+
+            for bannerName in self.bannerData:
                 self.validBannerNames.append(bannerName)
 
             self.emojiAssociations = requests.get(self.emojiAssociationGistLink).json()
         except Exception as e:
-            error(f"Fatal error while getting gist data for the Genshin command: {e.__class__.__name__}")
+            error(f"Fatal error while pulling data for the Genshin command: {e.__class__.__name__}")
             self.successfulInit = False
 
     def GetTwitchUserID(self, username) -> int: 
@@ -2329,9 +2446,32 @@ class GenshinCommand(Command):
             elif firstArg in ["banner", "banners"]:
                 message = ""
 
-                for key, value in self.bannerImageLinks.items():
-                    message += f"| {key}: {value} "
-                
+                currentIndex = 0
+
+                for banner in self.pulledBannerData:
+                    # Add the names of all the 5 stars if it isn't the standard banner.
+                    if banner.banner_type != 200:
+                        rateUp5Stars = []
+                        internalBannerName = ""
+
+                        if banner.banner_type == 301:
+                            internalBannerName = "character1"
+                        elif banner.banner_type == 400:
+                            internalBannerName = "character2"
+                        elif banner.banner_type == 302:
+                            internalBannerName = "weapon"
+
+                        for item in banner.r5_up_items:
+                            rateUp5Stars.append(item.name)
+
+                        message += f"({internalBannerName})" + " " + banner.name + ": " + ", ".join(rateUp5Stars) + "✨ "
+                    else:
+                        internalStandardBannerName = "standard"
+
+                        message += f"({internalStandardBannerName})" + " " + banner.name + "✨ "
+
+                    currentIndex += 1
+
                 bot.send_message(channel, f"{user}, Current banners are: {message}")
 
             elif firstArg == "update":
@@ -2339,7 +2479,7 @@ class GenshinCommand(Command):
                     bot.send_message(channel, "🤨")
                     return
                 
-                self.UpdateFromGist()
+                self.UpdateBannerData()
                 bot.send_message(channel, f"Successfully updated the wish schedule. Current banner names are: {', '.join(self.validBannerNames)}")
 
             elif firstArg in ["gamble", "roulette"]:
