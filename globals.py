@@ -7,6 +7,7 @@ TWITCH_API_HEADERS = {"Authorization": "Bearer {}".format(OAUTH_TOKEN), "Client-
 WOLFRAM_APP_ID = ""
 OCR_SPACE_APIKEY = ""
 OPENAI_APIKEY = ""
+GENSHIN_COOKIES = {'ltoken': '', 'ltuid': '', 'account_mid_v2': '', 'cookie_token_v2': ''}
 
 # Genshin command specific values
 GENSHIN_MYSQL_DB_HOST = ""
