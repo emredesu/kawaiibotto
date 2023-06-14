@@ -127,6 +127,7 @@ class GenshinCommand(Command):
             
     async def PullBannerData(self):
         client = genshin.Client(GENSHIN_COOKIES)
+        self.pulledBannerData = {}
         self.pulledBannerData = await client.get_banner_details(game = genshin.types.Game.GENSHIN)
 
     def UpdateBannerData(self):
@@ -140,7 +141,7 @@ class GenshinCommand(Command):
             _currStandardBannerIndex = 0
 
             for banner in self.pulledBannerData:
-                if banner.banner_type_name == 200: # Standard banner
+                if banner.banner_type == 200: # Standard banner
                     name = "standard"
 
                     addedName = name
