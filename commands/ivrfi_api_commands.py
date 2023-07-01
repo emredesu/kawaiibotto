@@ -43,7 +43,7 @@ class RandomQuoteCommand(Command):
 
 				try:
 					timestamp = rq_data["timestamp"]
-					datetimeObj = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+					datetimeObj = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
 					deltaTime = datetime.now() - datetimeObj
 
 					dayDifferential = deltaTime.days
