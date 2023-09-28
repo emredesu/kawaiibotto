@@ -2,7 +2,8 @@ from commands.command import Command
 from messagetypes import error
 import requests
 import re
-from datetime import datetime
+from datetime import datetime, timezone
+import dateutil.parser 
 
 
 class RandomQuoteCommand(Command):
@@ -43,7 +44,7 @@ class RandomQuoteCommand(Command):
 
 				try:
 					timestamp = rq_data["timestamp"]
-					datetimeObj = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+					datetimeObj = dateutil.parser.parse(timestamp).replace(tzinfo=None)
 					deltaTime = datetime.now() - datetimeObj
 
 					dayDifferential = deltaTime.days
