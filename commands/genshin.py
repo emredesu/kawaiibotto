@@ -79,24 +79,24 @@ class GenshinCommand(Command):
     standardBanner4StarChance = 5.1
     standardBanner4StarChanceWithSoftPity = 45
 
-    # Bot emotes. These are all 7tv emotes!
-    sadEmote = "PaimonSad"
-    danceEmote = "PaimonDance"
-    loserEmote = "PaimonBlehh"
-    shockedEmote = "PaimonShocked"
-    tantrumEmote = "paimonTantrum"
-    angryEmote = "paimonEHE"
-    primogemEmote = "paimonWhale"
-    proudEmote = "paimonHeh"
-    deadEmote = "QiqiSleep"
+    # Bot emotes.
+    sadEmote = "HungryPaimon 😭"
+    danceEmote = "HungryPaimon DinoDance"
+    loserEmote = "HungryPaimon 😈"
+    shockedEmote = "HungryPaimon ⁉"
+    tantrumEmote = "HungryPaimon 😑"
+    angryEmote = "HungryPaimon 💢"
+    primogemEmote = "HungryPaimon 💸"
+    proudEmote = "HungryPaimon 🤗"
+    deadEmote = "HungryPaimon 😵"
     neutralEmote = "HungryPaimon"
-    shyEmote = "paimonShy"
-    ayayaEmote = "paimonAYAYA"
-    derpEmote = "paimonDerp"
-    nomEmote = "paimonCookie"
-    emergencyFoodEmote = "paimonEmergencyFood"
-    thumbsUpEmote = "paimonThumbsUp"
-    stabEmote = "paimonStab"
+    shyEmote = "HungryPaimon 😳"
+    ayayaEmote = "HungryPaimon ‼"
+    derpEmote = "HungryPaimon ❓"
+    nomEmote = "HungryPaimon 🍪"
+    emergencyFoodEmote = "HungryPaimon 🍜"
+    thumbsUpEmote = "HungryPaimon 👌"
+    stabEmote = "HungryPaimon 🔪"
 
     # Roulette values
     rouletteWinChancePercentage = 45
@@ -104,7 +104,7 @@ class GenshinCommand(Command):
     rouletteMinBet = 50
 
     # Slots values
-    slotsElements = [neutralEmote, danceEmote, loserEmote, tantrumEmote, primogemEmote, proudEmote, ayayaEmote, derpEmote, nomEmote, stabEmote]
+    slotsElements = ["⭐", "HungryPaimon", "🌠", "🔥", "🌊", "🧊", "⚡", "⛰️", "🌪️", "🌵"]
     slotsWinMultiplier = 100
     slotsMinBet = 100
 
