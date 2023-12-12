@@ -32,7 +32,8 @@ class GenshinCommand(Command):
     cursor = None
 
     emojiAssociationGistLink = "https://gist.githubusercontent.com/emredesu/e13a6274d9ba9825562b279d00bb1c0b/raw/kawaiibottoGenshinEmojiAssociations.json"
-    bannerDataLinksGist = "https://gist.githubusercontent.com/emredesu/786b47a49442c497b050630e8b218b5d/raw/genshin_banner_links.txt"
+    bannerIDLink = "https://operation-webstatic.mihoyo.com/gacha_info/hk4e/cn_gf01/gacha/list.json"
+    bannerDataBaseLink = "https://operation-webstatic.hoyoverse.com/gacha_info/hk4e/os_euro/{}/en-us.json"
 
     validBannerNames = []
     bannerData = None
@@ -79,7 +80,7 @@ class GenshinCommand(Command):
     standardBanner4StarChance = 5.1
     standardBanner4StarChanceWithSoftPity = 45
 
-    # Bot emotes.
+    # Bot emotes. These are all 7tv emotes!
     sadEmote = "HungryPaimon 😭"
     danceEmote = "HungryPaimon DinoDance"
     loserEmote = "HungryPaimon 😈"
@@ -127,23 +128,19 @@ class GenshinCommand(Command):
             
     def PullBannerData(self):
         self.pulledBannerData = []
-        
-        bannerLinkRequest = requests.get(self.bannerDataLinksGist)
 
-        if bannerLinkRequest.status_code != 200:
+        bannerIDRequest = requests.get(self.bannerIDLink)
+        if bannerIDRequest.status_code != 200:
             raise Exception()
         
-        bannerLinks = bannerLinkRequest.text.split("\n")
+        for bannerData in bannerIDRequest.json()["data"]["list"]:
+            bannerID = bannerData["gacha_id"]
 
-        for link in bannerLinks:
-            if not link:
-                continue
-
-            bannerDataRequest = requests.get(link)
-            if bannerDataRequest.status_code != 200:
+            bannerDetailsRequest = requests.get(self.bannerDataBaseLink.format(bannerID))
+            if bannerDetailsRequest.status_code != 200:
                 raise Exception()
-
-            self.pulledBannerData.append(bannerDataRequest.json())
+            
+            self.pulledBannerData.append(bannerDetailsRequest.json())
 
     def UpdateBannerData(self):
         try:
