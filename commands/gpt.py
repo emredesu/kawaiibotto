@@ -33,28 +33,14 @@ class ChatBotCommand(Command):
 
 	def execute(self, bot, user, message, channel):
 		maxTokens = 1000
-		unhingedTag = "unhinged:true"
 		historyWipeTag = "history:false"
 		currentModel = "gpt-3.5-turbo"
 
 		args = message.split()
 		args.pop(0) # Get rid of the command invocation
 
-		# "Unhinged" version, uses the oldest possible GPT model for some "unique" answers
-		if unhingedTag in args:
-			messagetypes.log("Swapped to unhinged version of GPT for the following instance of command invocation:")
-			currentEngine = "text-davinci-001"
-			args.pop(args.index(unhingedTag))
 
-			try:
-				completionResult = openai.Completion.create(engine=currentEngine, prompt=" ".join(args), max_tokens=maxTokens)
-				bot.send_message(channel, f"{user}," + completionResult.choices[0].text)
-				return
-			except Exception as e:
-				bot.send_message(channel, f"{user}, An error occured.")
-				messagetypes.error(f"{e}")
-				return
-		elif historyWipeTag in args:
+		if historyWipeTag in args:
 			args.pop(args.index(historyWipeTag))
 
 			# Delete user history and start fresh with the new prompt			
