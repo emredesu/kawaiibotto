@@ -80,7 +80,7 @@ class GenshinCommand(Command):
     standardBanner4StarChance = 5.1
     standardBanner4StarChanceWithSoftPity = 45
 
-    # Bot emotes. These are all 7tv emotes!
+    # Bot emotes.
     sadEmote = "HungryPaimon 😭"
     danceEmote = "HungryPaimon DinoDance"
     loserEmote = "HungryPaimon 😈"
@@ -345,12 +345,12 @@ class GenshinCommand(Command):
         else:
             return -1
 
-    def execute(self, bot, user, message, channel):
+    def execute(self, bot, messageData):
         if not self.successfulInit:
-            bot.send_message(channel, f"This command has not been initialized properly... sorry! {self.emergencyFoodEmote}")
+            bot.send_message(messageData.channel, f"This command has not been initialized properly... sorry! {self.emergencyFoodEmote}")
             return
 
-        args = message.split()
+        args = messageData.content.split()
 
         with self.mutex:
             validFirstArgs = ["claim", "redeem", "wish", "characters", "weapons", "top", "register", "pity", "pitycheck", "pitycounter", "stats", "guarantee", "help", 
@@ -361,30 +361,30 @@ class GenshinCommand(Command):
             try:
                 firstArg = args[1]
             except IndexError:
-                bot.send_message(channel, f"{user}, {self.DESCRIPTION}")
+                bot.send_message(messageData.channel, f"{messageData.user}, {self.DESCRIPTION}")
                 return
 
             if firstArg not in validFirstArgs:
-                bot.send_message(channel, f"Invalid first argument supplied! Valid first arguments are: {' '.join(validFirstArgs)}")
+                bot.send_message(messageData.channel, f"Invalid first argument supplied! Valid first arguments are: {' '.join(validFirstArgs)}")
                 return
         
             if firstArg in ["claim", "redeem"]:
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
-                    uid = self.GetTwitchUserID(user)
+                    uid = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error.")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to continue due to a Twitch API error.")
                     return
 
                 self.cursor.execute("SELECT primogems, lastRedeemTime FROM wishstats where userId=%s", (uid,))
@@ -427,11 +427,11 @@ class GenshinCommand(Command):
                     self.cursor.execute("UPDATE wishstats SET primogems=primogems+%s, lastRedeemTime=NOW() WHERE userId=%s", (claimAmount, uid))
                     self.database.commit()
 
-                    bot.send_message(channel, f"{user}, you have successfully claimed {claimAmount} primogems! \
+                    bot.send_message(messageData.channel, f"{messageData.user}, you have successfully claimed {claimAmount} primogems! \
                     You now have {ownedPrimogems + claimAmount} primogems! {self.primogemEmote}")
                 else:
                     timeUntilClaim = str(datetime.timedelta(seconds=self.requiredSecondsBetweenRedeems-int(timePassed.total_seconds())))
-                    bot.send_message(channel, f"{user}, you can't claim primogems yet - your next claim will be available in: {timeUntilClaim} {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you can't claim primogems yet - your next claim will be available in: {timeUntilClaim} {self.sadEmote}")
                     return
 
             elif firstArg == "wish":
@@ -440,46 +440,46 @@ class GenshinCommand(Command):
                 try:
                     secondArg = args[2]
                 except IndexError:
-                    bot.send_message(channel, f"Please provide a banner name to wish on. Current banner names are: {' '.join(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"Please provide a banner name to wish on. Current banner names are: {' '.join(validSecondArgs)}")
                     return
 
                 if secondArg not in validSecondArgs:
-                    bot.send_message(channel, f"Please provide a valid banner name. Current valid banner names are: {' '.join(validSecondArgs)} | Example usage: _genshin wish {random.choice(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"Please provide a valid banner name. Current valid banner names are: {' '.join(validSecondArgs)} | Example usage: _genshin wish {random.choice(validSecondArgs)}")
                     return
                 
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 wishCount = 1
                 try:
                     wishCount = int(args[3]) # See if the user has supplied a third argument as how many wishes they want to make.
                     if wishCount < 1:
-                        bot.send_message(channel, f"{user}, don't mess with Paimon! You can't do {wishCount} wishes! {self.angryEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, don't mess with Paimon! You can't do {wishCount} wishes! {self.angryEmote}")
                         return
                     elif wishCount > 10:
-                        bot.send_message(channel, f"{user}, you can't do more than 10 wishes at once! {self.angryEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, you can't do more than 10 wishes at once! {self.angryEmote}")
                         return
                 except IndexError:
                     pass
                 except (ValueError, SyntaxError):
-                    bot.send_message(channel, f"{user}, \"{args[3]}\" is not an integer! {self.tantrumEmote} Example usage: _genshin wish {random.choice(validSecondArgs)} {random.randint(1, 10)}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, \"{args[3]}\" is not an integer! {self.tantrumEmote} Example usage: _genshin wish {random.choice(validSecondArgs)} {random.randint(1, 10)}")
                     return
 
                 isMultiWish = False if wishCount == 1 else True
 
                 uid = None
                 try:
-                    uid = self.GetTwitchUserID(user)
+                    uid = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error! {self.tantrumEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to continue due to a Twitch API error! {self.tantrumEmote}")
                     return
 
                 self.cursor.execute("SELECT primogems FROM wishstats WHERE userId=%s", (uid,))
@@ -544,7 +544,7 @@ class GenshinCommand(Command):
                                     acquiredCharacter = self.bannerData[secondArg]["rateUp5StarCharacter"]
                                     
                                     if not isMultiWish:
-                                        targetString = f"{user}, you beat the 50-50" if not hasGuarantee else f"{user}, you used up your guarantee"
+                                        targetString = f"{messageData.user}, you beat the 50-50" if not hasGuarantee else f"{messageData.user}, you used up your guarantee"
                                         targetString += f" and got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
                                     else:
                                         targetString += f"| {acquiredCharacter}(5🌟)"
@@ -587,7 +587,7 @@ class GenshinCommand(Command):
                                     acquiredCharacter = random.choice(self.bannerData[secondArg]["all5StarCharacters"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you lost your 50-50 and got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.shockedEmote}"
+                                        targetString = f"{messageData.user}, you lost your 50-50 and got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.shockedEmote}"
                                     else:
                                         targetString += f"| {acquiredCharacter}(5🌟)"
 
@@ -637,7 +637,7 @@ class GenshinCommand(Command):
                                     acquiredCharacter = random.choice(self.bannerData[secondArg]["rateUp4StarCharacters"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you won the 50-50" if not hasGuarantee else f"{user}, you used up your 4 star guarantee"
+                                        targetString = f"{messageData.user}, you won the 50-50" if not hasGuarantee else f"{messageData.user}, you used up your 4 star guarantee"
                                         targetString += f" and got {acquiredCharacter}(4⭐){self.GetEmojiAssociation(acquiredCharacter)}!"
                                     else:
                                         targetString += f"| {acquiredCharacter}(4⭐)"
@@ -682,7 +682,7 @@ class GenshinCommand(Command):
                                         acquiredWeapon = random.choice(self.bannerData[secondArg]["all4StarWeapons"])
 
                                         if not isMultiWish:
-                                            targetString += f"{user}, you lost the 4 star 50-50 and got {acquiredWeapon}(4⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.shockedEmote}"
+                                            targetString += f"{messageData.user}, you lost the 4 star 50-50 and got {acquiredWeapon}(4⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.shockedEmote}"
                                         else:
                                             targetString += f"| {acquiredWeapon}(4⭐)"
 
@@ -761,7 +761,7 @@ class GenshinCommand(Command):
                                 self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnCharacterBanner=wishesSinceLast4StarOnCharacterBanner+1, characterBannerPityCounter=characterBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                                 if not isMultiWish:
-                                    targetString += f"{user}, you got a {acquiredTrash}(3★) {self.nomEmote}"
+                                    targetString += f"{messageData.user}, you got a {acquiredTrash}(3★) {self.nomEmote}"
                                 else:
                                     targetString += f"| {acquiredTrash}(3★) "
 
@@ -811,7 +811,7 @@ class GenshinCommand(Command):
                                     acquiredCharacter = random.choice(self.bannerData[secondArg]["all5StarCharacters"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
+                                        targetString = f"{messageData.user}, you got {acquiredCharacter}(5🌟){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
                                     else:
                                         targetString += f"| {acquiredCharacter}(5🌟)"
 
@@ -849,7 +849,7 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["all5StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}! {self.neutralEmote}"
+                                        targetString = f"{messageData.user}, you got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}! {self.neutralEmote}"
                                     else:
                                         targetString += f"| {acquiredWeapon}(5🌟)"
 
@@ -897,7 +897,7 @@ class GenshinCommand(Command):
                                     acquiredCharacter = random.choice(self.bannerData[secondArg]["all4StarCharacters"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you got {acquiredCharacter}(4⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
+                                        targetString = f"{messageData.user}, you got {acquiredCharacter}(4⭐){self.GetEmojiAssociation(acquiredCharacter)}! {self.neutralEmote}"
                                     else:
                                         targetString += f"| {acquiredCharacter}(4⭐)"
 
@@ -935,7 +935,7 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["all4StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you got {acquiredWeapon}(4⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.neutralEmote}"
+                                        targetString = f"{messageData.user}, you got {acquiredWeapon}(4⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.neutralEmote}"
                                     else:
                                         targetString += f"| {acquiredWeapon}(4⭐)"
 
@@ -972,7 +972,7 @@ class GenshinCommand(Command):
                                 self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnStandardBanner=wishesSinceLast4StarOnStandardBanner+1, standardBannerPityCounter=standardBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                                 if not isMultiWish:
-                                    targetString += f"{user}, you got a {acquiredTrash}(3★) {self.nomEmote}"
+                                    targetString += f"{messageData.user}, you got a {acquiredTrash}(3★) {self.nomEmote}"
                                 else:
                                     targetString += f"| {acquiredTrash}(3★) "
 
@@ -1028,7 +1028,7 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["rateUp5StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you beat the odds of 75-25" if not hasGuarantee5Star else f"{user}, you used up your guarantee"
+                                        targetString = f"{messageData.user}, you beat the odds of 75-25" if not hasGuarantee5Star else f"{messageData.user}, you used up your guarantee"
                                         targetString += f" and got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}!"
                                     else:
                                         targetString += f"| {acquiredWeapon}(5🌟)"
@@ -1064,7 +1064,7 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["all5StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, You lost the 75-25 and got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}! {self.shockedEmote}"
+                                        targetString = f"{messageData.user}, You lost the 75-25 and got {acquiredWeapon}(5🌟){self.GetEmojiAssociation(acquiredWeapon)}! {self.shockedEmote}"
                                     else:
                                         targetString += f"| {acquiredWeapon}(5🌟)"
 
@@ -1115,7 +1115,7 @@ class GenshinCommand(Command):
                                     acquiredWeapon = random.choice(self.bannerData[secondArg]["rateUp4StarWeapons"])
 
                                     if not isMultiWish:
-                                        targetString = f"{user}, you won the 50-50" if not hasGuarantee else f"{user}, you used up your 4 star guarantee"
+                                        targetString = f"{messageData.user}, you won the 50-50" if not hasGuarantee else f"{messageData.user}, you used up your 4 star guarantee"
                                         targetString += f" and got {acquiredWeapon}(4⭐){self.GetEmojiAssociation(acquiredWeapon)}!"
                                     else:
                                         targetString += f"| {acquiredWeapon}(4⭐)"
@@ -1154,7 +1154,7 @@ class GenshinCommand(Command):
                                         acquiredWeapon = random.choice(self.bannerData[secondArg]["all4StarWeapons"])
 
                                         if not isMultiWish:
-                                            targetString = f"{user}, you lost the 4 star 50-50"
+                                            targetString = f"{messageData.user}, you lost the 4 star 50-50"
                                             targetString += f" and got {acquiredWeapon}(4⭐){self.GetEmojiAssociation(acquiredWeapon)}! {self.sadEmote}"
                                         else:
                                             targetString += f"| {acquiredWeapon}(4⭐)"
@@ -1235,28 +1235,28 @@ class GenshinCommand(Command):
                                 self.cursor.execute("UPDATE wishstats SET wishesSinceLast4StarOnWeaponBanner=wishesSinceLast4StarOnWeaponBanner+1, weaponBannerPityCounter=weaponBannerPityCounter+1 WHERE userId=%s", (uid,))
 
                                 if not isMultiWish:
-                                    targetString += f"{user}, you got a {acquiredTrash}(3★) {self.nomEmote}"
+                                    targetString += f"{messageData.user}, you got a {acquiredTrash}(3★) {self.nomEmote}"
                                 else:
                                     targetString += f"| {acquiredTrash}(3★) "
                 else:
-                    bot.send_message(channel, f"{user}, you need {primogemCost} primogems for that, but you have {ownedPrimogems}! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you need {primogemCost} primogems for that, but you have {ownedPrimogems}! {self.primogemEmote}")
                     return
 
                 # Increase the user's wish counter.
                 self.cursor.execute("UPDATE wishstats SET wishesDone=wishesDone+%s WHERE userId=%s", (wishCount, uid))
                 self.database.commit()
 
-                bot.send_message(channel, (user + ", " if isMultiWish else "") + targetString)
+                bot.send_message(messageData.channel, (messageData.user + ", " if isMultiWish else "") + targetString)
             elif firstArg == "characters":
                 validSecondArgs = ["4star", "5star"]
                 secondArg = None
 
-                targetUser = user
+                targetUser = messageData.user
 
                 try:
                     secondArg = args[2]
                 except IndexError:
-                    bot.send_message(channel, f"Please provide a character type to retrieve. Character types are: {' '.join(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"Please provide a character type to retrieve. Character types are: {' '.join(validSecondArgs)}")
                     return
                 
                 try:
@@ -1266,28 +1266,28 @@ class GenshinCommand(Command):
 
                 targetUser = targetUser.strip("@,")
 
-                addressingMethod = "you" if targetUser == user else "they"
+                addressingMethod = "you" if targetUser == messageData.user else "they"
 
                 if secondArg not in validSecondArgs:
-                    bot.send_message(channel, f"Please provide a valid character type. Valid character types are: {' '.join(validSecondArgs)} | Example usage: _genshin characters {random.choice(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"Please provide a valid character type. Valid character types are: {' '.join(validSecondArgs)} | Example usage: _genshin characters {random.choice(validSecondArgs)}")
                     return
                 
                 userExists = None
                 try:
                     userExists = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, {addressingMethod} are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
                 else:
                     uid = None
                     try:
                         uid = self.GetTwitchUserID(targetUser)
                     except:
-                        bot.send_message(channel, f"{user}, unable to show characters due to a Twitch API error! {self.tantrumEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, unable to show characters due to a Twitch API error! {self.tantrumEmote}")
                         return
 
                     if secondArg == "5star":
@@ -1295,7 +1295,7 @@ class GenshinCommand(Command):
                         characterData = json.loads(self.cursor.fetchone()[0])
 
                         if len(characterData.items()) == 0:
-                            bot.send_message(channel, f"{user}, {addressingMethod} have no 5 star characters to show. {self.deadEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} have no 5 star characters to show. {self.deadEmote}")
                             return
 
                         targetString = ""
@@ -1309,13 +1309,13 @@ class GenshinCommand(Command):
                             if currentLoopCount < len(characterData.items()):
                                 targetString += ", " # Separate characters with a comma if we're not at the end of the list.
                         
-                        bot.send_message(channel, f"{user}, {targetString}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, {targetString}")
                     else:
                         self.cursor.execute("SELECT owned4StarCharacters FROM wishstats WHERE userId=%s", (uid,))
                         characterData = json.loads(self.cursor.fetchone()[0])
 
                         if len(characterData.items()) == 0:
-                            bot.send_message(channel, f"{user}, {addressingMethod} have no 4 star characters to show. {self.deadEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} have no 4 star characters to show. {self.deadEmote}")
                             return
 
                         targetString = ""
@@ -1329,17 +1329,17 @@ class GenshinCommand(Command):
                             if currentLoopCount < len(characterData.items()):
                                 targetString += ", " # Separate characters with a comma if we're not at the end of the list.
                         
-                        bot.send_message(channel, f"{user}, {targetString}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, {targetString}")
             elif firstArg == "weapons":
                 validSecondArgs = ["4star", "5star"]
                 secondArg = None
 
-                targetUser = user
+                targetUser = messageData.user
 
                 try:
                     secondArg = args[2]
                 except IndexError:
-                    bot.send_message(channel, f"Please provide a weapon type to retrieve. Valid weapon types are: {' '.join(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"Please provide a weapon type to retrieve. Valid weapon types are: {' '.join(validSecondArgs)}")
                     return
                 
                 try:
@@ -1349,28 +1349,28 @@ class GenshinCommand(Command):
 
                 targetUser = targetUser.strip("@,")
 
-                addressingMethod = "you" if targetUser == user else "they"
+                addressingMethod = "you" if targetUser == messageData.user else "they"
 
                 if secondArg not in validSecondArgs:
-                    bot.send_message(channel, f"Please provide a valid weapon type. Valid weapon types are: {' '.join(validSecondArgs)} | Example usage: _genshin weapons {random.choice(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"Please provide a valid weapon type. Valid weapon types are: {' '.join(validSecondArgs)} | Example usage: _genshin weapons {random.choice(validSecondArgs)}")
                     return
 
                 userExists = None
                 try:
                     userExists = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
             
                 if not userExists:
-                    bot.send_message(channel, f"{user}, {addressingMethod} are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
                 else:
                     uid = None
                     try:
                         uid = self.GetTwitchUserID(targetUser)
                     except:
-                        bot.send_message(channel, f"{user}, unable to show weapons due to a Twitch API error! {self.tantrumEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, unable to show weapons due to a Twitch API error! {self.tantrumEmote}")
                         return
 
                     if secondArg == "5star":
@@ -1378,7 +1378,7 @@ class GenshinCommand(Command):
                         weaponData = json.loads(self.cursor.fetchone()[0])
 
                         if len(weaponData.items()) == 0:
-                            bot.send_message(channel, f"{user}, {addressingMethod} have no 5 star weapons to show. {self.deadEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} have no 5 star weapons to show. {self.deadEmote}")
                             return
 
                         targetString = ""
@@ -1392,13 +1392,13 @@ class GenshinCommand(Command):
                             if currentLoopCount < len(weaponData.items()):
                                 targetString += ", " # Separate characters with a comma if we're not at the end of the list.
                         
-                        bot.send_message(channel, f"{user}, {targetString}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, {targetString}")
                     else:
                         self.cursor.execute("SELECT owned4StarWeapons FROM wishstats WHERE userId=%s", (uid,))
                         weaponData = json.loads(self.cursor.fetchone()[0])
 
                         if len(weaponData.items()) == 0:
-                            bot.send_message(channel, f"{user}, {addressingMethod} have no 4 star weapons to show. {self.deadEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} have no 4 star weapons to show. {self.deadEmote}")
                             return
 
                         targetString = ""
@@ -1412,9 +1412,9 @@ class GenshinCommand(Command):
                             if currentLoopCount < len(weaponData.items()):
                                 targetString += ", " # Separate characters with a comma if we're not at the end of the list.
                         
-                        bot.send_message(channel, f"{user}, {targetString}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, {targetString}")
             elif firstArg in ["primogems", "primos", "points"]:
-                targetUser = user
+                targetUser = messageData.user
                 try:
                     targetUser = args[2]
                 except IndexError:
@@ -1426,18 +1426,18 @@ class GenshinCommand(Command):
                 try:
                     userExists = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {'you are not registered!' if targetUser == messageData.user else 'that user is not registered!'} Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
                     uid = self.GetTwitchUserID(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, unable to show primogems due to a Twitch API error! {self.tantrumEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to show primogems due to a Twitch API error! {self.tantrumEmote}")
                     return
 
                 # Pull primogem data from the database.
@@ -1452,9 +1452,9 @@ class GenshinCommand(Command):
                 userRankLower = data[2]
                 userCount = data[3]
 
-                addressingMethod = "you" if targetUser == user else "they"
+                addressingMethod = "you" if targetUser == messageData.user else "they"
 
-                bot.send_message(channel, f"{user}, {addressingMethod} have {userPrimogems} primogems and are placed {userRankUpper}/{userCount}. {self.nomEmote}")
+                bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} have {userPrimogems} primogems and are placed {userRankUpper}/{userCount}. {self.nomEmote}")
 
             elif firstArg == "top":
                 validSecondArgs = ["wishes", "fiftyfiftieswon", "fiftyfiftieslost", "primogems", "primos", "points", "rouletteswon", "rouletteslost", "slotswon", "slotslost"]
@@ -1463,11 +1463,11 @@ class GenshinCommand(Command):
                 try:
                     secondArg = args[2]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, please provide a second argument to get the top stats for! Valid second arguments are: {' '.join(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, please provide a second argument to get the top stats for! Valid second arguments are: {' '.join(validSecondArgs)}")
                     return
 
                 if secondArg not in validSecondArgs:
-                    bot.send_message(channel, f"{user}, please provide a valid second second argument to get the top stats for! Valid second arguments are: {' '.join(validSecondArgs)}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, please provide a valid second second argument to get the top stats for! Valid second arguments are: {' '.join(validSecondArgs)}")
                     return
 
                 if secondArg == "wishes":
@@ -1484,7 +1484,7 @@ class GenshinCommand(Command):
                         if currentLoopCount < len(result):
                             targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                     
-                    bot.send_message(channel, targetStr)
+                    bot.send_message(messageData.channel, targetStr)
                 elif secondArg == "fiftyfiftieswon":
                     self.cursor.execute("SELECT username, fiftyFiftiesWon FROM wishstats ORDER BY fiftyFiftiesWon DESC LIMIT 10")
                     result = self.cursor.fetchmany(10)
@@ -1499,7 +1499,7 @@ class GenshinCommand(Command):
                         if currentLoopCount < len(result):
                             targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                     
-                    bot.send_message(channel, targetStr)
+                    bot.send_message(messageData.channel, targetStr)
                 elif secondArg == "fiftyfiftieslost":
                     self.cursor.execute("SELECT username, fiftyFiftiesLost FROM wishstats ORDER BY fiftyFiftiesLost DESC LIMIT 10")
                     result = self.cursor.fetchmany(10)
@@ -1514,7 +1514,7 @@ class GenshinCommand(Command):
                         if currentLoopCount < len(result):
                             targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                     
-                    bot.send_message(channel, targetStr)
+                    bot.send_message(messageData.channel, targetStr)
                 elif secondArg in ["primogems", "primos", "points"]:
                     self.cursor.execute("SELECT username, primogems FROM wishstats ORDER BY primogems DESC LIMIT 10")
                     result = self.cursor.fetchmany(10)
@@ -1529,7 +1529,7 @@ class GenshinCommand(Command):
                         if currentLoopCount < len(result):
                             targetStr += ", " # Separate results with a comma if we're not at the end of the data.
                     
-                    bot.send_message(channel, targetStr)
+                    bot.send_message(messageData.channel, targetStr)
                 elif secondArg in "rouletteswon":
                    self.cursor.execute("SELECT username, roulettesWon FROM gamblestats ORDER BY roulettesWon DESC LIMIT 10")
                    result = self.cursor.fetchmany(10)
@@ -1544,7 +1544,7 @@ class GenshinCommand(Command):
                        if currentLoopCount < len(result):
                            targetStr += ", " # Separate results with a comma if we're not at the end of the data.
 
-                   bot.send_message(channel, targetStr)
+                   bot.send_message(messageData.channel, targetStr)
                 elif secondArg in "rouletteslost":
                    self.cursor.execute("SELECT username, roulettesLost FROM gamblestats ORDER BY roulettesLost DESC LIMIT 10")
                    result = self.cursor.fetchmany(10)
@@ -1559,7 +1559,7 @@ class GenshinCommand(Command):
                        if currentLoopCount < len(result):
                            targetStr += ", " # Separate results with a comma if we're not at the end of the data.
 
-                   bot.send_message(channel, targetStr)
+                   bot.send_message(messageData.channel, targetStr)
                 elif secondArg in "slotswon":
                    self.cursor.execute("SELECT username, slotsWon FROM gamblestats ORDER BY slotsWon DESC LIMIT 10")
                    result = self.cursor.fetchmany(10)
@@ -1574,7 +1574,7 @@ class GenshinCommand(Command):
                        if currentLoopCount < len(result):
                            targetStr += ", " # Separate results with a comma if we're not at the end of the data.
 
-                   bot.send_message(channel, targetStr)
+                   bot.send_message(messageData.channel, targetStr)
                 elif secondArg in "slotslost":
                    self.cursor.execute("SELECT username, slotsLost FROM gamblestats ORDER BY slotsLost DESC LIMIT 10")
                    result = self.cursor.fetchmany(10)
@@ -1589,10 +1589,10 @@ class GenshinCommand(Command):
                        if currentLoopCount < len(result):
                            targetStr += ", " # Separate results with a comma if we're not at the end of the data.
 
-                   bot.send_message(channel, targetStr)
+                   bot.send_message(messageData.channel, targetStr)
 
             elif firstArg in ["pity", "pitycheck", "pitycounter"]:
-                targetUser = user
+                targetUser = messageData.user
                 try:
                     targetUser = args[2]
                 except IndexError:
@@ -1602,30 +1602,30 @@ class GenshinCommand(Command):
                 try:
                     userExists = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, {'you' if targetUser == user else 'they'} are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {'you' if targetUser == messageData.user else 'they'} are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
                     uid = self.GetTwitchUserID(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, unable to show pity due to a Twitch API error! {self.tantrumEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to show pity due to a Twitch API error! {self.tantrumEmote}")
                     return
 
                 self.cursor.execute("SELECT characterBannerPityCounter, weaponBannerPityCounter, standardBannerPityCounter, wishesSinceLast4StarOnCharacterBanner, \
                 wishesSinceLast4StarOnWeaponBanner, wishesSinceLast4StarOnStandardBanner FROM wishstats WHERE userId=%s", (uid,))
                 results = self.cursor.fetchone()
 
-                addressingMethod = "Your" if targetUser == user else "Their"
+                addressingMethod = "Your" if targetUser == messageData.user else "Their"
 
-                bot.send_message(channel, f"{user}, {addressingMethod} current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} {self.neutralEmote} \
+                bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} current pity counters - Character: {results[0]} | Weapon: {results[1]} | Standard: {results[2]} {self.neutralEmote} \
                 Wishes since last 4 star - Character: {results[3]} | Weapon: {results[4]} | Standard: {results[5]} {self.primogemEmote}")
             elif firstArg == "stats":
-                targetUser = user
+                targetUser = messageData.user
                 try:
                     targetUser = args[2]
                 except IndexError:
@@ -1637,18 +1637,18 @@ class GenshinCommand(Command):
                 try:
                     userExists = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {'you are not registered!' if targetUser == messageData.user else 'that user is not registered!'} Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
                     uid = self.GetTwitchUserID(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, unable to show stats due to a Twitch API error! {self.tantrumEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to show stats due to a Twitch API error! {self.tantrumEmote}")
                     return
 
                 self.cursor.execute("SELECT wishesDone, fiftyFiftiesWon, fiftyFiftiesLost, owned5StarCharacters, owned5StarWeapons, owned4StarCharacters, owned4StarWeapons, primogems FROM wishstats WHERE userId=%s", (uid,))
@@ -1678,14 +1678,14 @@ class GenshinCommand(Command):
                 slotsWon = gambleData[2]
                 slotsLost = gambleData[3] 
 
-                addressingMethod = "You" if targetUser == user else "They"
+                addressingMethod = "You" if targetUser == messageData.user else "They"
 
-                bot.send_message(channel, f"{user}, {addressingMethod} currently have {userPrimogems} primogems and have done {wishesDone} wishes so far. {addressingMethod} won {fiftyFiftiesWon} 50-50s and lost {fiftyFiftiesLost}. \
+                bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} currently have {userPrimogems} primogems and have done {wishesDone} wishes so far. {addressingMethod} won {fiftyFiftiesWon} 50-50s and lost {fiftyFiftiesLost}. \
                 {addressingMethod} own {len(owned5StarCharacters)} 5 star characters, {len(owned5StarWeapons)} 5 star weapons, {len(owned4StarCharacters)} 4 star characters \
                 and {len(owned4StarWeapons)} 4 star weapons. {addressingMethod} have done {tradesDone} successful trades. {addressingMethod} won {duelsWon} duels and \
                 lost {duelsLost} duels. Roulette W/L: {roulettesWon}/{roulettesLost} Slots W/L:{slotsWon}/{slotsLost} {self.proudEmote}")
             elif firstArg == "guarantee":
-                targetUser = user
+                targetUser = messageData.user
                 try:
                     targetUser = args[2]
                 except IndexError:
@@ -1695,18 +1695,18 @@ class GenshinCommand(Command):
                 try:
                     userExists = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, {'you are not registered!' if targetUser == user else 'that user is not registered!'} Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {'you are not registered!' if targetUser == messageData.user else 'that user is not registered!'} Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
                     uid = self.GetTwitchUserID(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, unable to show guarantee standings due to a Twitch API error! {self.tantrumEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to show guarantee standings due to a Twitch API error! {self.tantrumEmote}")
                     return
 
                 self.cursor.execute("SELECT has5StarGuaranteeOnCharacterBanner, has5StarGuaranteeOnWeaponBanner, has4StarGuaranteeOnCharacterBanner, has4StarGuaranteeOnWeaponBanner from wishstats where userId=%s", (uid,))
@@ -1717,30 +1717,30 @@ class GenshinCommand(Command):
                 has4StarGuaranteeOnCharacterBanner = result[2]
                 has4StarGuaranteeOnWeaponBanner = result[3]
 
-                addressingMethod = "Your" if targetUser == user else "Their"
+                addressingMethod = "Your" if targetUser == messageData.user else "Their"
 
                 positiveEmoji = "✅"
                 negativeEmoji = "❌"
-                bot.send_message(channel, f"{user}, {addressingMethod} current guarantee standings: Character banner 5 star {positiveEmoji if has5StarGuaranteeOnCharacterBanner else negativeEmoji} | \
+                bot.send_message(messageData.channel, f"{messageData.user}, {addressingMethod} current guarantee standings: Character banner 5 star {positiveEmoji if has5StarGuaranteeOnCharacterBanner else negativeEmoji} | \
                 Character banner 4 star {positiveEmoji if has4StarGuaranteeOnCharacterBanner else negativeEmoji} | Weapon banner 5 star {positiveEmoji if has5StarGuaranteeOnWeaponBanner else negativeEmoji} | \
                 Weapon banner 4 star {positiveEmoji if has4StarGuaranteeOnWeaponBanner else negativeEmoji}")
             elif firstArg == "help":
-                bot.send_message(channel, f"{user}, {self.DESCRIPTION}")
+                bot.send_message(messageData.channel, f"{messageData.user}, {self.DESCRIPTION}")
             elif firstArg == "register":
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if userExists:
-                    bot.send_message(channel, f"{user}, you are already registered! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are already registered! {self.angryEmote}")
                     return
 
-                self.CreateUserTableEntry(user)
+                self.CreateUserTableEntry(messageData.user)
 
-                bot.send_message(channel, f"{user}, you have been registered successfully! {self.proudEmote} You got {self.primogemAmountOnRegistration} primogems as a welcome bonus! {self.primogemEmote}")
+                bot.send_message(messageData.channel, f"{messageData.user}, you have been registered successfully! {self.proudEmote} You got {self.primogemAmountOnRegistration} primogems as a welcome bonus! {self.primogemEmote}")
             elif firstArg == "overview":
                 self.cursor.execute("select SUM(wishesDone), SUM(fiftyFiftiesWon), SUM(fiftyFiftiesLost), COUNT(*) from wishstats;")
                 result = self.cursor.fetchone()
@@ -1750,7 +1750,7 @@ class GenshinCommand(Command):
                 totalFiftyFiftiesLost = result[2]
                 totalUserCount = result[3]
 
-                bot.send_message(channel, f"{totalUserCount} users in the database have collectively done {totalWishesDone} wishes. {totalFiftyFiftiesWon} 50-50s were won \
+                bot.send_message(messageData.channel, f"{totalUserCount} users in the database have collectively done {totalWishesDone} wishes. {totalFiftyFiftiesWon} 50-50s were won \
                 out of the total {totalFiftyFiftiesWon + totalFiftyFiftiesLost}. That's a {round((totalFiftyFiftiesWon / (totalFiftyFiftiesWon + totalFiftyFiftiesLost))*100, 2)}% win \
                 rate! {self.neutralEmote}")
             elif firstArg == "duel":
@@ -1760,14 +1760,14 @@ class GenshinCommand(Command):
                     duelTarget = args[2]
                     duelAmount = args[3]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, usage: _genshin duel (username) (amount). {self.thumbsUpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, usage: _genshin duel (username) (amount). {self.thumbsUpEmote}")
                     return
                 
                 if duelTarget == botUsername:
-                    bot.send_message(channel, f"{user}, think you stand a chance against Paimon?! {self.stabEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, think you stand a chance against Paimon?! {self.stabEmote}")
                     return
-                elif duelTarget == user:
-                    bot.send_message(channel, f"{user}, don't be so self-conflicted, love yourself! {self.thumbsUpEmote}")
+                elif duelTarget == messageData.user:
+                    bot.send_message(messageData.channel, f"{messageData.user}, don't be so self-conflicted, love yourself! {self.thumbsUpEmote}")
                     return
 
                 # See if these users are registered.
@@ -1775,21 +1775,21 @@ class GenshinCommand(Command):
                 isTargetRegistered = None
 
                 try:
-                    isUserRegistered = self.CheckUserRowExists(user)
+                    isUserRegistered = self.CheckUserRowExists(messageData.user)
                     isTargetRegistered = self.CheckUserRowExists(duelTarget)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not isUserRegistered:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
                 elif not isTargetRegistered:
-                    bot.send_message(channel, f"{user}, duel target {duelTarget} is not registered! Get them to use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")         
+                    bot.send_message(messageData.channel, f"{messageData.user}, duel target {duelTarget} is not registered! Get them to use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")         
                     return
 
                 # Get user and target Twitch UIDs.
-                userUID = self.GetTwitchUserID(user)
+                userUID = self.GetTwitchUserID(messageData.user)
                 targetUID = self.GetTwitchUserID(duelTarget)
                 
                 # Get primogem and in-duel stats relating to both users.
@@ -1816,23 +1816,23 @@ class GenshinCommand(Command):
                     duelAmount = self.GetUserPrimogemsPartial(userPrimogems, duelAmount)
 
                 if duelAmount == -1:
-                    bot.send_message(channel, f"{user}, couldn't parse the duel amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the duel amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                     return
 
                 # Do necessary checks before initiating the duel.
                 if userInDuel:
                     if int((timeNow - userDuelStartTime).total_seconds()) < self.duelTimeout:  # Since the functionality to timeout the duels would be too costly and unnecessary (and not because I'm lazy kappa), we just check the time differential.
-                        bot.send_message(channel, f"{user}, you are already dueling with {userDuelingWith}! {self.angryEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, you are already dueling with {userDuelingWith}! {self.angryEmote}")
                         return
                 elif targetInDuel:
                     if int((timeNow - targetDuelStartTime).total_seconds()) < self.duelTimeout:
-                        bot.send_message(channel, f"{user}, {duelTarget} is currently dueling with {targetDuelingWith}! {self.sadEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, {duelTarget} is currently dueling with {targetDuelingWith}! {self.sadEmote}")
                         return
                 elif userPrimogems < duelAmount:
-                    bot.send_message(channel, f"{user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
                     return
                 elif targetPrimogems < duelAmount:
-                    bot.send_message(channel, f"{user}, {duelTarget} only has {targetPrimogems} primogems! {self.shockedEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {duelTarget} only has {targetPrimogems} primogems! {self.shockedEmote}")
                     return
                 
                 # No problems were found, the duel is on!
@@ -1840,28 +1840,28 @@ class GenshinCommand(Command):
                 # Update duelstats entries for both users.
                 self.cursor.execute("UPDATE duelstats SET inDuel=TRUE, duelingWith=%s, duelAmount=%s, duelStartTime=NOW(), isInitiator=TRUE WHERE userId=%s", (duelTarget, duelAmount, userUID))
                 self.database.commit()
-                self.cursor.execute("UPDATE duelstats SET inDuel=TRUE, duelingWith=%s, duelAmount=%s, duelStartTime=NOW(), isInitiator=FALSE WHERE userId=%s", (user, duelAmount, targetUID))
+                self.cursor.execute("UPDATE duelstats SET inDuel=TRUE, duelingWith=%s, duelAmount=%s, duelStartTime=NOW(), isInitiator=FALSE WHERE userId=%s", (messageData.user, duelAmount, targetUID))
                 self.database.commit()
 
                 # Announce the duel in the chat.
-                bot.send_message(channel, f"{duelTarget}, {user} wants to duel you for {duelAmount} primogems! You can use _genshin duelaccept or _genshin dueldeny to respond within {self.duelTimeout} seconds! {self.stabEmote}")
+                bot.send_message(messageData.channel, f"{duelTarget}, {messageData.user} wants to duel you for {duelAmount} primogems! You can use _genshin duelaccept or _genshin dueldeny to respond within {self.duelTimeout} seconds! {self.stabEmote}")
             elif firstArg == "duelaccept":
                 userUID = None
                 try:
-                    userUID = self.GetTwitchUserID(user)
+                    userUID = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"Can not proceed due to a Twitch API problem. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"Can not proceed due to a Twitch API problem. {self.sadEmote}")
                     return
                 
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
                 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 # See if the user is in a valid duel and get their primogem data.
@@ -1882,14 +1882,14 @@ class GenshinCommand(Command):
 
                         # The duel initiator cannot accept the duel they started.
                         if isInitiator:
-                            bot.send_message(channel, f"You can't accept the duel you started! You have to wait for {duelingWith} to accept the duel or wait until the timeout! {self.angryEmote}")
+                            bot.send_message(messageData.channel, f"You can't accept the duel you started! You have to wait for {duelingWith} to accept the duel or wait until the timeout! {self.angryEmote}")
                             return
                         
                         targetUID = None
                         try:
                             targetUID = self.GetTwitchUserID(duelingWith)
                         except:
-                            bot.send_message(channel, f"{user}, cannot proceed due to a Twitch API error. Try again in a bit. {self.shockedEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, cannot proceed due to a Twitch API error. Try again in a bit. {self.shockedEmote}")
                             return
 
                         # Get opponent's primogem data.
@@ -1898,26 +1898,26 @@ class GenshinCommand(Command):
 
                         # See if both sides still have enough primogems. If not, cancel the duel.
                         if userPrimogems < duelAmount:
-                            bot.send_message(channel, f"{user}, you don't have the same amount of primogems you had at the time of duel's start - the duel will be cancelled. {self.loserEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, you don't have the same amount of primogems you had at the time of duel's start - the duel will be cancelled. {self.loserEmote}")
 
                             self.cursor.execute("UPDATE duelstats SET inDuel=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
                             self.database.commit()
                             return
                         elif opponentPrimogems < duelAmount:
-                            bot.send_message(channel, f"{user}, {duelingWith} doesn't have the same amount of primogems they had at the time of duel's start - the duel will be cancelled. {self.loserEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, {duelingWith} doesn't have the same amount of primogems they had at the time of duel's start - the duel will be cancelled. {self.loserEmote}")
                 
                             self.cursor.execute("UPDATE duelstats SET inDuel=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
                             self.database.commit()
                             return
                         
                         # Duel begins!
-                        duelists = [user, duelingWith]
+                        duelists = [messageData.user, duelingWith]
                         winner = random.choice(duelists)
                         duelists.remove(winner)
                         loser = duelists[0]
 
-                        winnerUID = userUID if winner == user else targetUID
-                        loserUID = userUID if winner != user else targetUID
+                        winnerUID = userUID if winner == messageData.user else targetUID
+                        loserUID = userUID if winner != messageData.user else targetUID
 
                         # Update primogems.
                         self.cursor.execute("UPDATE wishstats SET primogems = (CASE WHEN userId=%s THEN primogems+%s WHEN userId=%s THEN primogems-%s END) WHERE userID IN (%s, %s)", (winnerUID, duelAmount, loserUID, duelAmount, userUID, targetUID))
@@ -1934,31 +1934,31 @@ class GenshinCommand(Command):
                         self.database.commit()
 
                         # Announce the winner.
-                        bot.send_message(channel, f"{winner} {self.danceEmote} won the duel against {loser} {self.loserEmote} for {duelAmount} primogems!")
+                        bot.send_message(messageData.channel, f"{winner} {self.danceEmote} won the duel against {loser} {self.loserEmote} for {duelAmount} primogems!")
                     else:
-                        bot.send_message(channel, f"{user}, you have no active duels to accept. {self.sadEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, you have no active duels to accept. {self.sadEmote}")
                         return
                 else:
-                    bot.send_message(channel, f"{user}, you have no active duels to accept. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you have no active duels to accept. {self.sadEmote}")
                     return
 
             elif firstArg == "dueldeny":
                 userUID = None
                 try:
-                    userUID = self.GetTwitchUserID(user)
+                    userUID = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
                     return
                 
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
                 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 # See if the user is in a valid duel and get their primogem data.
@@ -1975,7 +1975,7 @@ class GenshinCommand(Command):
                 try:
                     targetUID = self.GetTwitchUserID(duelingWith)
                 except:
-                    bot.send_message(channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
                     return
 
                 if inDuel:
@@ -1984,12 +1984,12 @@ class GenshinCommand(Command):
                         self.cursor.execute("UPDATE duelstats SET inDuel=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
                         self.database.commit()
 
-                        bot.send_message(channel, f"{duelingWith}, {user} denied your duel request. {self.shockedEmote}")
+                        bot.send_message(messageData.channel, f"{duelingWith}, {messageData.user} denied your duel request. {self.shockedEmote}")
                     else:
-                        bot.send_message(channel, f"{user}, you have no active duels to deny! {self.angryEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, you have no active duels to deny! {self.angryEmote}")
                         return
                 else:
-                    bot.send_message(channel, f"{user}, you have no active duels to deny! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you have no active duels to deny! {self.angryEmote}")
                     return
             
             elif firstArg in ["give", "giveprimos", "giveprimogems"]:            
@@ -1999,14 +1999,14 @@ class GenshinCommand(Command):
                     giveTarget = args[2]
                     giveAmount = args[3]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, usage: _genshin {firstArg} (username) (amount). {self.thumbsUpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, usage: _genshin {firstArg} (username) (amount). {self.thumbsUpEmote}")
                     return
 
-                if giveTarget == user:
-                    bot.send_message(channel, f"{user}, you gave yourself your own {giveAmount} primogems and you now have exactly the same amount. Paimon approves! {self.thumbsUpEmote}")
+                if giveTarget == messageData.user:
+                    bot.send_message(messageData.channel, f"{messageData.user}, you gave yourself your own {giveAmount} primogems and you now have exactly the same amount. Paimon approves! {self.thumbsUpEmote}")
                     return
                 elif giveTarget == botUsername:
-                    bot.send_message(channel, f"{user}, Paimon appreciates the gesture, but she'd prefer if you kept your points. {self.shyEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, Paimon appreciates the gesture, but she'd prefer if you kept your points. {self.shyEmote}")
                     return
                 
                 # See if these users are registered.
@@ -2014,26 +2014,26 @@ class GenshinCommand(Command):
                 isTargetRegistered = None
 
                 try:
-                    isUserRegistered = self.CheckUserRowExists(user)
+                    isUserRegistered = self.CheckUserRowExists(messageData.user)
                     isTargetRegistered = self.CheckUserRowExists(giveTarget)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not isUserRegistered:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
                 elif not isTargetRegistered:
-                    bot.send_message(channel, f"{user}, target {giveTarget} is not registered! Get them to use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")         
+                    bot.send_message(messageData.channel, f"{messageData.user}, target {giveTarget} is not registered! Get them to use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")         
                     return
 
                 userUID = None
                 targetUID = None
                 try:
-                    userUID = self.GetTwitchUserID(user)
+                    userUID = self.GetTwitchUserID(messageData.user)
                     targetUID = self.GetTwitchUserID(giveTarget)
                 except:
-                    bot.send_message(channel, f"{user}, cannot proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, cannot proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 # See if the user has enough primogems.
@@ -2046,16 +2046,16 @@ class GenshinCommand(Command):
                     giveAmount = self.GetUserPrimogemsPartial(userPrimogems, giveAmount)
 
                 if giveAmount == -1:
-                    bot.send_message(channel, f"{user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                     return
 
                 # Reject invalid amounts.
                 if giveAmount <= 0:
-                    bot.send_message(channel, f"{user}, Paimon thinks {giveTarget} would appreciate it more if you gave them a positive amount of primogems! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, Paimon thinks {giveTarget} would appreciate it more if you gave them a positive amount of primogems! {self.angryEmote}")
                     return
 
                 if userPrimogems < giveAmount:
-                    bot.send_message(channel, f"{user}, you only have {userPrimogems} primogems! {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you only have {userPrimogems} primogems! {self.sadEmote}")
                     return
                 
                 # Update primogems.
@@ -2063,7 +2063,7 @@ class GenshinCommand(Command):
                 self.database.commit()
 
                 # Announce the successful exchange.
-                bot.send_message(channel, f"{user} gave {giveAmount} primogems to {giveTarget}! {self.shyEmote}")
+                bot.send_message(messageData.channel, f"{messageData.user} gave {giveAmount} primogems to {giveTarget}! {self.shyEmote}")
 
             elif firstArg == "trade":
                 validItemTypes = ["character", "weapon"]
@@ -2079,18 +2079,18 @@ class GenshinCommand(Command):
                     itemType = args[3]
                     primogemOffer = args[-1]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, usage: _genshin {firstArg} username character/weapon \"Item Name\" primogemOfferAmount {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, usage: _genshin {firstArg} username character/weapon \"Item Name\" primogemOfferAmount {self.derpEmote}")
                     return
                 
                 if itemType not in validItemTypes:
-                    bot.send_message(channel, f"{user}, {itemType} is not a valid item type! {self.tantrumEmote} Valid item types are: {' '.join(validItemTypes)} | \
+                    bot.send_message(messageData.channel, f"{messageData.user}, {itemType} is not a valid item type! {self.tantrumEmote} Valid item types are: {' '.join(validItemTypes)} | \
                                                 Example command usage: _genshin {firstArg} username character/weapon \"Item Name\" primogemOfferAmount {self.derpEmote}")
                     return
 
                 try:
                     itemName = re.findall('"([^"]*)"', message)[0]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, no item name in double quotation marks (\") was found! Make sure to include it in the command. Usage example: \
+                    bot.send_message(messageData.channel, f"{messageData.user}, no item name in double quotation marks (\") was found! Make sure to include it in the command. Usage example: \
                                                 _genshin {firstArg} username character/weapon \"Item Name\" primogemOfferAmount {self.derpEmote}")
                     return
 
@@ -2099,27 +2099,27 @@ class GenshinCommand(Command):
                 targetExistsInDatabase = None
 
                 try:
-                    userExistsInDatabase = self.CheckUserRowExists(user)
+                    userExistsInDatabase = self.CheckUserRowExists(messageData.user)
                     targetExistsInDatabase = self.CheckUserRowExists(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExistsInDatabase:
-                    bot.send_message(channel, f"{user}, you are not registered! Use _genshin register to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use _genshin register to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
                 elif not targetExistsInDatabase:
-                    bot.send_message(channel, f"{user}, {targetUser} is not registered! Get them to use _genshin register to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {targetUser} is not registered! Get them to use _genshin register to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 # Get the Twitch UIDs for both users.
                 userUID = None
                 targetUID = None
                 try:
-                    userUID = self.GetTwitchUserID(user)
+                    userUID = self.GetTwitchUserID(messageData.user)
                     targetUID = self.GetTwitchUserID(targetUser)
                 except:
-                    bot.send_message(channel, f"{user}, cannot proceed due a to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, cannot proceed due a to a Twitch API error. {self.sadEmote}")
                     return
 
                 # See if any of the users is in an active trade.
@@ -2139,11 +2139,11 @@ class GenshinCommand(Command):
 
                 if userInTrade:
                     if int((timeNow - userTradeStartTime).total_seconds()) < self.tradeTimeout:
-                        bot.send_message(channel, f"{user}, you are already in an active trade with {userTradingWith}! {self.angryEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, you are already in an active trade with {userTradingWith}! {self.angryEmote}")
                         return
                 elif targetInTrade:
                     if int((timeNow - targetTradeStartTime).total_seconds()) < self.tradeTimeout:
-                        bot.send_message(channel, f"{user}, {targetUser} is in an active trade with {targetTradingWith}! {self.shockedEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, {targetUser} is in an active trade with {targetTradingWith}! {self.shockedEmote}")
                         return
             
                 # See if the user has enough primogems.
@@ -2156,22 +2156,22 @@ class GenshinCommand(Command):
                     primogemOffer = self.GetUserPrimogemsPartial(userPrimogems, primogemOffer)
                     
                 if primogemOffer == -1:
-                    bot.send_message(channel, f"{user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                     return
 
                 if userPrimogems < primogemOffer:
-                    bot.send_message(channel, f"{user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you only have {userPrimogems} primogems! {self.shockedEmote}")
                     return
 
                 # Check for abnormalities.
                 if primogemOffer < 0:
-                    bot.send_message(channel, f"{user}, primogem offer amount cannot be less than zero! {self.shockedEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, primogem offer amount cannot be less than zero! {self.shockedEmote}")
                     return
-                elif targetUser == user:
-                    bot.send_message(channel, f"{user}, you successfully traded your own {itemName} with yourself! Paimon thinks that was a good trade! {self.thumbsUpEmote}")
+                elif targetUser == messageData.user:
+                    bot.send_message(messageData.channel, f"{messageData.user}, you successfully traded your own {itemName} with yourself! Paimon thinks that was a good trade! {self.thumbsUpEmote}")
                     return
                 elif targetUser == botUsername:
-                    bot.send_message(channel, f"{user}, thanks for the offer, but Paimon doesn't know how trading math works. {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, thanks for the offer, but Paimon doesn't know how trading math works. {self.derpEmote}")
                     return
 
                 # Check if the trade initiator has already maxed out the aformentioned item. If they do, don't let them initiate the trade.
@@ -2193,7 +2193,7 @@ class GenshinCommand(Command):
                     userConstellationOrRefinementValue = userOwned4Stars[itemName]
 
                 if userConstellationOrRefinementValue is not None and (userConstellationOrRefinementValue == "C6" or userConstellationOrRefinementValue == "R5"):
-                    bot.send_message(channel, f"{user}, You already have {itemName} at {userConstellationOrRefinementValue}, which is already the maximum value for the \"{itemType}\" type! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, You already have {itemName} at {userConstellationOrRefinementValue}, which is already the maximum value for the \"{itemType}\" type! {self.angryEmote}")
                     return
 
                 # See if the target has the amentioned item.
@@ -2216,7 +2216,7 @@ class GenshinCommand(Command):
                     itemStarValue = "4star"
                     constellationOrRefinementValue = targetOwned4Stars[itemName]
                 else:
-                    bot.send_message(channel, f"{user}, {targetUser} does not own any {itemType}s called \"{itemName}\"! {self.tantrumEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {targetUser} does not own any {itemType}s called \"{itemName}\"! {self.tantrumEmote}")
                     return
 
                 # Everything is in order, the trade is initiated!
@@ -2228,32 +2228,32 @@ class GenshinCommand(Command):
                                                                     WHEN userId=%s THEN %s END), \
                                                                     primogemOffer=%s, tradeStartTime=NOW() WHERE userId IN (%s, %s)",
                                                                     (userUID, targetUID, (True if itemType == "character" else False), itemName, itemStarValue,
-                                                                    constellationOrRefinementValue, userUID, targetUser, targetUID, user, primogemOffer, userUID, targetUID))
+                                                                    constellationOrRefinementValue, userUID, targetUser, targetUID, messageData.user, primogemOffer, userUID, targetUID))
                 self.database.commit()
 
                 starInt = 5 if itemStarValue == "5star" else 4
 
                 # Announce the trade offer in the chat.
-                bot.send_message(channel, f"{targetUser}, {user} is offering {primogemOffer} {'primogem' if primogemOffer == 1 else 'primogems'} for your \
+                bot.send_message(messageData.channel, f"{targetUser}, {messageData.user} is offering {primogemOffer} {'primogem' if primogemOffer == 1 else 'primogems'} for your \
                 {itemName}({starInt}⭐)[{constellationOrRefinementValue}]! You can use _genshin tradeaccept or _genshin tradedeny to respond within {self.tradeTimeout} seconds. {self.nomEmote}")
             
             elif firstArg == "tradeaccept":
                 userUID = None
                 try:
-                    userUID = self.GetTwitchUserID(user)
+                    userUID = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"Can not proceed due to a Twitch API problem. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"Can not proceed due to a Twitch API problem. {self.sadEmote}")
                     return
                 
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
                 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 # See if the user is in a valid trade and get their primogem data.
@@ -2279,14 +2279,14 @@ class GenshinCommand(Command):
 
                         # The trade initiator cannot accept the trade they started.
                         if userIsBuying:
-                            bot.send_message(channel, f"You can't accept the trade you started! You have to wait for {userTradingWith} to accept or deny the trade or wait until the timeout! {self.angryEmote}")
+                            bot.send_message(messageData.channel, f"You can't accept the trade you started! You have to wait for {userTradingWith} to accept or deny the trade or wait until the timeout! {self.angryEmote}")
                             return
                         
                         targetUID = None
                         try:
                             targetUID = self.GetTwitchUserID(userTradingWith)
                         except:
-                            bot.send_message(channel, f"{user}, cannot proceed due to a Twitch API error. Try again in a bit. {self.shockedEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, cannot proceed due to a Twitch API error. Try again in a bit. {self.shockedEmote}")
                             return
 
                         # Get trade offerer's primogem data.
@@ -2295,7 +2295,7 @@ class GenshinCommand(Command):
 
                         # See if the offerer still has enough primogems. If not, cancel the trade.
                         if offererPrimogems < primogemOffer:
-                            bot.send_message(channel, f"{user}, {userTradingWith} has less primogems than the amount they started the trade with. The trade will be cancelled.")
+                            bot.send_message(messageData.channel, f"{messageData.user}, {userTradingWith} has less primogems than the amount they started the trade with. The trade will be cancelled.")
                             
                             self.cursor.execute("UPDATE tradestats SET inTrade=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
                             self.database.commit()
@@ -2394,31 +2394,31 @@ class GenshinCommand(Command):
 
                         starInt = 5 if itemStarValue == "5star" else 4
 
-                        targetStr = f"{userTradingWith} bought {itemName}({starInt}⭐)[{itemQuality}] from {user} for {primogemOffer} primogems!"
+                        targetStr = f"{userTradingWith} bought {itemName}({starInt}⭐)[{itemQuality}] from {messageData.user} for {primogemOffer} primogems!"
                         if offererItemsData[itemName] not in ["C0", "R1"]: # If the item got a constellation/refinement upgrade, announce that too. 
                             targetStr += f" Their {itemName} is now {offererItemsData[itemName]}!"
                         
                         targetStr += f" {self.proudEmote}"
 
-                        bot.send_message(channel, targetStr)
+                        bot.send_message(messageData.channel, targetStr)
 
             elif firstArg == "tradedeny":
                 userUID = None
                 try:
-                    userUID = self.GetTwitchUserID(user)
+                    userUID = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
                     return
                 
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
                 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not a registered user! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 # See if the user is in a valid trade.
@@ -2435,25 +2435,25 @@ class GenshinCommand(Command):
                 try:
                     targetUID = self.GetTwitchUserID(tradingWith)
                 except:
-                    bot.send_message(channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"Cannot proceed due to a Twitch API problem. {self.sadEmote}")
                     return
 
                 if inTrade:
                     if int((timeNow - tradeStartTime).total_seconds()) < self.tradeTimeout:
                         if isBuying:
-                            bot.send_message(channel, f"{user}, you can't deny the trade you started! You have to wait for {tradingWith} to respond to the trade or wait until the timeout! {self.angryEmote}")
+                            bot.send_message(messageData.channel, f"{messageData.user}, you can't deny the trade you started! You have to wait for {tradingWith} to respond to the trade or wait until the timeout! {self.angryEmote}")
                             return
 
                         # Valid trade, move on with the denial.
                         self.cursor.execute("UPDATE tradestats SET inTrade=FALSE WHERE userID IN (%s, %s)", (userUID, targetUID))
                         self.database.commit()
 
-                        bot.send_message(channel, f"{tradingWith}, {user} denied your trade offer. {self.shockedEmote}")
+                        bot.send_message(messageData.channel, f"{tradingWith}, {messageData.user} denied your trade offer. {self.shockedEmote}")
                     else:
-                        bot.send_message(channel, f"{user}, you have no active trade offers to deny! {self.angryEmote}")
+                        bot.send_message(messageData.channel, f"{messageData.user}, you have no active trade offers to deny! {self.angryEmote}")
                         return
                 else:
-                    bot.send_message(channel, f"{user}, you have no active trade offers to deny! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you have no active trade offers to deny! {self.angryEmote}")
                     return
 
             elif firstArg in ["banner", "banners"]:
@@ -2489,33 +2489,33 @@ class GenshinCommand(Command):
 
                     currentIndex += 1
 
-                bot.send_message(channel, f"{user}, Current banners are: {message}")
+                bot.send_message(messageData.channel, f"{messageData.user}, Current banners are: {message}")
 
             elif firstArg == "update":
-                if user != AUTHORIZED_USER:
-                    bot.send_message(channel, "🤨")
+                if messageData.user != AUTHORIZED_USER:
+                    bot.send_message(messageData.channel, "🤨")
                     return
                 
                 self.UpdateBannerData()
-                bot.send_message(channel, f"Successfully updated the wish schedule. Current banner names are: {', '.join(self.validBannerNames)}")
+                bot.send_message(messageData.channel, f"Successfully updated the wish schedule. Current banner names are: {', '.join(self.validBannerNames)}")
 
             elif firstArg in ["gamble", "roulette"]:
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
-                    uid = self.GetTwitchUserID(user)
+                    uid = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error.")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to continue due to a Twitch API error.")
                     return
 
                 self.cursor.execute("SELECT primogems FROM wishstats where userId=%s", (uid,))
@@ -2527,7 +2527,7 @@ class GenshinCommand(Command):
                 try:
                     betAmount = args[2]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, you haven't entered an amount to bet! Example usage: _genshin roulette all {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you haven't entered an amount to bet! Example usage: _genshin roulette all {self.primogemEmote}")
                     return
                 
                 try:
@@ -2537,20 +2537,20 @@ class GenshinCommand(Command):
                     betAmount = self.GetUserPrimogemsPartial(ownedPrimogems, betAmount)
 
                 if betAmount == -1:
-                    bot.send_message(channel, f"{user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                     return
                 
                 if betAmount < 0:
-                    bot.send_message(channel, f"{user}, no loans! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, no loans! {self.angryEmote}")
                     return
 
                 if betAmount < self.rouletteMinBet:
-                    bot.send_message(channel, f"{user}, minimum bet for roulette is {self.rouletteMinBet} primogems. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, minimum bet for roulette is {self.rouletteMinBet} primogems. {self.sadEmote}")
                     return
 
                 # Check if user has enough primogems.
                 if ownedPrimogems < betAmount:
-                    bot.send_message(channel, f"{user}, you wanted to bet {betAmount} primogems, but you only have {ownedPrimogems} primogems! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you wanted to bet {betAmount} primogems, but you only have {ownedPrimogems} primogems! {self.angryEmote}")
                     return
 
                 # Now check if user won the roulette.
@@ -2563,7 +2563,7 @@ class GenshinCommand(Command):
                     self.cursor.execute("UPDATE gamblestats SET roulettesWon=roulettesWon+1 WHERE userId=%s", (uid,))
                     self.database.commit()
 
-                    bot.send_message(channel, f"{user} has won {earnedPrimogems} primogems in roulette, and they now have {earnedPrimogems + ownedPrimogems} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user} has won {earnedPrimogems} primogems in roulette, and they now have {earnedPrimogems + ownedPrimogems} primogems! {self.primogemEmote}")
                 else:
                     # User has lost the roulette, take their loss from them.
                     lostPrimogems = betAmount
@@ -2572,25 +2572,25 @@ class GenshinCommand(Command):
                     self.cursor.execute("UPDATE gamblestats SET roulettesLost=roulettesLost+1 WHERE userId=%s", (uid,))
                     self.database.commit()
 
-                    bot.send_message(channel, f"{user} has lost {lostPrimogems} primogems in roulette, and they now have {ownedPrimogems - lostPrimogems} primogems! {self.shockedEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user} has lost {lostPrimogems} primogems in roulette, and they now have {ownedPrimogems - lostPrimogems} primogems! {self.shockedEmote}")
             
             elif firstArg in ["slot", "slots"]:
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
-                    uid = self.GetTwitchUserID(user)
+                    uid = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error.")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to continue due to a Twitch API error.")
                     return
 
                 self.cursor.execute("SELECT primogems FROM wishstats where userId=%s", (uid,))
@@ -2602,7 +2602,7 @@ class GenshinCommand(Command):
                 try:
                     betAmount = args[2]
                 except IndexError:
-                    bot.send_message(channel, f"{user}, you haven't entered an amount to bet! Example usage: _genshin slots all {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you haven't entered an amount to bet! Example usage: _genshin slots all {self.primogemEmote}")
                     return
                 
                 try:
@@ -2612,20 +2612,20 @@ class GenshinCommand(Command):
                     betAmount = self.GetUserPrimogemsPartial(ownedPrimogems, betAmount)
 
                 if betAmount == -1:
-                    bot.send_message(channel, f"{user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                     return
 
                 if betAmount < 0:
-                    bot.send_message(channel, f"{user}, no loans! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, no loans! {self.angryEmote}")
                     return
 
                 if betAmount < self.slotsMinBet:
-                    bot.send_message(channel, f"{user}, minimum bet for slots is {self.slotsMinBet} primogems. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, minimum bet for slots is {self.slotsMinBet} primogems. {self.sadEmote}")
                     return
 
                 # Check if user has enough primogems.
                 if ownedPrimogems < betAmount:
-                    bot.send_message(channel, f"{user}, you wanted to bet {betAmount} primogems, but you only have {ownedPrimogems} primogems! {self.angryEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you wanted to bet {betAmount} primogems, but you only have {ownedPrimogems} primogems! {self.angryEmote}")
                     return
 
                 # Now, do the slot rolls!
@@ -2643,7 +2643,7 @@ class GenshinCommand(Command):
                     self.cursor.execute("UPDATE gamblestats SET slotsWon=slotsWon+1 WHERE userId=%s", (uid,))
                     self.database.commit()
 
-                    bot.send_message(channel, f"{user} you got {slotsResult} in slots and won {earnedPrimogems} primogems!!! You now have {ownedPrimogems + earnedPrimogems} primogems!!! {self.primogemEmote} {self.primogemEmote} {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user} you got {slotsResult} in slots and won {earnedPrimogems} primogems!!! You now have {ownedPrimogems + earnedPrimogems} primogems!!! {self.primogemEmote} {self.primogemEmote} {self.primogemEmote}")
                 else:
                     # User has lost the roulette, take their loss from them.
                     lostPrimogems = betAmount
@@ -2652,25 +2652,25 @@ class GenshinCommand(Command):
                     self.cursor.execute("UPDATE gamblestats SET slotsLost=slotsLost+1 WHERE userId=%s", (uid,))
                     self.database.commit()
 
-                    bot.send_message(channel, f"{user} you got {slotsResult} in slots and lost {lostPrimogems} primogems. You now have {ownedPrimogems - lostPrimogems} primogems. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user} you got {slotsResult} in slots and lost {lostPrimogems} primogems. You now have {ownedPrimogems - lostPrimogems} primogems. {self.sadEmote}")
             
             elif firstArg in "updatename":
                 userExists = None
                 try:
-                    userExists = self.CheckUserRowExists(user)
+                    userExists = self.CheckUserRowExists(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, can't proceed due to a Twitch API error. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, can't proceed due to a Twitch API error. {self.sadEmote}")
                     return
 
                 if not userExists:
-                    bot.send_message(channel, f"{user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, you are not registered! Use \"_genshin register\" to register and get {self.primogemAmountOnRegistration} primogems! {self.primogemEmote}")
                     return
 
                 uid = None
                 try:
-                    uid = self.GetTwitchUserID(user)
+                    uid = self.GetTwitchUserID(messageData.user)
                 except:
-                    bot.send_message(channel, f"{user}, unable to continue due to a Twitch API error.")
+                    bot.send_message(messageData.channel, f"{messageData.user}, unable to continue due to a Twitch API error.")
                     return
 
                 try:
@@ -2683,9 +2683,9 @@ class GenshinCommand(Command):
                     self.cursor.execute("UPDATE gamblestats SET username=%s where userId=%s", (newUsername, uid))
                     self.database.commit()
 
-                    bot.send_message(channel, f"{user}, Successfully updated your new name in the database! {self.proudEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, Successfully updated your new name in the database! {self.proudEmote}")
                 except:
-                    bot.send_message(channel, f"{user}, An error occured while updating name. {self.sadEmote}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, An error occured while updating name. {self.sadEmote}")
                     return
 
 

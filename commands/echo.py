@@ -1,18 +1,18 @@
 from commands.command import Command
-
+from globals import AUTHORIZED_USER
 
 class EchoCommand(Command):
     COMMAND_NAME = "echo"
     COOLDOWN = 0
     DESCRIPTION = "Echo the inputted message."
 
-    def execute(self, bot, user, message, channel):
-        if user != "emredesu":
+    def execute(self, bot, messageData):
+        if messageData.user != AUTHORIZED_USER:
             return
 
-        targetChannel = channel
+        targetChannel = messageData.channel
 
-        args = message.split()
+        args = messageData.content.split()
         args.pop(0)
 
         for arg in args:

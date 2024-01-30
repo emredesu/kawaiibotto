@@ -30,10 +30,10 @@ class PingCommand(Command):
 	COOLDOWN = 3
 	DESCRIPTION = "Check if the bot is running and get the bot's uptime."
 
-	def execute(self, bot, user, message, channel):
+	def execute(self, bot, messageData):
 		ping_to_twitch = (bot.last_twitch_pong_time - bot.last_twitch_pinged_time).microseconds // 1000 \
 		if bot.last_twitch_pong_time is not None \
 		and bot.last_twitch_pinged_time is not None else "N/A"
 
-		bot.send_message(channel, calculate_uptime(bot) + f" Latency to TMI: {ping_to_twitch}ms")
+		bot.send_message(messageData.channel, calculate_uptime(bot) + f" Latency to TMI: {ping_to_twitch}ms")
 		bot.ping_twitch()

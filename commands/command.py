@@ -8,5 +8,5 @@ class Command:
 
 	lastUseTimePerUser = {}
 
-	def execute(self, bot, user, message, channel):
+	def execute(self, bot, messageData):
 		pass

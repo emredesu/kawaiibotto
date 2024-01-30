@@ -8,10 +8,10 @@ class OCRCommand(Command):
     DESCRIPTION = "Use OCR (optical character recognition) to extract the text from an image link. You can specify the language" \
                 "using \"lang:(language code here)\". Example usage: _ocr https://i.nuuls.com/leMKr.png lang:jpn"
 
-    def execute(self, bot, user, message, channel):
+    def execute(self, bot, messageData):
         target_language = "eng"
 
-        message_args = message.split()
+        message_args = messageData.content.split()
         message_args.pop(0) # Get rid of the first arg that's used to invoke the command.
         for arg in message_args:
             if arg.startswith("lang:"):
@@ -72,7 +72,7 @@ class OCRCommand(Command):
             try:
                 target_language = matchedLanguageCodes[target_language]
             except KeyError:
-                bot.send_message(channel, f"{user}, the language code you inputted is invalid. Valid codes can be found at: https://ocr.space/OCRAPI#:~:text=faster%20upload%20speeds.-,language,-%5BOptional%5D%0AArabic")
+                bot.send_message(messageData.channel, f"{messageData.user}, the language code you inputted is invalid. Valid codes can be found at: https://ocr.space/OCRAPI#:~:text=faster%20upload%20speeds.-,language,-%5BOptional%5D%0AArabic")
                 return
 
         targetRequest = f"https://api.ocr.space/parse/imageurl?apikey={OCR_SPACE_APIKEY}&url={message_args[0]}"
@@ -82,20 +82,20 @@ class OCRCommand(Command):
         try:
             requestData = requests.get(targetRequest)
             if requestData.status_code != 200:
-                bot.send_message(channel, f"{user}, the OCR API returned a {requestData.status_code}.")
+                bot.send_message(messageData.channel, f"{messageData.user}, the OCR API returned a {requestData.status_code}.")
 
             jsonData = requestData.json()
             
             if jsonData["IsErroredOnProcessing"]:
                 errorMessage = " / ".join(jsonData["ErrorMessage"])
-                bot.send_message(channel, f"{user}, {errorMessage}")
+                bot.send_message(messageData.channel, f"{messageData.user}, {errorMessage}")
             else:
                 parsedText = jsonData["ParsedResults"][0]["ParsedText"]
                 if not parsedText:
-                    bot.send_message(channel, f"{user}, received empty response from the API, did you give the correct language code with lang:code ?")
+                    bot.send_message(messageData.channel, f"{messageData.user}, received empty response from the API, did you give the correct language code with lang:code ?")
                     return
                 else:
-                    bot.send_message(channel, f"{user}, {parsedText}")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {parsedText}")
         except:
-            bot.send_message(channel, f"{user}, an unknown error has occured.")
+            bot.send_message(messageData.channel, f"{messageData.user}, an unknown error has occured.")
         

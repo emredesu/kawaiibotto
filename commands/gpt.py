@@ -31,12 +31,12 @@ class ChatBotCommand(Command):
 		super().__init__(commands)
 		openai.api_key = OPENAI_APIKEY
 
-	def execute(self, bot, user, message, channel):
+	def execute(self, bot, messageData):
 		maxTokens = 1000
 		historyWipeTag = "history:false"
 		currentModel = "gpt-3.5-turbo"
 
-		args = message.split()
+		args = messageData.content.split()
 		args.pop(0) # Get rid of the command invocation
 
 
@@ -44,11 +44,11 @@ class ChatBotCommand(Command):
 			args.pop(args.index(historyWipeTag))
 
 			# Delete user history and start fresh with the new prompt			
-			self.messageHistory.pop(user)
+			self.messageHistory.pop(messageData.user)
 
 		userPrompt = " ".join(args)
 		if not userPrompt:
-			bot.send_message(channel, f"{user}, You haven't given the model a prompt! Example usage: _gpt Tell me a story about a turtle.")
+			bot.send_message(messageData.channel, f"{messageData.user}, You haven't given the model a prompt! Example usage: _gpt Tell me a story about a turtle.")
 			return
         
 		try:
@@ -56,10 +56,10 @@ class ChatBotCommand(Command):
 			hasHistory = False
 
 			# Check if the user has message history saved and that it's not timed out. If so, build the "messages" list.
-			if user in self.messageHistory and (time.time() - self.messageHistory[user][-1].timestamp) < self.HISTORY_EXPIRE_AFTER:
+			if messageData.user in self.messageHistory and (time.time() - self.messageHistory[messageData.user][-1].timestamp) < self.HISTORY_EXPIRE_AFTER:
 				hasHistory = True
 
-				for messageHistoryData in self.messageHistory[user]:
+				for messageHistoryData in self.messageHistory[messageData.user]:
 					# Message sent by a user
 					if messageHistoryData.userMessage:
 						userMessageHistory.append({"role": "user", "content": messageHistoryData.messageContent})
@@ -68,28 +68,28 @@ class ChatBotCommand(Command):
 						userMessageHistory.append({"role": "system", "content": messageHistoryData.messageContent})
 			else:
 				# If the user is still in message history despite not passing the previous condition check, that means their messages have expired, so we will wipe their history.
-				if user in self.messageHistory:
-					self.messageHistory.pop(user)
+				if messageData.user in self.messageHistory:
+					self.messageHistory.pop(messageData.user)
 
 			# This new prompt is also added to the messages list.
 			userMessageHistory.append({"role": "user", "content": userPrompt})
 
 			# Save this new prompt to the user message history. If user does not exist in the history, create a new entry.
-			if user in self.messageHistory:
-				self.messageHistory[user].append(GPTMessageData(True, userPrompt, time.time()))
+			if messageData.user in self.messageHistory:
+				self.messageHistory[messageData.user].append(GPTMessageData(True, userPrompt, time.time()))
 			else:
-				self.messageHistory[user] = [GPTMessageData(True, userPrompt, time.time())]
+				self.messageHistory[messageData.user] = [GPTMessageData(True, userPrompt, time.time())]
 
 			gptHTTPResponse = openai.ChatCompletion.create(model=currentModel, messages=userMessageHistory, max_tokens=maxTokens)
 			generatedResponses = [choice.message["content"].strip() for choice in gptHTTPResponse["choices"]]
 
 			chosenResponse = generatedResponses[0]
-			bot.send_message(channel, f"{user}," + (self.HISTORY_EMOJI if hasHistory else " ") + chosenResponse)
+			bot.send_message(messageData.channel, f"{messageData.user}," + (self.HISTORY_EMOJI if hasHistory else " ") + chosenResponse)
 
 			# Save bot response to message history too.
-			self.messageHistory[user].append(GPTMessageData(False, chosenResponse, time.time()))
+			self.messageHistory[messageData.user].append(GPTMessageData(False, chosenResponse, time.time()))
 		except Exception as e:
-			bot.send_message(channel, f"{user}, An error occured.")
+			bot.send_message(messageData.channel, f"{messageData.user}, An error occured.")
 			messagetypes.error(f"{e}")
 			return
 
@@ -102,21 +102,21 @@ class ImageGenCommand(Command):
 		super().__init__(commands)
 		openai.api_key = OPENAI_APIKEY
 
-	def execute(self, bot, user, message, channel):
+	def execute(self, bot, messageData):
 		maxTokens = 1000
 
-		args = message.split()
+		args = messageData.content.split()
 		args.pop(0)
 
 		userPrompt = " ".join(args)
 		if not userPrompt:
-			bot.send_message(channel, f"{user}, You haven't given the model a prompt! Example usage: _dalle A cat playing with a mouse toy.")
+			bot.send_message(messageData.channel, f"{messageData.user}, You haven't given the model a prompt! Example usage: _dalle A cat playing with a mouse toy.")
 			return
 		
 		try:
-			bot.send_message(channel, f"{user}, Generating...")
+			bot.send_message(messageData.channel, f"{messageData.user}, Generating...")
 			imageResult = openai.Image.create(prompt=userPrompt, n=1)
-			bot.send_message(channel, f"{user}, {imageResult['data'][0]['url']}")
+			bot.send_message(messageData.channel, f"{messageData.user}, {imageResult['data'][0]['url']}")
 		except:
-			bot.send_message(channel, f"{user}, An error occured.")
+			bot.send_message(messageData.channel, f"{messageData.user}, An error occured.")
 			return

@@ -21,23 +21,23 @@ class RandomQuoteCommand(Command):
 		else:
 			self.channels = [channels_data["channels"][i]["name"] for i in range(len(channels_data["channels"]))]
 
-	def execute(self, bot, user, message, channel):
-		args = message.split()
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
 
 		try:
 			person = args[1].replace("@", "")
 			ch = args[2]
 		except IndexError:
-			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (username) (channel)")
+			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (username) (channel)")
 		else:
 			if ch not in self.channels:
-				bot.send_message(channel, "That channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
+				bot.send_message(messageData.channel, "That channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
 				return
 			else:
 				request = requests.get(f"https://logs.ivr.fi/channel/{ch}/user/{person}/random?json=1")
 				
 				if request.status_code != 200:
-					bot.send_message(channel, f"{user}, API returned {request.status_code}.")
+					bot.send_message(messageData.channel, f"{messageData.user}, API returned {request.status_code}.")
 					return
 
 				rq_data = request.json()["messages"][0]			
@@ -49,9 +49,9 @@ class RandomQuoteCommand(Command):
 
 					dayDifferential = deltaTime.days
 
-					bot.send_message(channel, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
+					bot.send_message(messageData.channel, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
 				except KeyError:
-					bot.send_message(channel, f"{user}, API error.")
+					bot.send_message(messageData.channel, f"{messageData.user}, API error.")
 					return
 
 
@@ -60,14 +60,14 @@ class EmoteInfoCommand(Command):
 	COOLDOWN = 5
 	DESCRIPTION = f"Get info about an emote (whose emote is it, which tier is it etc.). Example usage: _{COMMAND_NAME} bepBlush"
 
-	def execute(self, bot, user, message, channel):
-		args = message.split()
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
 		data = None
 
 		try:
 			emote = args[1]
 		except IndexError:
-			bot.send_message(channel, f"Usage: _{self.COMMAND_NAME} (emote name or emote ID)")
+			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (emote name or emote ID)")
 			return
 		else:
 			try:
@@ -79,7 +79,7 @@ class EmoteInfoCommand(Command):
 
 				ch = data["channelLogin"]
 
-				bot.send_message(channel, f"{emote} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+				bot.send_message(messageData.channel, f"{emote} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
 			except KeyError:
 				# On failure, try again with the ?id=true parameter in case the given param is an emote code.
 				try:
@@ -92,7 +92,7 @@ class EmoteInfoCommand(Command):
 					ch = data["channelLogin"]
 					emoteName = data["emoteCode"]
 
-					bot.send_message(channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+					bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
 				except KeyError:
 					# Lastly, try to extract the emote code from the given string in case it's an emote URL.
 					emoteCode = ""
@@ -105,13 +105,13 @@ class EmoteInfoCommand(Command):
 						ch = data["channelLogin"]
 						emoteName = data["emoteCode"]
 
-						bot.send_message(channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+						bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
 					except (IndexError, KeyError):
 						# Give up.
 						statusCode = data["statusCode"]
 						errorMessage = data["error"]["message"]
 
-						bot.send_message(channel, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
+						bot.send_message(messageData.channel, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
 
 			except requests.exceptions.ConnectionError:
-				bot.send_message(channel, "API is down ;w;")
+				bot.send_message(messageData.channel, "API is down ;w;")

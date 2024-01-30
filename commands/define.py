@@ -1,5 +1,6 @@
 from commands.command import Command
 import requests
+import json
 
 class DefineCommand(Command):
     COMMAND_NAME = ["define", "definion", "dictionary"]
@@ -7,8 +8,8 @@ class DefineCommand(Command):
 
     supported_language_codes = ["en_US", "hi", "es", "fr", "ja", "ru", "en_GB", "de", "it", "ko", "pt-BR", "ar", "tr"]
 
-    def execute(self, bot, user, message, channel):
-        args = message.split()
+    def execute(self, bot, messageData):
+        args = messageData.content.split()
         args.pop(0)
 
         target_word = None
@@ -16,7 +17,7 @@ class DefineCommand(Command):
         target_index = 0
 
         if len(args) < 1:
-            bot.send_message(channel, "Inadequate amount of parameters supplied! Example usage: _define cute lang:en")
+            bot.send_message(messageData.channel, "Inadequate amount of parameters supplied! Example usage: _define cute lang:en")
             return
 
         for arg in args:
@@ -29,7 +30,7 @@ class DefineCommand(Command):
                     break
 
                 if requested_target_language not in self.supported_language_codes:
-                    bot.send_message(channel, f"{requested_target_language} is not a supported language code. Supported language codes are: {' '.join(self.supported_language_codes)}")
+                    bot.send_message(messageData.channel, f"{requested_target_language} is not a supported language code. Supported language codes are: {' '.join(self.supported_language_codes)}")
                     return
 
                 target_language = requested_target_language
@@ -40,7 +41,7 @@ class DefineCommand(Command):
                     target_index = requested_index
                     args.remove(arg)
                 except ValueError:
-                    bot.send_message(channel, "An invalid value (non-int) was supplied after \"index:\"!")
+                    bot.send_message(messageData.channel, "An invalid value (non-int) was supplied after \"index:\"!")
                     return
         
         if target_language is None:
@@ -52,20 +53,20 @@ class DefineCommand(Command):
         result = requests.get(api_request)
 
         if result.status_code != 200:
-            bot.send_message(channel, f"{user}, {result.json()['message']}")
+            bot.send_message(messageData.channel, f"{messageData.user}, {result.json()['message']}")
             return
 
         try:
             result = result.json()
         except json.decoder.JSONDecodeError:
-            bot.send_message(channel, "There was an error getting the definiton for that word. Try again later.")
+            bot.send_message(messageData.channel, "There was an error getting the definiton for that word. Try again later.")
             return
 
         data = result[0]
         data_max_index = len(data["meanings"]) - 1
 
         if target_index > data_max_index:
-            bot.send_message(channel, f"Requested index is too big! Max index for this query is {data_max_index}.")
+            bot.send_message(messageData.channel, f"Requested index is too big! Max index for this query is {data_max_index}.")
             return
 
         part_of_speech = data["meanings"][target_index]["partOfSpeech"]
@@ -74,8 +75,8 @@ class DefineCommand(Command):
         try:
             example_usage = data["meanings"][target_index]["definitions"][0]["example"]
         except KeyError:
-            example_usage = "(NOT FOUND)"
+            example_usage = None
         
-        to_send = f"index ({target_index}/{data_max_index}) {target_word} ({part_of_speech}): {definition} Example usage: {example_usage}"
+        to_send = f"index ({target_index}/{data_max_index}) {target_word} ({part_of_speech}): {definition} {(f'Example usage: {example_usage}' if example_usage is not None else '')}"
 
-        bot.send_message(channel, to_send)
+        bot.send_message(messageData.channel, to_send)

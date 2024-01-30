@@ -6,5 +6,5 @@ class VanishCommand(Command):
 	COOLDOWN = 0
 	DESCRIPTION = "poof"
 
-	def execute(self, bot, user, message, channel):
-		bot.send_message(channel, f"/timeout {user} 1")
+	def execute(self, bot, messageData):
+		bot.send_message(messageData.channel, f"/timeout {messageData.user} 1")

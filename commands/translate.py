@@ -125,8 +125,8 @@ class TranslateCommand(Command):
 		"auto": "auto"
 	}
 
-	def execute(self, bot, user, message, channel):
-		args = message.split()
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
 		args.pop(0)
 
 		text_array = []
@@ -149,7 +149,7 @@ class TranslateCommand(Command):
 			elif value == source_language.lower():
 				break
 		else:
-			bot.send_message(channel, f"{user}, That language is not supported by Google translate API! To see which languages are supported, visit: https://cloud.google.com/translate/docs/languages")
+			bot.send_message(messageData.channel, f"{messageData.user}, That language is not supported by Google translate API! To see which languages are supported, visit: https://cloud.google.com/translate/docs/languages")
 			return
 
 		for key, value in self.google_supported_languages.items():
@@ -159,7 +159,7 @@ class TranslateCommand(Command):
 			elif value == target_language.lower():
 				break
 		else:
-			bot.send_message(channel, f"{user}, That language is not supported by Google translate API! To see which languages are supported, visit: https://cloud.google.com/translate/docs/languages")
+			bot.send_message(messageData.channel, f"{messageData.user}, That language is not supported by Google translate API! To see which languages are supported, visit: https://cloud.google.com/translate/docs/languages")
 			return
 
 		text = " ".join(text_array)
@@ -167,7 +167,7 @@ class TranslateCommand(Command):
 		is_successful = bool(data[0][0][4])
 
 		if not is_successful:
-			bot.send_message(channel, f"{user}, translation failed ;w;")
+			bot.send_message(messageData.channel, f"{messageData.user}, translation failed ;w;")
 			return
 		else:
 			translated_text = ""
@@ -177,4 +177,4 @@ class TranslateCommand(Command):
 			if source_language == "auto":
 				source_language = data[2]
 
-			bot.send_message(channel, f"{user}, {source_language} -> {target_language} - {translated_text}")
+			bot.send_message(messageData.channel, f"{messageData.user}, {source_language} -> {target_language} - {translated_text}")

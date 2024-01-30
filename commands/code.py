@@ -8,13 +8,13 @@ class CodeCommand(Command):
 	COOLDOWN = 5
 	DESCRIPTION = "Want to see the source code of a command? Use this command!"
 
-	def execute(self, bot, user, message, channel):
-		args = message.split()
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
 
 		try:
 			searched_command = args[1]
 		except IndexError:
-			bot.send_message(channel, "Usage: _code (command name)")
+			bot.send_message(messageData.channel, "Usage: _code (command name)")
 		else:
 			command_list = []
 
@@ -26,7 +26,7 @@ class CodeCommand(Command):
 					command_list.append(cmnd.COMMAND_NAME)
 
 			if searched_command not in command_list:
-				bot.send_message(channel, "There is no command with that name. :c")
+				bot.send_message(messageData.channel, "There is no command with that name. :c")
 				return
 			else:
 				command_object = None
@@ -42,4 +42,4 @@ class CodeCommand(Command):
 							command_object = cmnd
 							break
 
-			bot.send_message(channel, f"{user}, https://github.com/emredesu/kawaiibotto/blob/master/commands/{pathlib.Path(inspect.getfile(command_object.__class__)).stem}.py")
+			bot.send_message(messageData.channel, f"{messageData.user}, https://github.com/emredesu/kawaiibotto/blob/master/commands/{pathlib.Path(inspect.getfile(command_object.__class__)).stem}.py")
