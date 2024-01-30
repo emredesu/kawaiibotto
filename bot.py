@@ -1,6 +1,7 @@
 from globals import *
 from messagetypes import *
 from instantiatecommands import instantiate_commands
+from messageParser import TwitchIRCMessage
 import datetime
 import socket
 import time
@@ -44,6 +45,7 @@ class kawaiibotto:
 				self.socket = socket.socket()
 				time.sleep(self.reconnections ** 2)
 			else:
+				self.socket.send("CAP REQ :twitch.tv/commands twitch.tv/tags\r\n".encode("utf-8")) # Request message tags capabilities
 				self.socket.send("PASS oauth:{}\r\n".format(OAUTH_TOKEN).encode("utf-8"))
 				self.socket.send("NICK {}\r\n".format(USERNAME).encode("utf-8"))
 				success("connected to twitch.")
@@ -76,70 +78,41 @@ class kawaiibotto:
 
 		self.connect()
 	
-	def parsemsg(self, msg):
-		"""
-		Breaks a message from an IRC server into its prefix, command, and arguments.
-		"""
-		prefix = ''
-		trailing = []
-		try:
-			if msg[0] == ':':
-				prefix, msg = msg[1:].split(' ', 1)
-			if msg.find(' :') != -1:
-				msg, trailing = msg.split(' :', 1)
-				args = msg.split()
-				args.append(trailing)
-			else:
-				args = msg.split()
-			command = args.pop(0)
-			return prefix, command, args
-		except Exception as e:
-			error(f"Error while parsing message {msg}: {e.__class__.__name__}: {str(e)}")
-			return None
+	def ParseMessage(self, msg) -> TwitchIRCMessage:
+		return TwitchIRCMessage(msg)
 
-	def process_irc_message(self, message):
-		data = self.parsemsg(message)
-		data_type = data[1] if data is not None else "FAILED_TO_PARSE"
+	def process_irc_message(self, rawMessage):
+		parsedMsg = self.ParseMessage(rawMessage)
 
-		if data_type == "PING":
+		if parsedMsg.messageType == "PING":
 			self.socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
 			log("answered the twitch ping")
 			self.ping_twitch() # When Twitch pings us, we ping Twitch back to get our current ping.
-		elif data_type == "PONG":
+		elif parsedMsg.messageType == "PONG":
 			self.last_twitch_pong_time = datetime.datetime.now()
-		elif data_type == "RECONNECT":
+		elif parsedMsg.messageType == "RECONNECT":
 			log("Reconnecting per Twitch's demand...")
 			self.reconnect()
 			return
-		elif data_type == "PRIVMSG":
-			channel = data[2][0][1::]
-			message = data[2][1]
-			user = ""
-
-			for char in data[0]:
-				if char == "!":
-					break
-				else:
-					user += char
-
+		elif parsedMsg.messageType == "PRIVMSG":
 			# Command invocation
-			if message.startswith(COMMAND_PREFIX):
-				invoked_command = message.split()[0][len(COMMAND_PREFIX)::]
+			if parsedMsg.content.startswith(COMMAND_PREFIX):
+				invoked_command = parsedMsg.content.split()[0][len(COMMAND_PREFIX)::]
 
 				for command in self.commands:
 					if isinstance(command.COMMAND_NAME, list):	# alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
-								if self.CheckCanExecute(command, user):
-									thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel)) # Spawn a new thread for the command 
+								if self.CheckCanExecute(command, parsedMsg.user):
+									thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg)) # Spawn a new thread for the command 
 									thread.start()
 					else:
 						if command.COMMAND_NAME == invoked_command:
-							if self.CheckCanExecute(command, user):
-								thread = threading.Thread(target=self.execute_command, args=(command, user, message, channel))
+							if self.CheckCanExecute(command, parsedMsg.user):
+								thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg))
 								thread.start()			
-			elif message.startswith("pajaVanish"):
-				self.send_message(channel, f"/timeout {user} 1")
+			elif rawMessage.startswith("pajaVanish"):
+				self.send_message(parsedMsg.channel, f"/timeout {parsedMsg.user} 1")
 
 	def CheckCanExecute(self, cmnd, user) -> bool:
 		if user in cmnd.lastUseTimePerUser:
@@ -150,15 +123,15 @@ class kawaiibotto:
 		else:
 			return True
 
-	def execute_command(self, cmnd, user, message, channel):
-		cmnd.lastUseTimePerUser[user] = time.time()
+	def execute_command(self, cmnd, messageData):
+		cmnd.lastUseTimePerUser[messageData.user] = time.time()
 
 		try:
-			cmnd.execute(self, user, message, channel)
-			log(f"{user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {channel}")
+			cmnd.execute(self, messageData)
+			log(f"{messageData.user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {messageData.channel}")
 		except Exception as e:
 			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
-			self.send_message(channel, f"{user}, the execution of that command failed! The error has been logged, and will be fixed soon.")
+			self.send_message(messageData.channel, f"{messageData.user}, the execution of that command failed! The error has been logged, and will be fixed soon.")
 
 	def start(self):
 		self.connect()
