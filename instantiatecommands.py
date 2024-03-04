@@ -16,7 +16,8 @@ from commands.ocr import OCRCommand
 from commands.genshin import GenshinCommand
 from commands.echo import EchoCommand
 from commands.maths import MathsCommand
-from commands.gpt import ChatBotCommand
+from commands.gpt import ChatBotCommand, ImageGenCommand
+from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand
 
 def instantiate_commands(commands):
 	HelloWorldCommand(commands)
@@ -41,3 +42,6 @@ def instantiate_commands(commands):
 	EchoCommand(commands)
 	MathsCommand(commands)
 	ChatBotCommand(commands)
+	ImageGenCommand(commands)
+	GenshinResinCheckCommand(commands)
+	HonkaiStarRailStaminaCheckCommand(commands)
