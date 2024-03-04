@@ -11,7 +11,7 @@ script:check = document.cookie.includes('ltoken') && document.cookie.includes('l
 _resin register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID)
 
 <h1>Register for Honkai: Star Rail</h1>
-_stamina register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your HSR UID)
+_stamina register ltoken:(ltoken) ltuid:(ltuid) hsruid:(your HSR UID)
 
 <h1>Register for both Genshin Impact <i>and</i> Honkai: Star Rail</h1>
 _stamina register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID) hsruid:(your HSR UID)
