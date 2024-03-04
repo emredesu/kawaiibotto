@@ -15,9 +15,6 @@ _stamina register ltoken:(ltoken) ltuid:(ltuid) hsruid:(your HSR UID)
 
 <h1>Register for both Genshin Impact <i>and</i> Honkai: Star Rail</h1>
 _stamina register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID) hsruid:(your HSR UID)
-
-<i>**OR**</i>
-
 _resin register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID) hsruid:(your HSR UID)
 
 - If at any point you have entered faulty data (wrong cookie, uid etc.) you may use the register commands 
