@@ -8,24 +8,14 @@ import asyncio
 import datetime
 import threading
 
+hoyoDBConnection = mysql.connector.connect(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData")
+hoyoDBCursor = hoyoDBConnection.cursor()
+DBMutex = threading.Lock()
+
 class GenshinResinCheckCommand(Command):
 	COMMAND_NAME = ["genshinresin", "resin", "resincheck"]
 	COOLDOWN = 5
 	DESCRIPTION = "Check your real-time remaining resin! Requires HoyoLAB cookies to function. Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md"
-
-	mutex = threading.Lock()
-
-	def __init__(self, commands):
-		super().__init__(commands)
-
-		try:
-			self.database = mysql.connector.connect(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData")
-			self.cursor = self.database.cursor()
-			self.successfulInit = True
-		except Exception as e:
-			error(f"Fatal error while connecting to the database: {e.__class__.__name__}")
-			traceback.print_exc()
-			self.successfulInit = False
 
 	async def GetUserNotes(self, ltuid, ltoken, uid):
 		cookies = {"ltuid":ltuid, "ltoken":ltoken}
@@ -34,11 +24,7 @@ class GenshinResinCheckCommand(Command):
 		return userNotes
 
 	def execute(self, bot, messageData):
-		if not self.successfulInit:
-			bot.send_message(messageData.channel, "This command is temporarily unavailable.")
-			return
-
-		with self.mutex:
+		with DBMutex:
 			args = messageData.content.split()
 			args.pop(0)
 
@@ -62,8 +48,8 @@ class GenshinResinCheckCommand(Command):
 					bot.send_message(messageData.channel, f"{messageData.user}, Invalid registration structure. Should be as follows: _resin register ltuid:(ltuid) ltoken:(ltoken) genshinuid:(uid). Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 					return
 				
-				self.cursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltoken=VALUES(ltoken), genshinUID=VALUES(genshinUID)", (int(messageData.tags["user-id"]), messageData.user, genshinUID, hsrUID, ltuid, ltoken))
-				self.database.commit()
+				hoyoDBCursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltoken=VALUES(ltoken), genshinUID=VALUES(genshinUID)", (int(messageData.tags["user-id"]), messageData.user, genshinUID, hsrUID, ltuid, ltoken))
+				hoyoDBConnection.commit()
 
 				bot.send_message(messageData.channel, f"{messageData.user}, successfully registered your HoyoLAB cookies. You may now use the command without any params to retrieve your Genshin Impact in-game data.")
 				return
@@ -71,8 +57,8 @@ class GenshinResinCheckCommand(Command):
 				bot.send_message(messageData.channel, f"{messageData.user}, Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 				return
 
-			self.cursor.execute("SELECT ltuid, ltoken, genshinUID FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
-			result = self.cursor.fetchone()
+			hoyoDBCursor.execute("SELECT ltuid, ltoken, genshinUID FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
+			result = hoyoDBCursor.fetchone()
 
 			ltuid = ""
 			ltoken = ""
@@ -99,20 +85,6 @@ class HonkaiStarRailStaminaCheckCommand(Command):
 	COOLDOWN = 5
 	DESCRIPTION = "Check your real-time remaining stamina! Requires HoyoLAB cookies to function. Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md"
 
-	mutex = threading.Lock()
-
-	def __init__(self, commands):
-		super().__init__(commands)
-
-		try:
-			self.database = mysql.connector.connect(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData")
-			self.cursor = self.database.cursor()
-			self.successfulInit = True
-		except Exception as e:
-			error(f"Fatal error while connecting to the database: {e.__class__.__name__}")
-			traceback.print_exc()
-			self.successfulInit = False
-
 	async def GetHSRUserNotes(self, ltuid, ltoken, uid):
 		cookies = {"ltuid":ltuid, "ltoken":ltoken}
 		client = genshin.Client(cookies)
@@ -120,11 +92,7 @@ class HonkaiStarRailStaminaCheckCommand(Command):
 		return userNotes
 
 	def execute(self, bot, messageData):
-		if not self.successfulInit:
-			bot.send_message(messageData.channel, "This command is temporarily unavailable.")
-			return
-
-		with self.mutex:
+		with DBMutex:
 			args = messageData.content.split()
 			args.pop(0)
 
@@ -148,8 +116,8 @@ class HonkaiStarRailStaminaCheckCommand(Command):
 					bot.send_message(messageData.channel, f"{messageData.user}, Invalid registration structure. Should be as follows: _stamina register ltuid:(ltuid) ltoken:(ltoken) hsruid:(uid). Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 					return
 				
-				self.cursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltoken=VALUES(ltoken), hsrUID=VALUES(hsrUID)", (int(messageData.tags["user-id"]), messageData.user, genshinUID, hsrUID, ltuid, ltoken))
-				self.database.commit()
+				hoyoDBCursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltoken=VALUES(ltoken), hsrUID=VALUES(hsrUID)", (int(messageData.tags["user-id"]), messageData.user, genshinUID, hsrUID, ltuid, ltoken))
+				hoyoDBConnection.commit()
 
 				bot.send_message(messageData.channel, f"{messageData.user}, successfully registered your HoyoLAB cookies. You may now use the command without any params to retrieve your Honkai: Star Rail in-game data.")
 				return
@@ -157,8 +125,8 @@ class HonkaiStarRailStaminaCheckCommand(Command):
 				bot.send_message(messageData.channel, f"{messageData.user}, Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 				return
 			
-			self.cursor.execute("SELECT ltuid, ltoken, hsrUID FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
-			result = self.cursor.fetchone()
+			hoyoDBCursor.execute("SELECT ltuid, ltoken, hsrUID FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
+			result = hoyoDBCursor.fetchone()
 
 			ltuid = ""
 			ltoken = ""
