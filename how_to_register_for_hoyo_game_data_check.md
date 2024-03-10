@@ -1,5 +1,5 @@
 - Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page,
-type "java" in the address bar, and paste the following snippet right after it (WITHOUT a space):
+type `java` in the address bar, and paste the following snippet right after it (WITHOUT a space):
 
 ```js
 script:check = document.cookie.includes('ltoken') && document.cookie.includes('ltuid') || alert('Please logout and log back in before trying again, cookie is currently expired/invalid!');  var ltoken = document.cookie.match(/(?<=ltoken=)[^;]*/); var ltuid = document.cookie.match(/(?<=ltuid=)[^;]*/); var output = "ltoken:" + ltoken + " ltuid:" + ltuid; cookie = document.cookie; check && document.write(`<p>${output}</p><br><button onclick="navigator.clipboard.writeText('${output}')">Click here to copy!</button><br>`)
