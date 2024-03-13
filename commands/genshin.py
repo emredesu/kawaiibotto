@@ -131,6 +131,10 @@ class GenshinCommand(Command):
             raise Exception()
         
         for bannerData in bannerIDRequest.json()["data"]["list"]:
+            # HACK: Ignore chronicle banner until we find a way to get the right gacha_id (current gacha_id returned is wrong for some reason)
+            if bannerData["gacha_type"] == 500:
+                continue
+
             bannerID = bannerData["gacha_id"]
 
             bannerDetailsRequest = requests.get(self.bannerDataBaseLink.format(bannerID))
