@@ -34,7 +34,8 @@ class ChatBotCommand(Command):
 	def execute(self, bot, messageData):
 		maxTokens = 1000
 		historyWipeTag = "history:false"
-		currentModel = "gpt-3.5-turbo"
+		currentModel = "gpt-4o"
+		masterPhrase = "Try to answer questions in less than 500 characters unless the user specifically asks for a detailed explanation."
 
 		args = messageData.content.split()
 		args.pop(0) # Get rid of the command invocation
@@ -54,6 +55,9 @@ class ChatBotCommand(Command):
 		try:
 			userMessageHistory = []
 			hasHistory = False
+
+			# Add the master phrase at the start of the message history.
+			userMessageHistory.append({"role": "system", "content": masterPhrase})
 
 			# Check if the user has message history saved and that it's not timed out. If so, build the "messages" list.
 			if messageData.user in self.messageHistory and (time.time() - self.messageHistory[messageData.user][-1].timestamp) < self.HISTORY_EXPIRE_AFTER:
