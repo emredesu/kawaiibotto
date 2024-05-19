@@ -32,10 +32,10 @@ class ChatBotCommand(Command):
 		openai.api_key = OPENAI_APIKEY
 
 	def execute(self, bot, messageData):
-		maxTokens = 1000
+		maxTokens = 125
 		historyWipeTag = "history:false"
 		currentModel = "gpt-4o"
-		masterPhrase = "Try to answer questions in less than 500 characters unless the user specifically asks for a detailed explanation."
+		masterPhrase = "Your messages must never exceed 500 characters under any circumstances."
 
 		args = messageData.content.split()
 		args.pop(0) # Get rid of the command invocation
