@@ -18,6 +18,7 @@ from commands.echo import EchoCommand
 from commands.maths import MathsCommand
 from commands.gpt import ChatBotCommand, ImageGenCommand
 from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand
+from commands.gemini import GeminiCommand
 
 def instantiate_commands(commands):
 	HelloWorldCommand(commands)
@@ -45,3 +46,4 @@ def instantiate_commands(commands):
 	ImageGenCommand(commands)
 	GenshinResinCheckCommand(commands)
 	HonkaiStarRailStaminaCheckCommand(commands)
+	GeminiCommand(commands)
