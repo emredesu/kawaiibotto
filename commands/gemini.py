@@ -59,8 +59,16 @@ class GeminiCommand(Command):
             # Create a new messageHistory object for the user with their prompt.
             else:
                 self.messageHistory[messageData.user] = GeminiChatHistory(self.model.start_chat(history=[]), time.time())
-        except Exception as exception:
-            bot.send_message(messageData.channel, f"{messageData.user}, Failed to get a response due to: {type(exception).__name__}")
 
-        response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt)
-        bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {response.text}")
+            response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt)
+            bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {response.text}")
+        except GenAI.types.StopCandidateException:
+            bot.send_message(messageData.channel, f"{messageData.user}, Execution stopped due to safety reasons. Your message history was cleaned.")
+            self.messageHistory.pop(messageData.user)
+        except GenAI.types.BlockedPromptException:
+            bot.send_message(messageData.channel, f"{messageData.user}, Execution stopped due to your prompt being blocked. Your message history was cleaned.")
+            self.messageHistory.pop(messageData.user)
+        except Exception as exception:
+            bot.send_message(messageData.channel, f"{messageData.user}, Failed to get a response due to: {type(exception).__name__}. Your message history was cleaned.")
+            self.messageHistory.pop(messageData.user)
+
