@@ -1,12 +1,14 @@
-
-# Login / API key info
+# Login info
 OAUTH_TOKEN = ""
 USERNAME = ""
 CLIENT_ID = ""
 TWITCH_API_HEADERS = {"Authorization": "Bearer {}".format(OAUTH_TOKEN), "Client-ID": "{}".format(CLIENT_ID)}
+
+# API key info for various apps
 WOLFRAM_APP_ID = ""
 OCR_SPACE_APIKEY = ""
 OPENAI_APIKEY = ""
+GOOGLE_GEMINI_APIKEY = ""
 
 # Genshin command specific values
 GENSHIN_MYSQL_DB_HOST = ""
