@@ -60,15 +60,16 @@ class GeminiCommand(Command):
             else:
                 self.messageHistory[messageData.user] = GeminiChatHistory(self.model.start_chat(history=[]), time.time())
 
-            response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt)
+            response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt, 
+                                                                                      safety_settings={GenAI.types.HarmCategory.HARM_CATEGORY_HARASSMENT: GenAI.types.HarmBlockThreshold.BLOCK_NONE,
+                                                                                                       GenAI.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: GenAI.types.HarmBlockThreshold.BLOCK_NONE,
+                                                                                                       GenAI.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: GenAI.types.HarmBlockThreshold.BLOCK_NONE,
+                                                                                                       GenAI.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: GenAI.types.HarmBlockThreshold.BLOCK_NONE})
             bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {response.text}")
         except GenAI.types.StopCandidateException:
             bot.send_message(messageData.channel, f"{messageData.user}, Execution stopped due to safety reasons. Your message history was cleaned.")
             self.messageHistory.pop(messageData.user)
         except GenAI.types.BlockedPromptException:
             bot.send_message(messageData.channel, f"{messageData.user}, Execution stopped due to your prompt being blocked. Your message history was cleaned.")
-            self.messageHistory.pop(messageData.user)
-        except Exception as exception:
-            bot.send_message(messageData.channel, f"{messageData.user}, Failed to get a response due to: {type(exception).__name__}. Your message history was cleaned.")
             self.messageHistory.pop(messageData.user)
 
