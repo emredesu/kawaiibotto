@@ -1,4 +1,3 @@
-import google.api_core.exceptions
 from commands.command import Command
 import messagetypes
 from globals import GOOGLE_GEMINI_APIKEY
