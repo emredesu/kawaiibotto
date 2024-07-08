@@ -1,11 +1,7 @@
-- Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page,
-type `java` in the address bar, and paste the following snippet right after it (WITHOUT a space):
+- Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page, open your browser's developer console and acquire your "ltuid" and "ltoken" cookies.
+>In Google Chrome, you can find your HoyoLAB cookies under Application -> Storage -> Cookies -> https://www.hoyolab.com/ in the developer console.
 
-```js
-script:check = document.cookie.includes('ltoken') && document.cookie.includes('ltuid') || alert('Please logout and log back in before trying again, cookie is currently expired/invalid!');  var ltoken = document.cookie.match(/(?<=ltoken=)[^;]*/); var ltuid = document.cookie.match(/(?<=ltuid=)[^;]*/); var output = "ltoken:" + ltoken + " ltuid:" + ltuid; cookie = document.cookie; check && document.write(`<p>${output}</p><br><button onclick="navigator.clipboard.writeText('${output}')">Click here to copy!</button><br>`)
-```
-
-- Press enter. You should be seeing a page that shows your ltoken and ltuid cookies. Click on the "Click here to copy!" button to copy those for use in registration.
+>In Mozilla Firefox, you can find your HoyoLAB cookies under the "Storage" tab in the developer console.
 
 <h1>Register for Genshin Impact</h1>
 _resin register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID)
