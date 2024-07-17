@@ -1,5 +1,4 @@
 from commands.helloworld import HelloWorldCommand
-from commands.pyramid import PyramidCommand
 from commands.ivrfi_api_commands import RandomQuoteCommand, EmoteInfoCommand
 from commands.opgg import OpggCommand
 from commands.twitch_api_commands import UserIDCommand, ProfilePictureCommand, EmotesCommand
@@ -22,7 +21,6 @@ from commands.gemini import GeminiCommand
 
 def instantiate_commands(commands):
 	HelloWorldCommand(commands)
-	PyramidCommand(commands)
 	RandomQuoteCommand(commands)
 	EmoteInfoCommand(commands)
 	OpggCommand(commands)
