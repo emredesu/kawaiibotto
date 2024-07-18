@@ -34,7 +34,7 @@ class ChatBotCommand(Command):
 	def execute(self, bot, messageData):
 		maxTokens = 250
 		historyWipeTag = "history:false"
-		currentModel = "gpt-3.5-turbo-0125"
+		currentModel = "gpt-4o-mini"
 		masterPhrase = "Your messages must not exceed 500 characters unless the user specifically asks for a detailed response, then you can go up to 1000 characters per message."
 
 		args = messageData.content.split()
