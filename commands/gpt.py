@@ -96,31 +96,3 @@ class ChatBotCommand(Command):
 			bot.send_message(messageData.channel, f"{messageData.user}, An error occured.")
 			messagetypes.error(f"{e}")
 			return
-
-class ImageGenCommand(Command):
-	COMMAND_NAME = ["dalle", "imagegen", "generateimage"]
-	COOLDOWN = 5
-	DESCRIPTION = "Create images using OpenAI's Dall-E!"
-
-	def __init__(self, commands):
-		super().__init__(commands)
-		openai.api_key = OPENAI_APIKEY
-
-	def execute(self, bot, messageData):
-		maxTokens = 1000
-
-		args = messageData.content.split()
-		args.pop(0)
-
-		userPrompt = " ".join(args)
-		if not userPrompt:
-			bot.send_message(messageData.channel, f"{messageData.user}, You haven't given the model a prompt! Example usage: _dalle A cat playing with a mouse toy.")
-			return
-		
-		try:
-			bot.send_message(messageData.channel, f"{messageData.user}, Generating...")
-			imageResult = openai.Image.create(prompt=userPrompt, n=1)
-			bot.send_message(messageData.channel, f"{messageData.user}, {imageResult['data'][0]['url']}")
-		except:
-			bot.send_message(messageData.channel, f"{messageData.user}, An error occured.")
-			return
