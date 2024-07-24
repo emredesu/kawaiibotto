@@ -17,6 +17,7 @@ class WhisperComand:
 
 		COMMAND_NAME = ""
 		COOLDOWN = 0
+		DESCRIPTION = ""
 
 		lastUseTimePerUser = {}
 
