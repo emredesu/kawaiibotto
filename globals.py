@@ -1,8 +1,11 @@
+
 # Login info
 OAUTH_TOKEN = ""
 USERNAME = ""
 CLIENT_ID = ""
 TWITCH_API_HEADERS = {"Authorization": "Bearer {}".format(OAUTH_TOKEN), "Client-ID": "{}".format(CLIENT_ID)}
+TWITCH_API_WHISPER_HEADERS = {"Authorization": "Bearer {}".format(OAUTH_TOKEN), "Client-ID": "{}".format(CLIENT_ID), "Content-Type": "application/json"}
+TWITCH_BOT_UID = 0 # Required for whispers functionality.
 
 # API key info for various apps
 WOLFRAM_APP_ID = ""
