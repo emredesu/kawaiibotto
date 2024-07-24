@@ -23,4 +23,4 @@ class CommandsCommand(Command):
 			else:
 				command_list.append("(w)" + cmd.COMMAND_NAME)
 
-		bot.send_message(messageData.channel, f"Currently available commands are: {' '.join(command_list)}")
+		bot.send_message(messageData.channel, f"Currently available commands are: {' '.join(command_list)} ▶️ (w) means the command can only be used through whispering the bot.")
