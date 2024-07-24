@@ -1,17 +1,20 @@
 from globals import *
 from messagetypes import *
-from instantiatecommands import instantiate_commands
+from instantiatecommands import instantiate_commands, instantiate_whisper_commands
 from messageParser import TwitchIRCMessage
 import datetime
 import socket
 import time
 import traceback
 import threading
+import requests
+import json
 
 class kawaiibotto:
 	def __init__(self):
 		self.start_time = datetime.datetime.now()
 		self.commands = []
+		self.whisperCommands = []
 		self.socket = socket.socket()
 
 		self.last_twitch_pinged_time = None
@@ -21,6 +24,7 @@ class kawaiibotto:
 		self.reconnections = 0
 
 		instantiate_commands(self.commands)
+		instantiate_whisper_commands(self.whisperCommands)
 		self.start()
 
 	def send_message(self, ch, msg):
@@ -30,6 +34,12 @@ class kawaiibotto:
 				self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, i.replace("\n", " ")).encode("utf-8"))
 		else:
 			self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))	# irc does not accept newlines, so we replace them with spaces
+
+	def send_whisper(self, messageDataFromWhisper, msg):
+		if len(msg) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
+			msg = msg[480] + "..."
+		
+		requests.post(f"https://api.twitch.tv/helix/whispers?from_user_id={TWITCH_BOT_UID}&to_user_id={messageDataFromWhisper.tags["user-id"]}", headers=TWITCH_API_WHISPER_HEADERS, data=json.dumps({"message": f"{msg}"}))
 
 	def ping_twitch(self):
 		self.last_twitch_pinged_time = datetime.datetime.now()
@@ -112,6 +122,23 @@ class kawaiibotto:
 								thread.start()			
 			elif rawMessage.startswith("pajaVanish"):
 				self.send_message(parsedMsg.channel, f"/timeout {parsedMsg.user} 1")
+		elif parsedMsg.messageType == "WHISPER":
+			# Whisper command invocation
+			if parsedMsg.whisperContent.startswith(COMMAND_PREFIX):
+				invoked_command = parsedMsg.whisperContent.split()[0][len(COMMAND_PREFIX)::]
+
+				for command in self.whisperCommands:
+					if isinstance(command.COMMAND_NAME, list):	# alias support
+						for alias in command.COMMAND_NAME:
+							if alias == invoked_command:
+								if self.CheckCanExecute(command, parsedMsg.user):
+									thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg)) # Spawn a new thread for the command 
+									thread.start()
+					else:
+						if command.COMMAND_NAME == invoked_command:
+							if self.CheckCanExecute(command, parsedMsg.user):
+								thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg))
+								thread.start()
 
 	def CheckCanExecute(self, cmnd, user) -> bool:
 		if user in cmnd.lastUseTimePerUser:
@@ -127,7 +154,10 @@ class kawaiibotto:
 
 		try:
 			cmnd.execute(self, messageData)
-			log(f"{messageData.user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {messageData.channel}")
+			if messageData.messageType != "WHISPER":
+				log(f"{messageData.user} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} in {messageData.channel}")
+			else:
+				log(f"{messageData.whisperUser} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} through whispers. Full message: {messageData.whisperContent}")
 		except Exception as e:
 			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
 			self.send_message(messageData.channel, f"{messageData.user}, the execution of that command failed! The error has been logged, and will be fixed soon.")

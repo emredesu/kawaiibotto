@@ -13,13 +13,14 @@ from commands.urban import UrbanCommand
 from commands.define import DefineCommand
 from commands.ocr import OCRCommand
 from commands.genshin import GenshinCommand
-from commands.echo import EchoCommand
+from commands.echo import EchoCommand, EchoWhisperCommand
 from commands.maths import MathsCommand
 from commands.gpt import ChatBotCommand
 from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand
 from commands.gemini import GeminiCommand
 
 def instantiate_commands(commands):
+	# PRIVMSG commands
 	HelloWorldCommand(commands)
 	RandomQuoteCommand(commands)
 	EmoteInfoCommand(commands)
@@ -44,3 +45,6 @@ def instantiate_commands(commands):
 	GenshinResinCheckCommand(commands)
 	HonkaiStarRailStaminaCheckCommand(commands)
 	GeminiCommand(commands)
+
+def instantiate_whisper_commands(commands):
+	EchoWhisperCommand(commands)

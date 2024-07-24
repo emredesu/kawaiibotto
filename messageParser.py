@@ -11,6 +11,10 @@ class TwitchIRCMessage:
 	channel: str = None
 	content: str = None
 
+	# WHISPER data
+	whisperUser: str = None
+	whisperContent: str = None
+
 	def __init__(self, message: str):
 		#print(f"Now parsing: {message} \n")
 
@@ -20,7 +24,7 @@ class TwitchIRCMessage:
 			# Seperate tag data and IRC message data
 			messageArgs = message.split(" ", 1)
 
-			#Parse tags
+			# Parse tags
 			self.ParseTags(messageArgs[0])
 			
 			# Parse IRC message
@@ -49,6 +53,8 @@ class TwitchIRCMessage:
 		# If message type is a PRIVMSG, extract the data from it.
 		if messageArgs[1] == "PRIVMSG":
 			self.ParsePRIVMSG(message)
+		elif messageArgs[1] == "WHISPER":
+			self.ParseWHISPER(message)
 
 	# Extract username, channel and message content from PRIVMSG.
 	def ParsePRIVMSG(self, message: str) -> None:
@@ -56,3 +62,8 @@ class TwitchIRCMessage:
 		self.user = re.search("(?<=:)(.*?)(?=!)", messageArgs[0]).group(0)
 		self.channel = messageArgs[2].removeprefix("#").removesuffix(":")
 		self.content = messageArgs[3].removeprefix(":")
+	
+	def ParseWHISPER(self, message: str) -> None:
+		messageArgs = message.split(" ", 3)
+		self.whisperUser = re.search("(?<=:)(.*?)(?=!)", messageArgs[0]).group(0)
+		self.whisperContent = messageArgs[3].removeprefix(":")
