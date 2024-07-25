@@ -1,19 +1,14 @@
-- Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page, open your browser's developer console (typically using F12) and acquire your "ltuid" and "ltoken" cookies.
+1- Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page, open your browser's developer console (typically using F12) and acquire your "ltuid" and "ltoken" cookies.
 >In Google Chrome, you can find your HoyoLAB cookies under Application -> Storage -> Cookies -> https://www.hoyolab.com/ in the developer console.
+
+Chrome demonstration video: TODO
 
 >In Mozilla Firefox, you can find your HoyoLAB cookies under the "Storage" tab in the developer console.
 
-<h1>Register for Genshin Impact</h1>
-_resin register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID)
+Firefox demonstration video: TODO
 
-<h1>Register for Honkai: Star Rail</h1>
-_stamina register ltoken:(ltoken) ltuid:(ltuid) hsruid:(your HSR UID)
+2- Whisper the following command to kawaiibotto on Twitch, filling the fields in paranthesis with the cookies you acquired from HoyoLAB. DO NOT use the command in public chats!
+<h1>Register for Hoyo commands:</h1>
+_hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken)
 
-<h1>Register for both Genshin Impact <i>and</i> Honkai: Star Rail (use one)</h1>
-_stamina register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID) hsruid:(your HSR UID)
-
-
-_resin register ltoken:(ltoken) ltuid:(ltuid) genshinuid:(your genshin UID) hsruid:(your HSR UID)
-
-- If at any point you have entered faulty data (wrong cookie, uid etc.) you may use the register commands 
-for each respective game again to fix those issues.
+- If at any point you have entered faulty data, you can use the command again to fix those errors.
