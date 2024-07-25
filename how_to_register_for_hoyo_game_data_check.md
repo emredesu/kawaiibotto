@@ -1,4 +1,4 @@
-- Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page, open your browser's developer console and acquire your "ltuid" and "ltoken" cookies.
+- Go to https://www.hoyolab.com/home, make sure you are logged into your HoyoLAB account. While on the HoyoLAB page, open your browser's developer console (typically using F12) and acquire your "ltuid" and "ltoken" cookies.
 >In Google Chrome, you can find your HoyoLAB cookies under Application -> Storage -> Cookies -> https://www.hoyolab.com/ in the developer console.
 
 >In Mozilla Firefox, you can find your HoyoLAB cookies under the "Storage" tab in the developer console.
