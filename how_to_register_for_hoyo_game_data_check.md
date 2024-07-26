@@ -5,14 +5,14 @@
 
 2- <b>Whisper</b> the following command to kawaiibotto on Twitch, filling the fields in paranthesis with the cookies you acquired from HoyoLAB. <b>DO NOT use the register command in public chats!</b>
 
-[Chrome demonstration video](https://youtu.be/9BXJcvY2ork)
-
-[Firefox demonstration video](https://youtu.be/Ufi4wqFg3Qk)
-
 <h1>Register for Hoyo commands:</h1>
 _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken)
 
-- If at any point you have entered faulty data, you can use the command again to fix those errors.,
+- If at any point you have entered faulty data, you can use the command again to fix those errors.
+  
+[Chrome demonstration video](https://youtu.be/9BXJcvY2ork)
+
+[Firefox demonstration video](https://youtu.be/Ufi4wqFg3Qk)
 
 <h1>After registering, you can use the following commands:</h1>
 
