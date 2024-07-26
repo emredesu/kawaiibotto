@@ -3,7 +3,8 @@
 
 >In Mozilla Firefox, you can find your HoyoLAB cookies under the "Storage" tab in the developer console.
 
-2- <b>Whisper</b> the following command to kawaiibotto on Twitch, filling the fields in paranthesis with the cookies you acquired from HoyoLAB. <b>DO NOT use the register command in public chats!</b>
+2- <b>Whisper</b> the following command to kawaiibotto on Twitch, filling the fields in paranthesis with the cookies you acquired from HoyoLAB.
+- If you would rather not give Twitch your phone number, you can use the registry command in public chats too.
 
 <h1>Register for Hoyo commands:</h1>
 _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken)
