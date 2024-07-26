@@ -217,3 +217,6 @@ class HoyoGameDailyRewardClaimCommand(Command):
 				bot.send_message(messageData.channel, f"{messageData.user}, you already claimed daily rewards for that game today!")
 			except:
 				bot.send_message(messageData.channel, f"{messageData.user}, error - you probably don't have an account in that game.")
+		else:
+			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			return
