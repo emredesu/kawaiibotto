@@ -12,4 +12,14 @@
 <h1>Register for Hoyo commands:</h1>
 _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken)
 
-- If at any point you have entered faulty data, you can use the command again to fix those errors.
+- If at any point you have entered faulty data, you can use the command again to fix those errors.,
+
+<h1>After registering, you can use the following commands:</h1>
+
+- <b>_resin</b>: Check live Genshin Impact data.
+
+- <b>_stamina</b>: Check live Honkai: Star Rail data.
+  
+- <b>_energy</b>: Check live Zenless Zone Zero data.
+  
+- <b>_hoyoclaim</b> (genshin/hsr/zzz): Claim daily HoyoLAB rewards for the specified game.
