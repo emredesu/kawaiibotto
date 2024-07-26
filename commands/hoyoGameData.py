@@ -4,14 +4,14 @@ from globals import GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MY
 import mysql.connector
 import mysql.connector.pooling
 from messagetypes import error, log
-from typing import List
+from typing import List, Union
 import genshin
 import asyncio
 import datetime
 
 hoyoDBConnectionPool = mysql.connector.pooling.MySQLConnectionPool(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData", pool_size=GENSHIN_DB_POOL_SIZE)
 
-async def GetHoyoClient(messageData: TwitchIRCMessage) -> genshin.Client | None:
+async def GetHoyoClient(messageData: TwitchIRCMessage) -> Union[genshin.Client, None]:
 	dbConnection = hoyoDBConnectionPool.get_connection()
 	dbCursor = dbConnection.cursor()
 	dbCursor.execute("SELECT ltuid, ltoken, ltmid FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
@@ -27,7 +27,7 @@ async def GetHoyoClient(messageData: TwitchIRCMessage) -> genshin.Client | None:
 	finally:
 		dbConnection.close()
 
-async def GetGameAccountUID(client : genshin.Client, gameName : str) -> int | None:
+async def GetGameAccountUID(client : genshin.Client, gameName : str) -> Union[int, None]:
 	gameAccounts = await client.get_game_accounts()
 
 	for account in gameAccounts:
