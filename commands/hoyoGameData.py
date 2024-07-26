@@ -127,7 +127,7 @@ class GenshinResinCheckCommand(Command):
 				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Genshin Impact account. {self.GENSHIN_EMOTE}")
 				return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user} you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 
 class HonkaiStarRailStaminaCheckCommand(Command):
@@ -155,7 +155,7 @@ class HonkaiStarRailStaminaCheckCommand(Command):
 				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Honkai: Star Rail account. {self.STAR_RAIL_EMOTE}")
 				return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user} you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 
 class ZenlessZoneZeroEnergyCheckCommand(Command):
@@ -185,7 +185,7 @@ class ZenlessZoneZeroEnergyCheckCommand(Command):
 				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Zenless Zone Zero account. {self.ZZZ_EMOTE}")
 				return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user} you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 		
 class HoyoGameDailyRewardClaimCommand(Command):
