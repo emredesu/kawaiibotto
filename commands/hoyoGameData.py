@@ -34,7 +34,7 @@ async def GetGameAccountUID(client : genshin.Client, gameName : str) -> Union[in
 		if gameName == account.game_biz and "玩家" not in account.nickname: # "玩家" seems to refer to invalid characters that are not yet complete yet (haven't progressed enough in the game), so we ignore those.
 			return account.uid
 
-class HoyolabRegistrationCommand(WhisperComand):
+class HoyolabRegistrationWhisperCommand(WhisperComand):
 	COMMAND_NAME = "hoyoregister"
 	COOLDOWN = 5
 	DESCRIPTION = "Register your HoyoLAB cookies for easy access to game energy info for and daily claims for Hoyoverse games!"
@@ -66,6 +66,40 @@ class HoyolabRegistrationCommand(WhisperComand):
 		dbConnection.commit()
 
 		bot.send_whisper(messageData, f"Successfully registered your HoyoLAB cookies! You may now use all the commands related to Hoyo games. If you entered any values incorrectly, you may use this command again to fix them.")
+		dbConnection.close()
+
+class HoyolabRegistrationCommand(Command):
+	COMMAND_NAME = "hoyoregister"
+	COOLDOWN = 5
+	DESCRIPTION = "Register your HoyoLAB cookies for easy access to game energy info for and daily claims for Hoyoverse games!"
+
+	def execute(self, bot, messageData: TwitchIRCMessage):
+		ltuid = ""
+		ltoken = ""
+		ltmid = ""
+
+		args = messageData.content.split()
+
+		for arg in args:
+			if arg.startswith("ltuid:"):
+				ltuid = arg[6::]
+			elif arg.startswith("ltmid:"):
+				ltmid = arg[6::]
+			elif arg.startswith("ltoken:"):
+				ltoken = arg[7::]
+
+		if ltuid == "" or ltmid == "" or ltoken == "":
+			bot.send_message(messageData.channel, f"{messageData.user}, Invalid registration structure. Should be as follows: _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken) ➡️ Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			return
+		
+		dbConnection = hoyoDBConnectionPool.get_connection()
+		dbCursor = dbConnection.cursor()
+
+		dbCursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltmid=VALUES(ltmid), ltoken=VALUES(ltoken)", 
+				   		(int(messageData.tags["user-id"]), messageData.user, ltuid, ltmid, ltoken))
+		dbConnection.commit()
+
+		bot.send_message(messageData.channel, f"{messageData.user}, Successfully registered your HoyoLAB cookies! You may now use all the commands related to Hoyo games. If you entered any values incorrectly, you may use this command again to fix them.")
 		dbConnection.close()
 
 class GenshinResinCheckCommand(Command):
