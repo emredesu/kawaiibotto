@@ -39,7 +39,7 @@ class kawaiibotto:
 		if len(msg) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
 			msg = msg[480] + "..."
 		
-		requests.post(f"https://api.twitch.tv/helix/whispers?from_user_id={TWITCH_BOT_UID}&to_user_id={messageDataFromWhisper.tags["user-id"]}", headers=TWITCH_API_WHISPER_HEADERS, data=json.dumps({"message": f"{msg}"}))
+		requests.post(f"https://api.twitch.tv/helix/whispers?from_user_id={TWITCH_BOT_UID}&to_user_id={messageDataFromWhisper.tags['user-id']}", headers=TWITCH_API_WHISPER_HEADERS, data=json.dumps({"message": f"{msg}"}))
 
 	def ping_twitch(self):
 		self.last_twitch_pinged_time = datetime.datetime.now()
