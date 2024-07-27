@@ -211,7 +211,7 @@ class HoyoGameDailyRewardClaimCommand(Command):
 				else:
 					rewardData = asyncio.run(self.ClaimDailyRewards(client, self.GAME_NAME_TO_ENUM[targetGame]))
 					bot.send_message(messageData.channel, f"{messageData.user}, successfully claimed {rewardData}!")
-			except KeyError:
+			except IndexError:
 				bot.send_message(messageData.channel, f"{messageData.user}, you didn't supply a game name to claim daily rewards for! Valid games names are: genshin, hsr, zzz.")
 			except genshin.AlreadyClaimed:
 				bot.send_message(messageData.channel, f"{messageData.user}, you already claimed daily rewards for that game today!")
