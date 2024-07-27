@@ -28,11 +28,19 @@ async def GetHoyoClient(messageData: TwitchIRCMessage) -> Union[genshin.Client, 
 		dbConnection.close()
 
 async def GetGameAccountUID(client : genshin.Client, gameName : str) -> Union[int, None]:
+	highestAccountLevel = 0
+	highestLevelAccount = None
+
 	gameAccounts = await client.get_game_accounts()
 
 	for account in gameAccounts:
 		if gameName == account.game_biz and "玩家" not in account.nickname: # "玩家" seems to refer to invalid characters that are not yet complete yet (haven't progressed enough in the game), so we ignore those.
-			return account.uid
+			if account.level > highestAccountLevel:
+				highestAccountLevel = account.level
+				highestLevelAccount = account
+	
+	if highestLevelAccount is not None:
+		return highestLevelAccount.uid
 
 class HoyolabRegistrationWhisperCommand(WhisperComand):
 	COMMAND_NAME = "hoyoregister"
@@ -118,11 +126,15 @@ class GenshinResinCheckCommand(Command):
 		if client is not None:
 			genshinUID = asyncio.run(GetGameAccountUID(client, self.GENSHIN_GAME_NAME))
 			if genshinUID is not None:
-				userNotes : genshin.models.Notes = asyncio.run(self.GetGenshinNotes(client, genshinUID))
+				try:
+					userNotes : genshin.models.Notes = asyncio.run(self.GetGenshinNotes(client, genshinUID))
 
-				bot.send_message(messageData.channel, 
-					f"{messageData.user}, {self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
-					Dailies: {('✅' if userNotes.claimed_commission_reward else '❌')} | Realm currency: {userNotes.current_realm_currency}/{userNotes.max_realm_currency} | Parametric transformer ready in: {str(userNotes.remaining_transformer_recovery_time)}")
+					bot.send_message(messageData.channel, 
+						f"{messageData.user}, {self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
+						Dailies: {('✅' if userNotes.claimed_commission_reward else '❌')} | Realm currency: {userNotes.current_realm_currency}/{userNotes.max_realm_currency} | Parametric transformer ready in: {str(userNotes.remaining_transformer_recovery_time)}")
+				except genshin.errors.InternalDatabaseError:
+					bot.send_message(messageData.channel, f"{messageData.user}, data doesn't exist! Please make sure your Real-time Notes and other settings are enabled in the HoyoLAB battle chronicle.")
+					return
 			else:
 				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Genshin Impact account. {self.GENSHIN_EMOTE}")
 				return
