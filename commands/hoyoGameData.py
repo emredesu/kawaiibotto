@@ -217,14 +217,32 @@ class HoyoGameDailyRewardClaimCommand(Command):
 			try:
 				args = messageData.content.split()
 				targetGame = args[1]
-				if targetGame not in ["genshin", "hsr", "zzz"]:
-					bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr, zzz.")
+
+				# Handle no game name
+				if targetGame not in ["genshin", "hsr", "zzz", "all"]:
+					bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr, zzz or all for to claim for all games at once.")
 					return
+				
+				# Handle all games claim
+				if targetGame == "all":
+					resultStr = ""
+
+					for game in ["genshin", "hsr", "zzz"]:
+						try:
+							claimResult = asyncio.run(self.ClaimDailyRewards(client, self.GAME_NAME_TO_ENUM[game]))
+							resultStr += f"{game}: Claimed {claimResult}! "
+						except genshin.AlreadyClaimed:
+							resultStr += f"{game}: (already claimed) "
+						except:
+							resultStr += f"{game}: (no account) "
+
+					bot.send_message(messageData.channel, f"{messageData.user}, {resultStr}")
+				# Handle singular game claim				
 				else:
 					rewardData = asyncio.run(self.ClaimDailyRewards(client, self.GAME_NAME_TO_ENUM[targetGame]))
 					bot.send_message(messageData.channel, f"{messageData.user}, successfully claimed {rewardData}!")
 			except IndexError:
-				bot.send_message(messageData.channel, f"{messageData.user}, you didn't supply a game name to claim daily rewards for! Valid games names are: genshin, hsr, zzz.")
+				bot.send_message(messageData.channel, f"{messageData.user}, you didn't supply a game name to claim daily rewards for! Valid games names are: genshin, hsr, zzz or all for to claim for all games at once.")
 			except genshin.AlreadyClaimed:
 				bot.send_message(messageData.channel, f"{messageData.user}, you already claimed daily rewards for that game today!")
 			except:
