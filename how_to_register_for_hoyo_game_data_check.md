@@ -7,9 +7,12 @@
 - If you would rather not give Twitch your phone number to be able to whisper, you can use the registry command in public chats too.
 
 <h1>Register for Hoyo commands:</h1>
-_hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken)
+_hoyoregister ltuid:(ltuid) ltmid:(ltmid here) ltoken:(ltoken)
 
+- Do not include the parantheses, they are for demonstration only!
 - If at any point you have entered faulty data, you can use the command again to fix those errors.
+- Example registry: `_hoyoregister ltuid:123456789 ltmid:1loveh1over3se ltoken:v2_42309uıojkldfngsdf8f7sdf89sd70897sd9f6gh`
+
   
 [Chrome demonstration video](https://youtu.be/9BXJcvY2ork)
 
