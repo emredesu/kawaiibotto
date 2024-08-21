@@ -24,4 +24,4 @@ class OpggCommand(Command):
 			elif region == "kr":
 				bot.send_message(messageData.channel, f"https://www.op.gg/summoner/userName={player_name}")
 			else:
-				bot.send_message(messageData.channel, f"https://{region}.op.gg/summoner/userName={player_name}")
+				bot.send_message(messageData.channel, f"https://www.op.gg/summoners/{region}/{player_name}")
