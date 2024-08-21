@@ -9,7 +9,7 @@ class OpggCommand(Command):
 	def execute(self, bot, messageData):
 		args = messageData.content.split()
 
-		available_regions = ["euw", "eune", "jp", "na", "oce", "br", "las", "lan", "ru", "tr", "sg", "id", "ph", "tw", "vn", "th", "kr"]
+		available_regions = ["euw", "eune", "jp", "na", "oce", "br", "las", "lan", "ru", "tr", "sg", "id", "ph", "tw", "vn", "th", "kr", "me"]
 
 		try:
 			region = args[1]
