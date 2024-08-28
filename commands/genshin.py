@@ -58,7 +58,7 @@ class GenshinCommand(Command):
     standardBanner4StarSoftPityStart = 9
     standardBanner4StarHardPity = 10
 
-    characterBanner5StarRateUpProbability = 50
+    characterBanner5StarRateUpProbability = 55
     characterBanner4StarRateUpProbability = 50
 
     weaponBanner5StarRateUpProbability = 75
