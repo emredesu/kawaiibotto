@@ -1,6 +1,6 @@
 from commands.command import Command, WhisperComand
 from messageParser import TwitchIRCMessage
-from globals import GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, GENSHIN_DB_POOL_SIZE
+from globals import GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, GENSHIN_DB_POOL_SIZE, AUTHORIZED_USER
 import mysql.connector
 import mysql.connector.pooling
 from messagetypes import error, log
@@ -250,3 +250,21 @@ class HoyoGameDailyRewardClaimCommand(Command):
 		else:
 			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
+		
+class HoyoDailyCheckReminderCommand(Command):
+	COMMAND_NAME = "claimremind"
+	COOLDOWN = 0
+	DESCRIPTION = "Use this to remind everyone to use _hoyoclaim. Authorized user only."
+
+	def execute(self, bot, messageData):
+		if messageData.user == AUTHORIZED_USER:
+			dbConnection = hoyoDBConnectionPool.get_connection()
+			dbCursor = dbConnection.cursor()
+			dbCursor.execute("SELECT username FROM hoyolabData")
+			allUsers = dbCursor.fetchall()
+
+			bot.send_message(messageData.channel, f"{', '.join([user[0] for user in allUsers])} time to use _hoyoclaim for daily rewards! HungryPaimon")
+
+			dbConnection.close()
+		else:
+			bot.send_message(messageData.channel, f"{messageData.user}, it's kind of you to be considerate, but only the bot owner can use this command to avoid spam.")
