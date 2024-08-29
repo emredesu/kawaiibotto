@@ -16,7 +16,7 @@ from commands.genshin import GenshinCommand
 from commands.echo import EchoCommand, EchoWhisperCommand
 from commands.maths import MathsCommand
 from commands.gpt import ChatBotCommand
-from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand, ZenlessZoneZeroEnergyCheckCommand, HoyolabRegistrationCommand, HoyolabRegistrationWhisperCommand, HoyoGameDailyRewardClaimCommand
+from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand, ZenlessZoneZeroEnergyCheckCommand, HoyolabRegistrationCommand, HoyolabRegistrationWhisperCommand, HoyoGameDailyRewardClaimCommand, HoyoDailyCheckReminderCommand
 from commands.gemini import GeminiCommand
 
 def instantiate_commands(commands):
@@ -48,6 +48,7 @@ def instantiate_commands(commands):
 	GeminiCommand(commands)
 	HoyolabRegistrationCommand(commands)
 	HoyoGameDailyRewardClaimCommand(commands)
+	HoyoDailyCheckReminderCommand(commands)
 
 def instantiate_whisper_commands(commands):
 	EchoWhisperCommand(commands)
