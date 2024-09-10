@@ -9,6 +9,7 @@ import traceback
 import threading
 import requests
 import json
+import copy
 
 class kawaiibotto:
 	def __init__(self):
@@ -107,38 +108,33 @@ class kawaiibotto:
 			# Command invocation
 			if parsedMsg.content.startswith(COMMAND_PREFIX):
 				invoked_command = parsedMsg.content.split()[0][len(COMMAND_PREFIX)::]
+				print("id before command exec: " + str(id(parsedMsg)))
 
 				for command in self.commands:
-					if isinstance(command.COMMAND_NAME, list):	# alias support
+					if isinstance(command.COMMAND_NAME, list): # alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
 								if self.CheckCanExecute(command, parsedMsg.user):
-									thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg)) # Spawn a new thread for the command 
-									thread.start()
+									self.execute_command(command, parsedMsg)
 					else:
 						if command.COMMAND_NAME == invoked_command:
 							if self.CheckCanExecute(command, parsedMsg.user):
-								thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg))
-								thread.start()			
-			elif rawMessage.startswith("pajaVanish"):
-				self.send_message(parsedMsg.channel, f"/timeout {parsedMsg.user} 1")
+								self.execute_command(command, parsedMsg)
 		elif parsedMsg.messageType == "WHISPER":
 			# Whisper command invocation
 			if parsedMsg.whisperContent.startswith(COMMAND_PREFIX):
 				invoked_command = parsedMsg.whisperContent.split()[0][len(COMMAND_PREFIX)::]
 
 				for command in self.whisperCommands:
-					if isinstance(command.COMMAND_NAME, list):	# alias support
+					if isinstance(command.COMMAND_NAME, list): # alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
 								if self.CheckCanExecute(command, parsedMsg.user):
-									thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg)) # Spawn a new thread for the command 
-									thread.start()
+									self.execute_command(command, parsedMsg)
 					else:
 						if command.COMMAND_NAME == invoked_command:
 							if self.CheckCanExecute(command, parsedMsg.user):
-								thread = threading.Thread(target=self.execute_command, args=(command, parsedMsg))
-								thread.start()
+								self.execute_command(command, parsedMsg)
 
 	def CheckCanExecute(self, cmnd, user) -> bool:
 		if user in cmnd.lastUseTimePerUser:
