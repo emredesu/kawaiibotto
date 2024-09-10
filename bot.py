@@ -9,7 +9,6 @@ import traceback
 import threading
 import requests
 import json
-import copy
 
 class kawaiibotto:
 	def __init__(self):
@@ -108,7 +107,6 @@ class kawaiibotto:
 			# Command invocation
 			if parsedMsg.content.startswith(COMMAND_PREFIX):
 				invoked_command = parsedMsg.content.split()[0][len(COMMAND_PREFIX)::]
-				print("id before command exec: " + str(id(parsedMsg)))
 
 				for command in self.commands:
 					if isinstance(command.COMMAND_NAME, list): # alias support
