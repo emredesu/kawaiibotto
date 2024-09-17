@@ -1984,8 +1984,6 @@ class GenshinCommand(Command):
             except ValueError:
                 giveAmount = self.GetUserPrimogemsPartial(userPrimogems, giveAmount)
 
-            log(f"genshin give invoked by {messageData.user}. userUID: {userUID} targetUID: {targetUID} give amount: {giveAmount} tags: {messageData.tags}")
-
             if giveAmount == -1:
                 bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                 return self.CleanUpCommand(dbConnection)
