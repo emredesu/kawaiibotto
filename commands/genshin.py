@@ -1984,6 +1984,8 @@ class GenshinCommand(Command):
             except ValueError:
                 giveAmount = self.GetUserPrimogemsPartial(userPrimogems, giveAmount)
 
+            log(f"genshin give invoked by {messageData.user}. userUID: {userUID} targetUID: {targetUID} give amount: {giveAmount} tags: {messageData.tags}")
+
             if giveAmount == -1:
                 bot.send_message(messageData.channel, f"{messageData.user}, couldn't parse the primogem amount! Try inputting a percentile value (like 50%), \"all\", a thousands value like \"10k\", or just plain amount (like 500). {self.derpEmote}")
                 return self.CleanUpCommand(dbConnection)
@@ -2007,35 +2009,16 @@ class GenshinCommand(Command):
         elif firstArg in ["banner", "banners"]:
             message = ""
 
-            currentIndex = 0
-
-            for banner in self.pulledBannerData:
-                # Add the names of all the 5 stars if it isn't the standard banner.
-                if banner["gacha_type"] != 200:
-                    rateUp5Stars = []
-                    internalBannerName = ""
-
-                    if banner["gacha_type"] == 301:
-                        internalBannerName = "character1"
-                    elif banner["gacha_type"] == 400:
-                        internalBannerName = "character2"
-                    elif banner["gacha_type"] == 302:
-                        internalBannerName = "weapon"
-
-                    for item in banner["r5_up_items"]:
-                        rateUp5Stars.append(item["item_name"])
-
-                    HTMLTagStrippedBannerName = re.sub("<[^>]*>", "", banner["title"])
-
-                    message += f"({internalBannerName})" + " " + HTMLTagStrippedBannerName + ": " + ", ".join(rateUp5Stars) + "✨ "
-                else:
-                    internalStandardBannerName = "standard"
-
-                    HTMLTagStrippedBannerName = re.sub("<[^>]*>", "", banner["title"])
-
-                    message += f"({internalStandardBannerName})" + " " + HTMLTagStrippedBannerName + "✨ "
-
-                currentIndex += 1
+            for bannerName, bannerData in self.bannerData.items():
+                if bannerName.startswith("character"):
+                    message += f"{bannerName} - {bannerData['rateUp5StarCharacter']} ✨"
+                    pass
+                elif bannerName.startswith("weapon"):
+                    message += f"{bannerName} - {', '.join(bannerData['rateUp5StarWeapons'])} ✨"
+                    pass
+                elif bannerName.startswith("standard"):
+                    message += f"{bannerName} - Standard characters and weapons. ✨"
+                    pass
 
             bot.send_message(messageData.channel, f"{messageData.user}, Current banners are: {message}")
 
