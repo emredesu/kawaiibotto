@@ -1794,6 +1794,9 @@ class GenshinCommand(Command):
             elif targetPrimogems < duelAmount:
                 bot.send_message(messageData.channel, f"{messageData.user}, {duelTarget} only has {targetPrimogems} primogems! {self.shockedEmote}")
                 return self.CleanUpCommand(dbConnection)
+            elif duelAmount < 0:
+                bot.send_message(messageData.channel, f"{messageData.user}, you can't duel for negative points! {self.angryEmote}")
+                return self.CleanUpCommand(dbConnection)
             
             # No problems were found, the duel is on!
 
