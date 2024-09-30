@@ -29,7 +29,7 @@ class ChatBotCommand(Command):
 
 	def __init__(self, commands):
 		super().__init__(commands)
-		openai.api_key = OPENAI_APIKEY
+		self.client = openai.OpenAI(api_key=OPENAI_APIKEY, timeout=10)
 
 	def execute(self, bot, messageData):
 		maxTokens = 250
@@ -84,15 +84,24 @@ class ChatBotCommand(Command):
 			else:
 				self.messageHistory[messageData.user] = [GPTMessageData(True, userPrompt, time.time())]
 
-			gptHTTPResponse = openai.ChatCompletion.create(model=currentModel, messages=userMessageHistory, max_tokens=maxTokens)
-			generatedResponses = [choice.message["content"].strip() for choice in gptHTTPResponse["choices"]]
+			gptHTTPResponse = self.client.chat.completions.create(model=currentModel, messages=userMessageHistory, max_tokens=maxTokens)
+			generatedResponses = [choice.message.content.strip() for choice in gptHTTPResponse.choices]
 
 			chosenResponse = generatedResponses[0]
 			bot.send_message(messageData.channel, f"{messageData.user}," + (self.HISTORY_EMOJI if hasHistory else " ") + chosenResponse)
 
 			# Save bot response to message history too.
 			self.messageHistory[messageData.user].append(GPTMessageData(False, chosenResponse, time.time()))
+		except openai.APIConnectionError as e:
+			bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
+			return
+		except openai.RateLimitError as e:
+			bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
+			return
+		except openai.APIStatusError as e:
+			bot.send_message(messageData.channel, f"{messageData.user}, OpenAI API status error: {e.status_code}: {e.response}")
+			return
 		except Exception as e:
-			bot.send_message(messageData.channel, f"{messageData.user}, An error occured.")
+			bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured.")
 			messagetypes.error(f"{e}")
 			return
