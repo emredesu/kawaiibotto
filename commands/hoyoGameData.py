@@ -257,7 +257,8 @@ class HoyoDailyCheckReminderCommand(Command):
 	DESCRIPTION = "Use this to remind everyone to use _hoyoclaim. Authorized user only."
 
 	def execute(self, bot, messageData):
-		if messageData.user == AUTHORIZED_USER:
+		# Check if the user is the authorized user or the broadcaster of the chat.
+		if messageData.user == AUTHORIZED_USER or messageData.tags["user-id"] == messageData.tags["room-id"]:
 			dbConnection = hoyoDBConnectionPool.get_connection()
 			dbCursor = dbConnection.cursor()
 			dbCursor.execute("SELECT username FROM hoyolabData")
