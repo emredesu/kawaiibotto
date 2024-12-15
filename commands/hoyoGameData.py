@@ -132,7 +132,7 @@ class GenshinResinCheckCommand(Command):
 					bot.send_message(messageData.channel, 
 						f"{messageData.user}, {self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
 						Dailies: {('✅' if userNotes.claimed_commission_reward else '❌')} | Realm currency: {userNotes.current_realm_currency}/{userNotes.max_realm_currency} | \
-						Parametric transformer {f'ready in {userNotes.remaining_realm_currency_recovery_time.days} day(s).' if userNotes.remaining_transformer_recovery_time.days > 0 else 'is ready!'}")
+						Parametric transformer {f'ready in {userNotes.remaining_transformer_recovery_time.days} day(s).' if userNotes.remaining_transformer_recovery_time.days > 0 else 'is ready!'}")
 				except genshin.errors.InternalDatabaseError:
 					bot.send_message(messageData.channel, f"{messageData.user}, data doesn't exist! Please make sure your Real-time Notes and other settings are enabled in the HoyoLAB battle chronicle.")
 					return
