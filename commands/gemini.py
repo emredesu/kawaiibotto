@@ -19,7 +19,7 @@ class GeminiCommand(Command):
 					conversations with the bot. If you wish to erase the bot's memory of your messages and start fresh, append history:false to your message. \
                     Append model:pro to your message to use the pro model instead, which might give more detailed responses at the cost of slower response times."
     
-    DEFAULT_MODEL = "gemini-1.5-flash-latest"
+    DEFAULT_MODEL = "gemini-2.0-flash-exp"
     PRO_MODEL = "gemini-pro-1.5-latest"
 
     HISTORY_DURATION = 300
