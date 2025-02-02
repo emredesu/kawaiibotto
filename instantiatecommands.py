@@ -11,7 +11,7 @@ from commands.code import CodeCommand
 from commands.translate import TranslateCommand
 from commands.urban import UrbanCommand
 from commands.define import DefineCommand
-from commands.ocr import OCRCommand
+from commands.ocr import OCRCommand, OCRTranslateCommand
 from commands.genshin import GenshinCommand
 from commands.echo import EchoCommand, EchoWhisperCommand
 from commands.maths import MathsCommand
@@ -49,6 +49,7 @@ def instantiate_commands(commands):
 	HoyolabRegistrationCommand(commands)
 	HoyoGameDailyRewardClaimCommand(commands)
 	HoyoDailyCheckReminderCommand(commands)
+	OCRTranslateCommand(commands)
 
 def instantiate_whisper_commands(commands):
 	EchoWhisperCommand(commands)
