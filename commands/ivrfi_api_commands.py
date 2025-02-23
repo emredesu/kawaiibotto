@@ -79,7 +79,7 @@ class EmoteInfoCommand(Command):
 
 				ch = data["channelLogin"]
 
-				bot.send_message(messageData.channel, f"{emote} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+				bot.send_message(messageData.channel, f"{emote} belongs to channel \"{ch}\". https://emotes.awoo.nl/twitch/{ch}")
 			except KeyError:
 				# On failure, try again with the ?id=true parameter in case the given param is an emote code.
 				try:
@@ -92,7 +92,7 @@ class EmoteInfoCommand(Command):
 					ch = data["channelLogin"]
 					emoteName = data["emoteCode"]
 
-					bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+					bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.awoo.nl/twitch/{ch}")
 				except KeyError:
 					# Lastly, try to extract the emote code from the given string in case it's an emote URL.
 					emoteCode = ""
@@ -105,7 +105,7 @@ class EmoteInfoCommand(Command):
 						ch = data["channelLogin"]
 						emoteName = data["emoteCode"]
 
-						bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.raccatta.cc/twitch/{ch}")
+						bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.awoo.nl/twitch/{ch}")
 					except (IndexError, KeyError):
 						# Give up.
 						statusCode = data["statusCode"]
