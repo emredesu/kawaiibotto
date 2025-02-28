@@ -1,4 +1,3 @@
-
 # Login info
 OAUTH_TOKEN = ""
 USERNAME = ""
@@ -18,6 +17,11 @@ GENSHIN_MYSQL_DB_HOST = ""
 GENSHIN_MYSQL_DB_USERNAME = ""
 GENSHIN_MYSQL_DB_PASSWORD = ""
 GENSHIN_DB_POOL_SIZE = 25
+
+# HoyoLAB cookies for Hoyoverse game command data
+kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": "", "ltmid_v2": ""}
+kawaiibottoGenshinUID = 0
+kawaiibottoStarRailUID = 0
 
 # Command prefix
 COMMAND_PREFIX = "_"
