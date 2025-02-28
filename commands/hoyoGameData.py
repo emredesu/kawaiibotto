@@ -1,6 +1,6 @@
 from commands.command import Command, WhisperComand
 from messageParser import TwitchIRCMessage
-from globals import GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, GENSHIN_DB_POOL_SIZE, AUTHORIZED_USER
+from globals import GENSHIN_MYSQL_DB_HOST, GENSHIN_MYSQL_DB_USERNAME, GENSHIN_MYSQL_DB_PASSWORD, GENSHIN_DB_POOL_SIZE, AUTHORIZED_USER, kawaiibottoHoyolabCookies, kawaiibottoGenshinUID, kawaiibottoStarRailUID
 import mysql.connector
 import mysql.connector.pooling
 from messagetypes import error, log
@@ -8,6 +8,7 @@ from typing import List, Union
 import genshin
 import asyncio
 import datetime
+import time
 
 hoyoDBConnectionPool = mysql.connector.pooling.MySQLConnectionPool(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData", pool_size=GENSHIN_DB_POOL_SIZE)
 
@@ -26,6 +27,9 @@ async def GetHoyoClient(messageData: TwitchIRCMessage) -> Union[genshin.Client, 
 		return None
 	finally:
 		dbConnection.close()
+	
+async def GetKawaiibottoHoyoClient() -> genshin.Client:
+	return genshin.Client(kawaiibottoHoyolabCookies)
 
 async def GetGameAccountUID(client : genshin.Client, gameName : str) -> Union[int, None]:
 	highestAccountLevel = 0
@@ -270,3 +274,148 @@ class HoyoDailyCheckReminderCommand(Command):
 			dbConnection.close()
 		else:
 			bot.send_message(messageData.channel, f"{messageData.user}, it's kind of you to be considerate, but only the bot owner or the broadcaster can use this command to avoid spam.")
+		
+class HoyoBannersCommand(Command):
+	COMMAND_NAME = "hoyobanners"
+	COOLDOWN = 5
+	DESCRIPTION = "Check ongoing event banners for Hoyoverse games. Game name needs to be specified."
+
+	async def GetEventBannerData(self, gameName: str) -> str:
+		client = await GetKawaiibottoHoyoClient()
+		response = ""
+				
+		if gameName == "genshin":
+			genshinEvents : genshin.models.GenshinEventCalendar = await client.get_genshin_event_calendar(kawaiibottoGenshinUID)
+			if len(genshinEvents.character_banners) > 0:
+				response += f"Genshin Impact Version {genshinEvents.character_banners[0].version} Banners: "
+
+			for characterBannerData in genshinEvents.character_banners:
+				response += f"HungryPaimon {characterBannerData.name} - "
+				for bannerCharacter in characterBannerData.characters:
+					if bannerCharacter.rarity > 4:
+						response += f"✨ {bannerCharacter.name} - "
+				response += f"Ends in: {str(datetime.timedelta(seconds=int(characterBannerData.end_timestamp - time.time())))} "
+			for weaponBannerData in genshinEvents.weapon_banners:
+				weaponBannerCounter = 1
+
+				response += f"HungryPaimon {weaponBannerData.name} - "
+				for bannerWeapon in weaponBannerData.weapons:
+					if bannerWeapon.rarity > 4:
+						response += f"✨ {bannerWeapon.name} "
+						weaponBannerCounter += 1
+						if weaponBannerCounter == len(weaponBannerData.weapons):
+							response += "- "
+				response += f"Ends in: {str(datetime.timedelta(seconds=int(weaponBannerData.end_timestamp - time.time())))} "
+		elif gameName == "hsr":
+			hsrEvents : genshin.models.HSREventCalendar = await client.get_starrail_event_calendar(kawaiibottoStarRailUID)
+			if len(hsrEvents.character_warps) > 0:
+				response += f"Honkai: Star Rail Version {hsrEvents.character_warps[0].version} Banners: "
+
+			charWarpCounter = 1
+			lightConeWarpCounter = 1
+
+			for characterWarpData in hsrEvents.character_warps:
+				if charWarpCounter <= 1:
+					response += f"🚆 Character Warps: "
+				for warpCharacter in characterWarpData.characters:
+					if warpCharacter.rarity > 4:
+						response += f"✨ {warpCharacter.name} "
+
+				charWarpCounter += 1
+				if charWarpCounter == len(hsrEvents.character_warps):
+					response += "- " 
+
+				# Because just being able to remove the fraction would be too easy, Python datetime libraries hate conveniency :/
+				endTimeDelta = characterWarpData.time_info.end - datetime.datetime.now(datetime.timezone.utc)
+				endTimeDelta = datetime.timedelta(seconds=int(endTimeDelta.total_seconds()))
+				response += f"Ends in: {str(endTimeDelta)} "
+			for lightconeWarpData in hsrEvents.light_cone_warps:
+				if lightConeWarpCounter <= 1:
+					response += f"🚆 Light Cone Warps - "
+				for warpLightCone in lightconeWarpData.light_cones:
+					if warpLightCone.rarity > 4:
+						response += f"✨ {warpLightCone.name} "
+
+				lightConeWarpCounter += 1
+				if lightConeWarpCounter == len(hsrEvents.light_cone_warps):
+					response += "- " 
+
+				# Because just being able to remove the fraction would be too easy, Python datetime libraries hate conveniency :/
+				endTimeDelta = lightconeWarpData.time_info.end - datetime.datetime.now(datetime.timezone.utc)
+				endTimeDelta = datetime.timedelta(seconds=int(endTimeDelta.total_seconds()))
+				response += f"Ends in: {str(endTimeDelta)} "
+		
+		return response
+
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
+		targetGame = ""
+		
+		# Handle no game name
+		try:
+			targetGame = args[1]
+		except IndexError:
+			bot.send_message(messageData.channel, f"{messageData.user}, No game name supplied! Valid game names are: genshin, hsr")
+			return
+
+		# Handle invalid game name
+		if targetGame not in ["genshin", "hsr"]:
+			bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr")
+			return
+		else:
+			bot.send_message(messageData.channel, f"{messageData.user}, {asyncio.run(self.GetEventBannerData(targetGame))}")
+
+class HoyoEventsComnand(Command):
+	COMMAND_NAME = "hoyoevents"
+	COOLDOWN = 5
+	DESCRIPTION = "Check ongoing events for Hoyoverse games. Game name needs to be specified."
+
+	async def GetEventData(self, gameName: str) -> str:
+		client = await GetKawaiibottoHoyoClient()
+		response = ""
+
+		if gameName == "genshin":
+			genshinEvents : genshin.models.GenshinEventCalendar = await client.get_genshin_event_calendar(kawaiibottoGenshinUID)
+			if len(genshinEvents.character_banners) > 0:
+				response += f"Genshin Impact v{genshinEvents.character_banners[0].version} events: "
+
+			for genshinEvent in genshinEvents.events:
+				if not genshinEvent.is_finished:
+					if genshinEvent.end_time is not None:
+						response += f"➡️  {genshinEvent.name} - Ends in: {str(datetime.timedelta(seconds=int(genshinEvent.end_timestamp - time.time())))} "
+					else:
+						response += f"⌛ {genshinEvent.name} - Not yet started "
+		elif gameName == "hsr":
+			hsrEvents : genshin.models.HSREventCalendar = await client.get_starrail_event_calendar(kawaiibottoStarRailUID)
+			if len(hsrEvents.character_warps) > 0:
+				response += f"HSR v{hsrEvents.character_warps[0].version} events: "
+
+			for hsrEvent in hsrEvents.events:
+				if hsrEvent.time_info is not None:
+					response += f"➡️ {hsrEvent.name} - "
+					# Because just being able to remove the fraction would be too easy, Python datetime libraries hate conveniency :/
+					endTimeDelta = hsrEvent.time_info.end - datetime.datetime.now(datetime.timezone.utc)
+					endTimeDelta = datetime.timedelta(seconds=int(endTimeDelta.total_seconds()))
+					response += f"Ends in: {str(endTimeDelta)} "
+				else:
+					response += f"➡️ {hsrEvent.name} "
+
+		return response
+
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
+		targetGame = ""
+		
+		# Handle no game name
+		try:
+			targetGame = args[1]
+		except IndexError:
+			bot.send_message(messageData.channel, f"{messageData.user}, No game name supplied! Valid game names are: genshin, hsr")
+			return
+
+		# Handle invalid game name
+		if targetGame not in ["genshin", "hsr"]:
+			bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr")
+			return
+		else:
+			bot.send_message(messageData.channel, f"{messageData.user}, {asyncio.run(self.GetEventData(targetGame))}")
