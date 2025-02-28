@@ -392,11 +392,20 @@ class HoyoEventsComnand(Command):
 
 			for hsrEvent in hsrEvents.events:
 				if hsrEvent.time_info is not None:
-					response += f"➡️ {hsrEvent.name} - "
-					# Because just being able to remove the fraction would be too easy, Python datetime libraries hate conveniency :/
-					endTimeDelta = hsrEvent.time_info.end - datetime.datetime.now(datetime.timezone.utc)
-					endTimeDelta = datetime.timedelta(seconds=int(endTimeDelta.total_seconds()))
-					response += f"Ends in: {str(endTimeDelta)} "
+					# Ongoing event
+					if hsrEvent.time_info.start < datetime.datetime.now(datetime.timezone.utc):
+						response += f"➡️ {hsrEvent.name} - "
+						# Because just being able to remove the fraction would be too easy, Python datetime libraries hate conveniency :/
+						endTimeDelta = hsrEvent.time_info.end - datetime.datetime.now(datetime.timezone.utc)
+						endTimeDelta = datetime.timedelta(seconds=int(endTimeDelta.total_seconds()))
+						response += f"Ends in: {str(endTimeDelta)} "
+					# Event not yet started
+					else:
+						response += f"⌛ {hsrEvent.name} - "
+						# Because just being able to remove the fraction would be too easy, Python datetime libraries hate conveniency :/
+						endTimeDelta = hsrEvent.time_info.start - datetime.datetime.now(datetime.timezone.utc)
+						endTimeDelta = datetime.timedelta(seconds=int(endTimeDelta.total_seconds()))
+						response += f"Starts in: {str(endTimeDelta)} "
 				else:
 					response += f"➡️ {hsrEvent.name} "
 
