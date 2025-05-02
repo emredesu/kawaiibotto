@@ -96,7 +96,7 @@ class ChatBotCommand(Command):
 			bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
 			return
 		except openai.RateLimitError as e:
-			bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
+			bot.send_message(messageData.channel, f"{messageData.user}, currently rate limited by OpenAI! Try again later.")
 			return
 		except openai.APIStatusError as e:
 			bot.send_message(messageData.channel, f"{messageData.user}, OpenAI API status error: {e.status_code}: {e.response}")
