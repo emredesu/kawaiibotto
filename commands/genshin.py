@@ -272,6 +272,9 @@ class GenshinCommand(Command):
     def GetTwitchUserID(self, username: str) -> int:
         if type(username) is int: # There is a chance that we might already pass a userID to this command, if that's the case then just return the userID. Holy fucking spaghetti.
             return username
+        
+        if username.startswith("@"): # Handle it when username is passed as "@username" rather than just "username"
+            username = username[1::]
 
         url = f"https://api.twitch.tv/helix/users?login={username}"
 
