@@ -222,6 +222,14 @@ class HoyoGameDailyRewardClaimCommand(Command):
 		reward : genshin.models.DailyReward = await client.claim_daily_reward(game = targetGame)
 		return f"{reward.name} x{reward.amount}"
 	
+	def UpdateClaimDate(self, messageData) -> None:
+		dbConnection = hoyoDBConnectionPool.get_connection()
+		dbCursor = dbConnection.cursor()
+
+		dbCursor.execute("UPDATE hoyolabData SET lastClaimDate=%s WHERE userID=%s", (datetime.datetime.now().isoformat(), int(messageData.tags["user-id"])))
+		dbConnection.commit()
+		dbConnection.close()
+	
 	def execute(self, bot, messageData):
 		client = asyncio.run(GetHoyoClient(messageData))
 		if client is not None:
@@ -248,10 +256,12 @@ class HoyoGameDailyRewardClaimCommand(Command):
 							resultStr += f"{game}: (no account) "
 
 					bot.send_message(messageData.channel, f"{messageData.user}, {resultStr}")
+					self.UpdateClaimDate(messageData)
 				# Handle singular game claim				
 				else:
 					rewardData = asyncio.run(self.ClaimDailyRewards(client, self.GAME_NAME_TO_ENUM[targetGame]))
 					bot.send_message(messageData.channel, f"{messageData.user}, successfully claimed {rewardData}!")
+					self.UpdateClaimDate(messageData)
 			except IndexError:
 				bot.send_message(messageData.channel, f"{messageData.user}, you didn't supply a game name to claim daily rewards for! Valid games names are: genshin, hsr, zzz or all for to claim for all games at once.")
 			except genshin.AlreadyClaimed:
@@ -272,10 +282,19 @@ class HoyoDailyCheckReminderCommand(Command):
 		if messageData.user == AUTHORIZED_USER or messageData.tags["user-id"] == messageData.tags["room-id"]:
 			dbConnection = hoyoDBConnectionPool.get_connection()
 			dbCursor = dbConnection.cursor()
-			dbCursor.execute("SELECT username FROM hoyolabData")
+			dbCursor.execute("SELECT username, lastClaimDate FROM hoyolabData")
 			allUsers = dbCursor.fetchall()
 
-			bot.send_message(messageData.channel, f"{', '.join([user[0] for user in allUsers])} time to use _hoyoclaim for daily rewards! HungryPaimon")
+			# Only remind to users that didn't already do a claim today
+			usernames = []
+			for user in allUsers:
+				if user[1] == None or user[1].day != datetime.datetime.now().day:
+					usernames.append(user[0])
+
+			if len(usernames) > 0:
+				bot.send_message(messageData.channel, f"{', '.join(usernames)} time to use _hoyoclaim for daily rewards! HungryPaimon")
+			else:
+				bot.send_message(messageData.channel, "There's no one that didn't claim their rewards! HungryPaimon")
 
 			dbConnection.close()
 		else:
