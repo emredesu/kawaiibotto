@@ -34,8 +34,11 @@ class ChatBotCommand(Command):
 	def execute(self, bot, messageData):
 		maxTokens = 250
 		historyWipeTag = "history:false"
-		currentModel = "gpt-4o-mini"
-		masterPhrase = "Your messages must not exceed 500 characters unless the user specifically asks for a detailed response, then you can go up to 1000 characters per message."
+		currentModel = "gpt-5-mini"
+		masterPhrase = "Before crafting your response, check if the user has explicitly requested a detailed reply. " \
+		"If not, ensure the message does not exceed 500 characters. " \
+		"If a detailed response is clearly requested, allow up to 1000 characters." \
+		"Messages must not use markdown, as they will be outputted in an environment where markdown is not supported. "
 
 		args = messageData.content.split()
 		args.pop(0) # Get rid of the command invocation
@@ -83,15 +86,17 @@ class ChatBotCommand(Command):
 				self.messageHistory[messageData.user].append(GPTMessageData(True, userPrompt, time.time()))
 			else:
 				self.messageHistory[messageData.user] = [GPTMessageData(True, userPrompt, time.time())]
+			
+			response = self.client.responses.create(
+				model=currentModel,
+				instructions=masterPhrase,
+				input = userMessageHistory
+			)
 
-			gptHTTPResponse = self.client.chat.completions.create(model=currentModel, messages=userMessageHistory, max_tokens=maxTokens)
-			generatedResponses = [choice.message.content.strip() for choice in gptHTTPResponse.choices]
-
-			chosenResponse = generatedResponses[0]
-			bot.send_message(messageData.channel, f"{messageData.user}," + (self.HISTORY_EMOJI if hasHistory else " ") + chosenResponse)
+			bot.send_message(messageData.channel, f"{messageData.user}," + (self.HISTORY_EMOJI if hasHistory else " ") + response.output_text)
+			self.messageHistory[messageData.user].append(GPTMessageData(False, response.output_text, time.time()))
 
 			# Save bot response to message history too.
-			self.messageHistory[messageData.user].append(GPTMessageData(False, chosenResponse, time.time()))
 		except openai.APIConnectionError as e:
 			bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
 			return
