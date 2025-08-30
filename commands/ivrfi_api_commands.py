@@ -92,7 +92,7 @@ class EmoteInfoCommand(Command):
 					ch = data["channelLogin"]
 					emoteName = data["emoteCode"]
 
-					bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.awoo.nl/twitch/{ch}")
+					bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
 				except KeyError:
 					# Lastly, try to extract the emote code from the given string in case it's an emote URL.
 					emoteCode = ""
