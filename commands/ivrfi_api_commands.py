@@ -105,7 +105,7 @@ class EmoteInfoCommand(Command):
 						ch = data["channelLogin"]
 						emoteName = data["emoteCode"]
 
-						bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://emotes.awoo.nl/twitch/{ch}")
+						bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
 					except (IndexError, KeyError):
 						# Give up.
 						statusCode = data["statusCode"]
