@@ -23,36 +23,43 @@ class RandomQuoteCommand(Command):
 
 	def execute(self, bot, messageData):
 		args = messageData.content.split()
+		person = ""
+		ch = ""
 
-		try:
+		try: # Passing two arguments means the user is querying someone else in a different channel
 			person = args[1].replace("@", "")
 			ch = args[2]
 		except IndexError:
-			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (username) (channel)")
+			try: # Passing one argument means the user is querying themselves in a different channel
+				person = messageData.user
+				ch = args[1]
+			except IndexError: # Passing no argument means the user is querying themselves in the channel the command is user
+				person = messageData.user
+				ch = messageData.channel
+		
+		if ch not in self.channels:
+			bot.send_message(messageData.channel, f"{'That' if messageData.channel != ch else 'This'} channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
+			return
 		else:
-			if ch not in self.channels:
-				bot.send_message(messageData.channel, "That channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
+			request = requests.get(f"https://logs.ivr.fi/channel/{ch}/user/{person}/random?json=1")
+			
+			if request.status_code != 200:
+				bot.send_message(messageData.channel, f"{messageData.user}, API returned {request.status_code}.")
 				return
-			else:
-				request = requests.get(f"https://logs.ivr.fi/channel/{ch}/user/{person}/random?json=1")
-				
-				if request.status_code != 200:
-					bot.send_message(messageData.channel, f"{messageData.user}, API returned {request.status_code}.")
-					return
 
-				rq_data = request.json()["messages"][0]			
+			rq_data = request.json()["messages"][0]			
 
-				try:
-					timestamp = rq_data["timestamp"]
-					datetimeObj = dateutil.parser.parse(timestamp).replace(tzinfo=None)
-					deltaTime = datetime.now() - datetimeObj
+			try:
+				timestamp = rq_data["timestamp"]
+				datetimeObj = dateutil.parser.parse(timestamp).replace(tzinfo=None)
+				deltaTime = datetime.now() - datetimeObj
 
-					dayDifferential = deltaTime.days
+				dayDifferential = deltaTime.days
 
-					bot.send_message(messageData.channel, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
-				except KeyError:
-					bot.send_message(messageData.channel, f"{messageData.user}, API error.")
-					return
+				bot.send_message(messageData.channel, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
+			except KeyError:
+				bot.send_message(messageData.channel, f"{messageData.user}, API error.")
+				return
 
 
 class EmoteInfoCommand(Command):
