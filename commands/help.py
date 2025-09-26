@@ -1,6 +1,5 @@
 from commands.command import Command
 
-
 class HelpCommand(Command):
 	COMMAND_NAME = "help"
 	COOLDOWN = 5
@@ -9,6 +8,10 @@ class HelpCommand(Command):
 	def execute(self, bot, messageData):
 		try:
 			command_to_get_help_for = messageData.content.split()[1]
+
+			if command_to_get_help_for not in bot.commands:
+				bot.send_message(messageData.channel, f"{messageData.user}, command not found.")
+				return
 		except IndexError:
 			bot.send_message(messageData.channel, "Usage: _help {command name}")
 		else:
