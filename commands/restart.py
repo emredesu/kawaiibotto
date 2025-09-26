@@ -1,5 +1,5 @@
 from commands.command import Command
-from globals import AUTHORIZED_USER
+from globals import AUTHORIZED_USER, SUDO_PASSWORD
 import subprocess
 import platform
 
@@ -9,7 +9,6 @@ class RestartCommand(Command):
     DESCRIPTION = "Restarts the bot. Authorized user only"
 
     serviceName = "kawaiibotto"
-    sudoPassword = "makiisthebestgirl"
 
     def execute(self, bot, messageData):
         if messageData.user != AUTHORIZED_USER:
@@ -24,7 +23,7 @@ class RestartCommand(Command):
 
             subprocess.run(
                 ["sudo", "-S", "systemctl", "restart", self.serviceName],
-                input=self.sudoPassword + "\n",
+                input=SUDO_PASSWORD + "\n",
                 text=True,
                 check=True
             )
