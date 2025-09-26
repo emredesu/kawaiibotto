@@ -13,7 +13,7 @@ OPENAI_APIKEY = ""
 GOOGLE_GEMINI_APIKEY = ""
 
 # Genshin command specific values
-GENSHIN_MYSQL_DB_HOST = ""
+GENSHIN_MYSQL_DB_HOST = "192.168.1.1"
 GENSHIN_MYSQL_DB_USERNAME = ""
 GENSHIN_MYSQL_DB_PASSWORD = ""
 GENSHIN_DB_POOL_SIZE = 25
@@ -22,6 +22,9 @@ GENSHIN_DB_POOL_SIZE = 25
 kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": "", "ltmid_v2": ""}
 kawaiibottoGenshinUID = 0
 kawaiibottoStarRailUID = 0
+
+# Platform values
+SUDO_PASSWORD = ""
 
 # Command prefix
 COMMAND_PREFIX = "_"
