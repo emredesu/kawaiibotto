@@ -28,6 +28,10 @@ class GenshinCommand(Command):
 
     wishCost = 160
 
+    # Auto banner update
+    lastBannerUpdateTime = None
+    bannerUpdateIntervalHours = 6
+
     database = None
     cursor = None
 
@@ -265,6 +269,8 @@ class GenshinCommand(Command):
                 self.validBannerNames.append(bannerName)
 
             self.emojiAssociations = requests.get(self.emojiAssociationGistLink).json()
+
+            self.lastBannerUpdateTime = datetime.datetime.now()
         except Exception as e:
             error(f"Fatal error while pulling data for the Genshin command: {e.__class__.__name__}")
             self.successfulInit = False
@@ -365,6 +371,10 @@ class GenshinCommand(Command):
         if not self.successfulInit:
             bot.send_message(messageData.channel, f"This command has not been initialized properly... sorry! {self.emergencyFoodEmote}")
             return
+        
+        # Automatically update banners if the required amount of time has passed
+        if datetime.datetime.now() - self.lastBannerUpdateTime >= datetime.timedelta(hours=self.bannerUpdateIntervalHours):
+            self.UpdateBannerData()
         
         dbConnection = self.dbConnectionPool.get_connection()
         dbCursor = dbConnection.cursor()
