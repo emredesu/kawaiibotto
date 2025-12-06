@@ -34,7 +34,7 @@ class ChatBotCommand(Command):
 	def execute(self, bot, messageData):
 		maxTokens = 250
 		historyWipeTag = "history:false"
-		currentModel = "gpt-5-mini"
+		currentModel = "gpt-5-nano"
 		masterPhrase = "Before crafting your response, check if the user has explicitly requested a detailed reply. " \
 		"If not, ensure the message does not exceed 500 characters. " \
 		"If a detailed response is clearly requested, allow up to 1000 characters." \
