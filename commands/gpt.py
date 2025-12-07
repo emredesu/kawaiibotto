@@ -29,12 +29,12 @@ class ChatBotCommand(Command):
 
 	def __init__(self, commands):
 		super().__init__(commands)
-		self.client = openai.OpenAI(api_key=OPENAI_APIKEY, timeout=10)
+		self.client = openai.OpenAI(api_key=OPENAI_APIKEY, timeout=30)
 
 	def execute(self, bot, messageData):
 		maxTokens = 250
 		historyWipeTag = "history:false"
-		currentModel = "gpt-5-nano"
+		currentModel = "gpt-4o-mini"
 		masterPhrase = "Before crafting your response, check if the user has explicitly requested a detailed reply. " \
 		"If not, ensure the message does not exceed 500 characters. " \
 		"If a detailed response is clearly requested, allow up to 1000 characters." \
