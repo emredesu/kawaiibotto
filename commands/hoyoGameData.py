@@ -10,9 +10,19 @@ import asyncio
 import datetime
 import time
 
-hoyoDBConnectionPool = mysql.connector.pooling.MySQLConnectionPool(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData", pool_size=GENSHIN_DB_POOL_SIZE)
+successfulInit: bool = False
+hoyoDBConnectionPool = mysql.connector.pooling.MySQLConnectionPool(pool_name="placeholder")
+
+try:
+	hoyoDBConnectionPool = mysql.connector.pooling.MySQLConnectionPool(host=GENSHIN_MYSQL_DB_HOST, user=GENSHIN_MYSQL_DB_USERNAME, password=GENSHIN_MYSQL_DB_PASSWORD, database="hoyolabData", pool_size=GENSHIN_DB_POOL_SIZE)
+	successfulInit = True
+except:
+	successfulInit = False
 
 async def GetHoyoClient(messageData: TwitchIRCMessage) -> Union[genshin.Client, None]:
+	if successfulInit is False:
+		return None
+
 	dbConnection = hoyoDBConnectionPool.get_connection()
 	dbCursor = dbConnection.cursor()
 	dbCursor.execute("SELECT ltuid, ltoken, ltmid FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
@@ -52,6 +62,10 @@ class HoyolabRegistrationWhisperCommand(WhisperComand):
 	DESCRIPTION = "Register your HoyoLAB cookies for easy access to game energy info for and daily claims for Hoyoverse games!"
 
 	def execute(self, bot, messageData: TwitchIRCMessage):
+		if not successfulInit:
+			bot.send_message(messageData.channel, f"{messageData.user}, this command was not initialized successfully.")
+			return
+
 		ltuid = ""
 		ltoken = ""
 		ltmid = ""
