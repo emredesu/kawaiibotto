@@ -1,22 +1,23 @@
 from globals import *
 from messagetypes import *
-from instantiatecommands import instantiate_commands, instantiate_whisper_commands
+from instantiatecommands import instantiate_commands, instantiate_whisper_commands, instantiate_custom_commands
 from messageParser import TwitchIRCMessage
 import datetime
 import socket
 import time
 import traceback
-import threading
 import requests
 import json
 
 class kawaiibotto:
 	def __init__(self):
-		self.start_time = datetime.datetime.now()
+		self.socket = socket.socket()
+		
 		self.commands = []
 		self.whisperCommands = []
-		self.socket = socket.socket()
+		self.customCommands = []
 
+		self.start_time = datetime.datetime.now()
 		self.last_twitch_pinged_time = None
 		self.last_twitch_pong_time = None
 
@@ -25,6 +26,8 @@ class kawaiibotto:
 
 		instantiate_commands(self.commands)
 		instantiate_whisper_commands(self.whisperCommands)
+		instantiate_custom_commands(self.customCommands)
+
 		self.start()
 
 	def send_message(self, ch, msg):
@@ -118,6 +121,11 @@ class kawaiibotto:
 						if command.COMMAND_NAME == invoked_command:
 							if self.CheckCanExecute(command, parsedMsg.user):
 								self.execute_command(command, parsedMsg)
+			# Custom command invocation
+			else:
+				for customCommand in self.customCommands:
+					if parsedMsg.channel in customCommand.CHANNELS:
+						customCommand.HandleMessage(self, parsedMsg)
 		elif parsedMsg.messageType == "WHISPER":
 			# Whisper command invocation
 			if parsedMsg.whisperContent.startswith(COMMAND_PREFIX):
