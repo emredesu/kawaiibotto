@@ -4,7 +4,7 @@ import openai
 import random
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = ["i_am_a_terrible_person"]
+    CHANNELS = [""]
     KEYWORDS = ["kawaiibotto", "@kawaiibotto", "botto", "Botto", "BOTTO"]
     messageHistoryLimit = 50
     maxTokens = 500
@@ -95,4 +95,5 @@ class BottoChatbotCommand(CustomCommand):
                     return
                 except Exception as e:
                     bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured.")
+
                     return
