@@ -9,7 +9,7 @@ import random
 class BottoChatbotCommand(CustomCommand):
     CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
-    KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,", "botto"]
+    KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,"]
     messageHistoryLimit = 50
     maxTokens = 2048
     currentModel = "gemini-2.5-flash"
@@ -44,7 +44,8 @@ class BottoChatbotCommand(CustomCommand):
     "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way. " \
     "When you are prompted to join the chat without a user mentioning your name, generate a response with last messages as basis while considering the history as context. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
-    "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. "
+    "However, use the exact emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
+    "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. " \
 
     def __init__(self, commands):
         super().__init__(commands)
@@ -73,7 +74,7 @@ class BottoChatbotCommand(CustomCommand):
             self.messageHistory[messageData.channel].pop(0)
 
         # bot name mentioned, trigger response
-        if any(keyword in messageData.content.split() for keyword in self.KEYWORDS):
+        if any(keyword in messageData.content.lower() for keyword in self.KEYWORDS):
             try:
                 response = self.geminiClient.models.generate_content(
                     model=self.currentModel,
