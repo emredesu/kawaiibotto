@@ -1,23 +1,25 @@
 from commands.command import CustomCommand
-from globals import OPENAI_APIKEY
-import openai
+from globals import GOOGLE_GEMINI_APIKEY
+import google.genai as GenAI
+from google.genai import types
+import google.api_core
+import random
 import random
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = []
+    CHANNELS = ["i_am_a_terrible_person", "emredesu", "rainbowsh8", "vulpeshd", "hogings", "kimimayushi"]
+    RANDOM_CHAT_JOIN_CHANNELS = ["emredesu", "kimimayushi", "rainbowsh8"]
     KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,", "botto", "Botto", "BOTTO"]
     messageHistoryLimit = 50
-    maxTokens = 500
-    currentModel = "gpt-4o-mini"
+    maxTokens = 2048
+    currentModel = "gemini-2.5-flash"
 
     messageHistory = {} # key: channel name, value: message history
 
-    """
     autoRespondChance = {} # key: channel name, value: auto respond chance in %
     maxAutoRespondChance = 1
     autoRespondChanceIncreasePerMessage = 0.005
-    """
-
+    
     masterPhrase = "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. " \
     "Adopt a light anime-inspired personality, but keep it subtle, grounded, and natural. " \
     "You are charismatic, witty, and playful — not overly cute, bubbly, or 'kawaii'. " \
@@ -26,21 +28,38 @@ class BottoChatbotCommand(CustomCommand):
     "You will receive up to 50 previous chat messages in the format (username): (message). " \
     "Messages written by the user \"kawaiibotto\" belong to you. " \
     "Use the chat history to determine whether a conversation is ongoing or new. " \
-    "Only greet users if they were not already interacting with you. " \
+    "Only greet users if they were not already interacting with you. This can be determined from the supplied chat history. " \
     "Your name is \"kawaiibotto\" and you only respond when \"botto\" or \"kawaiibotto\" is mentioned. " \
     "Never prefix your username at the start of your messages. Twitch handles that automatically. " \
     "Never start responses with \"kawaiibotto:\". " \
     "Do not include usernames at the start of messages, but naturally mention the username of the person you are responding to. " \
     "Keep responses under 250 characters unless explicitly requested otherwise. " \
-    "Only respond to the person who mentioned \"botto\" and always mention their username somewhere in the reply. " \
-    "Sometimes your responses will trigger automatically without a mention. In those cases, join the conversation naturally like a regular chatter. " \
-    "Do not introduce yourself. Do not reply to every topic — only engage with the most recent one or two. " \
-    "Be funny, relaxed, and conversational. " \
-    "Do not force the conversation forward or add unnecessary questions."
+    "Respond to the person who mentioned \"botto\" and always mention their username somewhere in the reply. " \
+    "Do not force the conversation forward or add unnecessary questions." \
+    "Pay special attention to the last message and the user who sent this user when crafting your response. " \
+    "Never attempt to dodge or deflect questions or messages directed towards you. " \
+    "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name " \
+    "and prepare your response as an answer to that message, while still considering the history as context. " \
+    "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
+    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way. "
 
     def __init__(self, commands):
         super().__init__(commands)
-        self.client = openai.OpenAI(api_key=OPENAI_APIKEY, timeout=30)
+        self.geminiClient = GenAI.Client(api_key=GOOGLE_GEMINI_APIKEY)
+
+        # support for google search and remove all safety settings
+        groundingTool = types.Tool(google_search=types.GoogleSearch())
+        self.config = types.GenerateContentConfig(
+                                                max_output_tokens=self.maxTokens,
+                                                system_instruction=self.masterPhrase,
+                                                tools=[groundingTool],
+                                                safety_settings=[
+                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                                                ])
 
     def HandleMessage(self, bot, messageData):
         if messageData.channel not in self.messageHistory:
@@ -53,30 +72,20 @@ class BottoChatbotCommand(CustomCommand):
         # bot name mentioned, trigger response
         if any(item in self.KEYWORDS for item in messageData.content.split()):
             try:
-                response = self.client.responses.create(
+                response = self.geminiClient.models.generate_content(
                     model=self.currentModel,
-                    instructions=self.masterPhrase,
-                    input="\n".join(self.messageHistory[messageData.channel])
+                    contents="\n".join(self.messageHistory[messageData.channel]),
+                    config=self.config
                 )
-                self.messageHistory[messageData.channel].append(f"kawaiibotto: {response.output_text}") # append response to message history
-                #self.autoRespondChance[messageData.channel] = 0 # reset auto respond chance for this channel
-
-                bot.send_message(messageData.channel, response.output_text)
-            except openai.APIConnectionError as e:
-                bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
-                return
-            except openai.RateLimitError as e:
-                bot.send_message(messageData.channel, f"{messageData.user}, currently rate limited by OpenAI! Try again later.")
-                return
-            except openai.APIStatusError as e:
-                bot.send_message(messageData.channel, f"{messageData.user}, OpenAI API status error: {e.status_code}: {e.response}")
-                return
+                self.messageHistory[messageData.channel].append(f"kawaiibotto: {response.text}")
+                bot.send_message(messageData.channel, response.text)
             except Exception as e:
-                bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured.")
+                bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                 return
-        """
-        AUTO RESPONSE CODE WITH RANDOM CHANCE - NOW REMOVED
         else:
+            if messageData.channel not in self.RANDOM_CHAT_JOIN_CHANNELS:
+                pass
+
             if messageData.channel not in self.autoRespondChance:
                 self.autoRespondChance[messageData.channel] = 0
 
@@ -88,25 +97,14 @@ class BottoChatbotCommand(CustomCommand):
             # random message chance trigger check - reset the auto respond chance if this happens
             if random.uniform(0, 100) < self.autoRespondChance[messageData.channel]:
                 self.autoRespondChance[messageData.channel] = 0
-
                 try:
-                    response = self.client.responses.create(
+                    response = self.geminiClient.models.generate_content(
                         model=self.currentModel,
-                        instructions=self.masterPhrase,
-                        input="\n".join(self.messageHistory[messageData.channel])
+                        contents="\n".join(self.messageHistory[messageData.channel]),
+                        config=self.config
                     )
-                    self.messageHistory[messageData.channel].append(f"kawaiibotto: {response.output_text}") # append response to message history
-                    bot.send_message(messageData.channel, response.output_text)
-                except openai.APIConnectionError as e:
-                    bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
-                    return
-                except openai.RateLimitError as e:
-                    bot.send_message(messageData.channel, f"{messageData.user}, currently rate limited by OpenAI! Try again later.")
-                    return
-                except openai.APIStatusError as e:
-                    bot.send_message(messageData.channel, f"{messageData.user}, OpenAI API status error: {e.status_code}: {e.response}")
-                    return
+                    self.messageHistory[messageData.channel].append(f"kawaiibotto: {response.text}")
+                    bot.send_message(messageData.channel, response.text)
                 except Exception as e:
-                    bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured.")
+                    bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                     return
-        """
