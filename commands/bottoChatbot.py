@@ -9,7 +9,7 @@ import random
 class BottoChatbotCommand(CustomCommand):
     CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
-    KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,"]
+    KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,", "botto"]
     messageHistoryLimit = 50
     maxTokens = 2048
     currentModel = "gemini-2.5-flash"
@@ -17,8 +17,8 @@ class BottoChatbotCommand(CustomCommand):
     messageHistory = {} # key: channel name, value: message history
 
     autoRespondChance = {} # key: channel name, value: auto respond chance in %
-    maxAutoRespondChance = 1
-    autoRespondChanceIncreasePerMessage = 0.005
+    maxAutoRespondChance = 5
+    autoRespondChanceIncreasePerMessage = 0.05
     
     masterPhrase = "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. " \
     "Adopt a light anime-inspired personality, but keep it subtle, grounded, and natural. " \
@@ -44,7 +44,7 @@ class BottoChatbotCommand(CustomCommand):
     "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way. " \
     "When you are prompted to join the chat without a user mentioning your name, generate a response with last messages as basis while considering the history as context. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
-    "However, use the exact emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
+    "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. "
     "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. " \
 
     def __init__(self, commands):
@@ -93,7 +93,7 @@ class BottoChatbotCommand(CustomCommand):
                 return
         else:
             if messageData.channel not in self.RANDOM_CHAT_JOIN_CHANNELS:
-                pass
+                return
 
             if messageData.channel not in self.autoRespondChance:
                 self.autoRespondChance[messageData.channel] = 0
