@@ -7,8 +7,8 @@ import random
 import random
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = ["i_am_a_terrible_person", "emredesu", "rainbowsh8", "vulpeshd", "hogings", "kimimayushi"]
-    RANDOM_CHAT_JOIN_CHANNELS = ["emredesu", "kimimayushi", "rainbowsh8"]
+    CHANNELS = []
+    RANDOM_CHAT_JOIN_CHANNELS = []
     KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,", "botto", "Botto", "BOTTO"]
     messageHistoryLimit = 50
     maxTokens = 2048
@@ -41,7 +41,8 @@ class BottoChatbotCommand(CustomCommand):
     "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name " \
     "and prepare your response as an answer to that message, while still considering the history as context. " \
     "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
-    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way. "
+    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way. " \
+    "When you are prompted to join the chat without a user mentioning your name, generate a response with last messages as basis while considering the history as context. "
 
     def __init__(self, commands):
         super().__init__(commands)
@@ -77,8 +78,13 @@ class BottoChatbotCommand(CustomCommand):
                     contents="\n".join(self.messageHistory[messageData.channel]),
                     config=self.config
                 )
-                self.messageHistory[messageData.channel].append(f"kawaiibotto: {response.text}")
-                bot.send_message(messageData.channel, response.text)
+                reply_text = response.text.strip() if getattr(response, "text", None) else None
+                if not reply_text:
+                    bot.send_message(messageData.channel, f"{messageData.user}, I couldn't generate a reply this time.")
+                    return
+
+                self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
+                bot.send_message(messageData.channel, reply_text)
             except Exception as e:
                 bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                 return
@@ -91,7 +97,7 @@ class BottoChatbotCommand(CustomCommand):
 
             # increase random response chance every message
             self.autoRespondChance[messageData.channel] += self.autoRespondChanceIncreasePerMessage
-            if self.autoRespondChance[messageData.channel] < self.maxAutoRespondChance:
+            if self.autoRespondChance[messageData.channel] > self.maxAutoRespondChance:
                 self.autoRespondChance[messageData.channel] = self.maxAutoRespondChance
 
             # random message chance trigger check - reset the auto respond chance if this happens
@@ -103,8 +109,12 @@ class BottoChatbotCommand(CustomCommand):
                         contents="\n".join(self.messageHistory[messageData.channel]),
                         config=self.config
                     )
-                    self.messageHistory[messageData.channel].append(f"kawaiibotto: {response.text}")
-                    bot.send_message(messageData.channel, response.text)
+                    reply_text = response.text.strip() if getattr(response, "text", None) else None
+                    if not reply_text:
+                        return
+
+                    self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
+                    bot.send_message(messageData.channel, reply_text)
                 except Exception as e:
                     bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                     return
