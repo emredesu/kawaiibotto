@@ -2,14 +2,15 @@ from commands.command import CustomCommand
 from globals import GOOGLE_GEMINI_APIKEY
 import google.genai as GenAI
 from google.genai import types
-import google.api_core
 import random
 import random
+import re
 
 class BottoChatbotCommand(CustomCommand):
     CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
-    KEYWORDS = ["kawaiibotto", "@kawaiibotto", "@kawaiibotto,", "botto"]
+    KEYWORDS = ["kawaiibotto", "botto"]
+    NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
     maxTokens = 2048
     currentModel = "gemini-2.5-flash"
@@ -41,11 +42,12 @@ class BottoChatbotCommand(CustomCommand):
     "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name " \
     "and prepare your response as an answer to that message, while still considering the history as context. " \
     "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
-    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way. " \
-    "When you are prompted to join the chat without a user mentioning your name, generate a response with last messages as basis while considering the history as context. " \
+    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way, generating a response. " \
+    "with last few messages as basis for your response while considering the history as context. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
-    "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. "
-    "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. " \
+    "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
+    "When using emotes, ensure that you match the case as emotes are case-sensitive. Also make sure there's no extra characters near the emote as this will prevent the emote from appearing in the chat client. " \
+    "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
 
     def __init__(self, commands):
         super().__init__(commands)
@@ -74,7 +76,7 @@ class BottoChatbotCommand(CustomCommand):
             self.messageHistory[messageData.channel].pop(0)
 
         # bot name mentioned, trigger response
-        if any(keyword in messageData.content.lower() for keyword in self.KEYWORDS):
+        if self.NAME_PATTERN.search(messageData.content):
             try:
                 response = self.geminiClient.models.generate_content(
                     model=self.currentModel,
