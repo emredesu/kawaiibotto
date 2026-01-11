@@ -22,7 +22,7 @@ class GeminiCommand(Command):
     HISTORY_WIPE_TAG = "history:false"
     HISTORY_EMOJI = "⌛ "
 
-    maxTokens = 128
+    maxTokens = 256
     currentModel = "gemini-2.5-flash"
     MAX_RESPONSE_CHARS = 496
 
