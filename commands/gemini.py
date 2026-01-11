@@ -22,13 +22,21 @@ class GeminiCommand(Command):
     HISTORY_WIPE_TAG = "history:false"
     HISTORY_EMOJI = "⌛ "
 
-    maxTokens = 2048
+    maxTokens = 128
     currentModel = "gemini-2.5-flash"
+    MAX_RESPONSE_CHARS = 496
 
     messageHistory: Dict[str, GeminiChatHistory] = {}
 
-    MASTER_PROMPT = "Keep messages under 500 characters unless the user explicitly asks you for a detailed response. Never respond with more than 500 characters otherwise.."
-    
+    MASTER_PROMPT = "Keep messages under 250 characters unless the user explicitly asks you for a detailed response. Never respond with more than 500 characters otherwise."
+
+    def _calculate_max_output_tokens(self, contents: str) -> int:
+        approx_chars = self.MAX_RESPONSE_CHARS
+        base_tokens = max(16, approx_chars // 4)
+        input_len = len(contents)
+        reduction = min(base_tokens // 2, input_len // 400)
+        return max(16, min(self.maxTokens, base_tokens - reduction))
+
     def __init__(self, commands):
         super().__init__(commands)
 
@@ -79,7 +87,13 @@ class GeminiCommand(Command):
                 self.StartChat(messageData.user)
 
             response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt)
-            bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {response.text}")
+            reply_text = response.text if getattr(response, "text", None) else ""
+
+            # Enforce hard character limit to respect MASTER_PROMPT instructions
+            if len(reply_text) > self.MAX_RESPONSE_CHARS:
+                reply_text = reply_text[:self.MAX_RESPONSE_CHARS] + "..."
+
+            bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {reply_text}")
         except Exception as e:
             bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
 

@@ -12,8 +12,9 @@ class BottoChatbotCommand(CustomCommand):
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
-    maxTokens = 2048
+    maxTokens = 256
     currentModel = "gemini-2.5-flash"
+    maxResponseChars = 496
 
     messageHistory = {} # key: channel name, value: message history
 
@@ -34,16 +35,20 @@ class BottoChatbotCommand(CustomCommand):
     "Never prefix your username at the start of your messages. Twitch handles that automatically. " \
     "Never start responses with \"kawaiibotto:\". " \
     "Do not include usernames at the start of messages, but naturally mention the username of the person you are responding to. " \
-    "Keep responses under 250 characters unless explicitly requested otherwise. " \
+    "Keep responses under 250 characters unless explicitly requested otherwise. NEVER respond with more than 500 characters." \
+    "Do not repeat the user's question. Do not compliment the question (e.g., avoid \"Great question!\", \"Interesting question!\") " \
+    "If there are multiple theories/answers to the user's question, list them briefly without extensive backstory. " \
+    "If asked to choose between options (e.g. \"A\" or \"B\"?), pick one immediately and give a short reason. Never say \"both are good\" or \"it depends\". " \
     "Respond to the person who mentioned \"botto\" and always mention their username somewhere in the reply. " \
+    "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. " \
     "Do not force the conversation forward or add unnecessary questions." \
     "Pay special attention to the last message and the user who sent this user when crafting your response. " \
     "Never attempt to dodge or deflect questions or messages directed towards you. " \
     "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name " \
     "and prepare your response as an answer to that message, while still considering the history as context. " \
     "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
-    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way, generating a response. " \
-    "with last few messages as basis for your response while considering the history as context. " \
+    "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way, generating a response " \
+    "with the last few messages as basis for your response while considering the history as context. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
     "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
     "When using emotes, ensure that you match the case as emotes are case-sensitive. Also make sure there's no extra characters near the emote as this will prevent the emote from appearing in the chat client. " \
@@ -88,6 +93,10 @@ class BottoChatbotCommand(CustomCommand):
                     bot.send_message(messageData.channel, f"{messageData.user}, I couldn't generate a reply this time.")
                     return
 
+                # Enforce hard character limit to respect master phrase instructions
+                if len(reply_text) > self.maxResponseChars:
+                    reply_text = reply_text[:self.maxResponseChars] + "..."
+
                 self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
                 bot.send_message(messageData.channel, reply_text)
             except Exception as e:
@@ -117,6 +126,10 @@ class BottoChatbotCommand(CustomCommand):
                     reply_text = response.text.strip() if getattr(response, "text", None) else None
                     if not reply_text:
                         return
+
+                    # Enforce hard character limit to respect master phrase instructions
+                    if len(reply_text) > self.maxResponseChars:
+                        reply_text = reply_text[:self.maxResponseChars] + "..."
 
                     self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
                     bot.send_message(messageData.channel, reply_text)
