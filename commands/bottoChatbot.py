@@ -12,7 +12,7 @@ class BottoChatbotCommand(CustomCommand):
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
-    maxTokens = 256
+    maxTokens = 2048
     currentModel = "gemini-2.5-flash"
     maxResponseChars = 496
 
@@ -48,7 +48,7 @@ class BottoChatbotCommand(CustomCommand):
     "and prepare your response as an answer to that message, while still considering the history as context. " \
     "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
     "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way, generating a response " \
-    "with the last few messages as basis for your response while considering the history as context. " \
+    "with the last few messages as basis for your response while considering the history as context and do not mention any users or respond to messages you previously replied to. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
     "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
     "When using emotes, ensure that you match the case as emotes are case-sensitive. Also make sure there's no extra characters near the emote as this will prevent the emote from appearing in the chat client. " \
@@ -91,6 +91,7 @@ class BottoChatbotCommand(CustomCommand):
                 reply_text = response.text.strip() if getattr(response, "text", None) else None
                 if not reply_text:
                     bot.send_message(messageData.channel, f"{messageData.user}, I couldn't generate a reply this time.")
+                    self.messageHistory[messageData.channel].append(f"kawaiibotto: I couldn't generate a reply this time.")
                     return
 
                 # Enforce hard character limit to respect master phrase instructions
@@ -99,7 +100,7 @@ class BottoChatbotCommand(CustomCommand):
 
                 self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
                 bot.send_message(messageData.channel, reply_text)
-            except Exception as e:
+            except GenAI as e:
                 bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                 return
         else:
@@ -134,5 +135,4 @@ class BottoChatbotCommand(CustomCommand):
                     self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
                     bot.send_message(messageData.channel, reply_text)
                 except Exception as e:
-                    bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                     return
