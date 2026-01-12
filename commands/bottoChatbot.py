@@ -100,7 +100,7 @@ class BottoChatbotCommand(CustomCommand):
 
                 self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
                 bot.send_message(messageData.channel, reply_text)
-            except GenAI as e:
+            except Exception as e:
                 bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                 return
         else:
