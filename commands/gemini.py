@@ -15,27 +15,19 @@ class GeminiCommand(Command):
     COMMAND_NAME = ["gmn", "gemini"]
     COOLDOWN = 5
     DESCRIPTION = "Talk to Google's Gemini! Your messages sent through this command will be kept in the bot's memory for 5 minutes for use in continued \
-					conversations with the bot. If you wish to erase the bot's memory of your messages and start fresh, append history:false to your message. \
-                    Append model:pro to your message to use the pro model instead, which might give more detailed responses at the cost of slower response times."
+					conversations with the bot. If you wish to erase the bot's memory of your messages and start fresh, append history:false to your message."
 
     HISTORY_DURATION = 300
     HISTORY_WIPE_TAG = "history:false"
     HISTORY_EMOJI = "⌛ "
 
-    maxTokens = 256
+    maxTokens = 2048
     currentModel = "gemini-2.5-flash"
     MAX_RESPONSE_CHARS = 496
 
     messageHistory: Dict[str, GeminiChatHistory] = {}
 
     MASTER_PROMPT = "Keep messages under 250 characters unless the user explicitly asks you for a detailed response. Never respond with more than 500 characters otherwise."
-
-    def _calculate_max_output_tokens(self, contents: str) -> int:
-        approx_chars = self.MAX_RESPONSE_CHARS
-        base_tokens = max(16, approx_chars // 4)
-        input_len = len(contents)
-        reduction = min(base_tokens // 2, input_len // 400)
-        return max(16, min(self.maxTokens, base_tokens - reduction))
 
     def __init__(self, commands):
         super().__init__(commands)
