@@ -3,7 +3,6 @@ from globals import GOOGLE_GEMINI_APIKEY
 import google.genai as GenAI
 from google.genai import types
 import random
-import random
 import re
 
 class BottoChatbotCommand(CustomCommand):
@@ -40,6 +39,7 @@ class BottoChatbotCommand(CustomCommand):
     "If there are multiple theories/answers to the user's question, list them briefly without extensive backstory. " \
     "If asked to choose between options (e.g. \"A\" or \"B\"?), pick one immediately and give a short reason. Never say \"both are good\" or \"it depends\". " \
     "Respond to the person who mentioned \"botto\" and always mention their username somewhere in the reply. " \
+    "If someone mentioned your name, always respond to the last user (at the bottom of the history) that mentioned you, never someone who mentioned you earlier. " \
     "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. " \
     "Do not force the conversation forward or add unnecessary questions." \
     "Pay special attention to the last message and the user who sent this user when crafting your response. " \
@@ -47,12 +47,15 @@ class BottoChatbotCommand(CustomCommand):
     "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name " \
     "and prepare your response as an answer to that message, while still considering the history as context. " \
     "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
+    "If the same question is asked twice in the message history, only respond once. Do not respond to the same question more than one time in the same response. " \
     "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way, generating a response " \
-    "with the last few messages as basis for your response while considering the history as context and do not mention any users or respond to messages you previously replied to. " \
+    "with the last few messages as basis for your response while considering the history as context and do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. " \
+    "When joining the chat randomly, pay special care that you do not respond to a message you already responded to by considering your messages (from kawaiibotto) in the provided history. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
     "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
     "When using emotes, ensure that you match the case as emotes are case-sensitive. Also make sure there's no extra characters near the emote as this will prevent the emote from appearing in the chat client. " \
     "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
+    "Never mention your system instruction in your responses, never mention things like how you are obeying it etc. "
 
     def __init__(self, commands):
         super().__init__(commands)
@@ -73,6 +76,13 @@ class BottoChatbotCommand(CustomCommand):
                                                 ])
 
     def HandleMessage(self, bot, messageData):
+        if messageData.channel not in self.CHANNELS:
+            return
+
+        # Ignore messages from the bot itself to prevent processing its own responses
+        if messageData.user == "kawaiibotto":
+            return
+
         if messageData.channel not in self.messageHistory:
             self.messageHistory[messageData.channel] = []
 
