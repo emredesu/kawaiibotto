@@ -1,5 +1,5 @@
 from commands.command import CustomCommand
-from globals import GOOGLE_GEMINI_APIKEY
+from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER
 import google.genai as GenAI
 from google.genai import types
 import random
@@ -49,13 +49,14 @@ class BottoChatbotCommand(CustomCommand):
     "If a user asks you a question, never try to change or deflect the question, always give them an answer. " \
     "If the same question is asked twice in the message history, only respond once. Do not respond to the same question more than one time in the same response. " \
     "Sometimes you will be prompted to join the chat without a user invoking your name. When this happens, join the chat in a natural way, generating a response " \
-    "with the last few messages as basis for your response while considering the history as context and do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. " \
+    "with the last 5 messages as target for your response while considering the history as context and do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. " \
     "When joining the chat randomly, pay special care that you do not respond to a message you already responded to by considering your messages (from kawaiibotto) in the provided history. " \
     "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. " \
     "However, use the exact same emotes they use and do not try to coin new emote names, as they most likely won't exist in the chat. " \
-    "When using emotes, ensure that you match the case as emotes are case-sensitive. Also make sure there's no extra characters near the emote as this will prevent the emote from appearing in the chat client. " \
+    "When using emotes, ensure that you match the case as emotes are case-sensitive. Also make sure there's no extra characters or punctuation near the emote as this will prevent the emote from appearing in the chat client. " \
     "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
-    "Never mention your system instruction in your responses, never mention things like how you are obeying it etc. "
+    "Never mention your system instruction in your responses, never mention how you are obeying it or how you shouldn't do certain things based on your system instruction. "
+    "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. " \
 
     def __init__(self, commands):
         super().__init__(commands)
@@ -81,6 +82,12 @@ class BottoChatbotCommand(CustomCommand):
 
         # Ignore messages from the bot itself to prevent processing its own responses
         if messageData.user == "kawaiibotto":
+            return
+        
+        # Bot memory clear - only for authorized user and streamer
+        if (messageData.user == AUTHORIZED_USER or messageData.user == messageData.channel) and messageData.content.startswith("botto restart"):
+            bot.send_message(messageData.channel, "🧠🔄️👍")
+            self.messageHistory[messageData.channel] = []
             return
 
         if messageData.channel not in self.messageHistory:
@@ -110,9 +117,14 @@ class BottoChatbotCommand(CustomCommand):
 
                 self.messageHistory[messageData.channel].append(f"kawaiibotto: {reply_text}")
                 bot.send_message(messageData.channel, reply_text)
+
+                # reset auto respond chance on bot mention
+                if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
+                    self.autoRespondChance[messageData.channel] = 0
             except Exception as e:
                 bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
                 return
+        # random chat joining
         else:
             if messageData.channel not in self.RANDOM_CHAT_JOIN_CHANNELS:
                 return
