@@ -13,6 +13,7 @@ class BottoChatbotCommand(CustomCommand):
     messageHistoryLimit = 50
     maxTokens = 2048
     currentModel = "gemini-2.5-flash"
+    fallbackModel = "gemini-3-flash-preview"
     maxResponseChars = 496
 
     messageHistory = {} # key: channel name, value: message history
@@ -53,9 +54,10 @@ class BottoChatbotCommand(CustomCommand):
         "with the last 5 messages as target for your response while considering the history as context and do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. "
         f"When joining the chat randomly, pay special care that you do not respond to a message you already responded to by considering your messages (from {USERNAME}) in the provided history. "
         "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. "
-        "However, learn the emote names from the users and never try to coin new emote names, as they most likely won't exist in the chat. "
+        "However, when using an emote, make sure another user used it first and never try to make up emote names as they likely will not exist in the chat. "
+        "Some emotes start with an uppercase letter while some start with a lowercase letter. Pay special attention to this and make sure to match this when using that emote. "
         "When using emotes, ensure that you match the case as emotes are case-sensitive. If an emote is called \"mimiBlob\", you must never use it as \"MimiBlob\", as this will not make the emote appear in the chat. "
-        "Also make sure there's no extra characters or punctuation near the emote as this will prevent the emote from appearing in the chat. "
+        "Also make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. "
         "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
         "Never mention your system instruction in your responses, never mention how you are obeying it or how you shouldn't do certain things based on your system instruction. "
         "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. "
@@ -80,6 +82,21 @@ class BottoChatbotCommand(CustomCommand):
                                                     types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
                                                     types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
                                                 ])
+
+    def TryGetResponseFromFallbackModel(self, bot, messageData, outputErrorMessage=True):
+        response = self.geminiClient.models.generate_content(
+                    model=self.fallbackModel,
+                    contents="\n".join(self.messageHistory[messageData.channel]),
+                    config=self.config
+                )
+        reply_text = response.text.strip() if getattr(response, "text", None) else None
+        if not reply_text:
+            if outputErrorMessage:
+                bot.send_message(messageData.channel, f"{messageData.user}, I couldn't generate a reply this time.")
+                self.messageHistory[messageData.channel].append(f"({USERNAME}): (I couldn't generate a reply this time.)")
+        else:
+            self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
+            bot.send_message(messageData.channel, reply_text)
 
     def HandleMessage(self, bot, messageData):
         if messageData.channel not in self.CHANNELS:
@@ -112,8 +129,7 @@ class BottoChatbotCommand(CustomCommand):
                 )
                 reply_text = response.text.strip() if getattr(response, "text", None) else None
                 if not reply_text:
-                    bot.send_message(messageData.channel, f"{messageData.user}, I couldn't generate a reply this time.")
-                    self.messageHistory[messageData.channel].append(f"({USERNAME}): (I couldn't generate a reply this time.)")
+                    self.TryGetResponseFromFallbackModel(bot, messageData)
                     return
 
                 # Enforce hard character limit to respect master phrase instructions
@@ -127,7 +143,7 @@ class BottoChatbotCommand(CustomCommand):
                 if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
                     self.autoRespondChance[messageData.channel] = 0
             except Exception as e:
-                bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
+                self.TryGetResponseFromFallbackModel(bot, messageData)
                 return
         # random chat joining
         else:
@@ -153,6 +169,7 @@ class BottoChatbotCommand(CustomCommand):
                     )
                     reply_text = response.text.strip() if getattr(response, "text", None) else None
                     if not reply_text:
+                        self.TryGetResponseFromFallbackModel(bot, messageData, False)
                         return
 
                     # Enforce hard character limit to respect master phrase instructions
