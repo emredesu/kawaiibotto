@@ -15,6 +15,7 @@ class BottoChatbotCommand(CustomCommand):
     currentModel = "gemini-2.5-flash"
     fallbackModel = "gemini-3-flash-preview"
     maxResponseChars = 496
+    maxRetries = 10
 
     messageHistory = {} # key: channel name, value: message history
 
@@ -83,20 +84,22 @@ class BottoChatbotCommand(CustomCommand):
                                                     types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
                                                 ])
 
-    def TryGetResponseFromFallbackModel(self, bot, messageData, outputErrorMessage=True):
-        response = self.geminiClient.models.generate_content(
-                    model=self.fallbackModel,
-                    contents="\n".join(self.messageHistory[messageData.channel]),
-                    config=self.config
-                )
-        reply_text = response.text.strip() if getattr(response, "text", None) else None
-        if not reply_text:
-            if outputErrorMessage:
-                bot.send_message(messageData.channel, f"{messageData.user}, I couldn't generate a reply this time.")
-                self.messageHistory[messageData.channel].append(f"({USERNAME}): (I couldn't generate a reply this time.)")
-        else:
-            self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
-            bot.send_message(messageData.channel, reply_text)
+    def TryGetResponseFromFallbackModel(self, bot, messageData) -> bool: # Returns true if the model responded, otherwise false
+        try:
+            response = self.geminiClient.models.generate_content(
+                        model=self.fallbackModel,
+                        contents="\n".join(self.messageHistory[messageData.channel]),
+                        config=self.config
+                    )
+            reply_text = response.text.strip() if getattr(response, "text", None) else None
+            if not reply_text:
+                return False
+            else:
+                self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
+                bot.send_message(messageData.channel, reply_text)
+                return True
+        except:
+            return False
 
     def HandleMessage(self, bot, messageData):
         if messageData.channel not in self.CHANNELS:
@@ -121,31 +124,49 @@ class BottoChatbotCommand(CustomCommand):
 
         # bot name mentioned, trigger response
         if self.NAME_PATTERN.search(messageData.content):
-            try:
-                response = self.geminiClient.models.generate_content(
-                    model=self.currentModel,
-                    contents="\n".join(self.messageHistory[messageData.channel]),
-                    config=self.config
-                )
-                reply_text = response.text.strip() if getattr(response, "text", None) else None
-                if not reply_text:
-                    self.TryGetResponseFromFallbackModel(bot, messageData)
-                    return
+            success = False
 
-                # Enforce hard character limit to respect master phrase instructions
-                if len(reply_text) > self.maxResponseChars:
-                    reply_text = reply_text[:self.maxResponseChars] + "..."
+            # try to get a response maxRetries times
+            for i in range(self.maxRetries):
+                try:
+                    response = self.geminiClient.models.generate_content(
+                        model=self.currentModel,
+                        contents="\n".join(self.messageHistory[messageData.channel]),
+                        config=self.config
+                    )
+                    reply_text = response.text.strip() if getattr(response, "text", None) else None
+                    if not reply_text:
+                        successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
+                        if not successfulResponse:
+                            continue
+                        else:
+                            success = True
+                            break
 
-                self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
-                bot.send_message(messageData.channel, reply_text)
+                    # Enforce hard character limit to respect master phrase instructions
+                    if len(reply_text) > self.maxResponseChars:
+                        reply_text = reply_text[:self.maxResponseChars] + "..."
 
-                # reset auto respond chance on bot mention
-                if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
-                    self.autoRespondChance[messageData.channel] = 0
-            except Exception as e:
-                self.TryGetResponseFromFallbackModel(bot, messageData)
-                return
-        # random chat joining
+                    self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
+                    bot.send_message(messageData.channel, reply_text)
+
+                    # reset auto respond chance on bot mention
+                    if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
+                        self.autoRespondChance[messageData.channel] = 0
+
+                    success = True
+                    break
+                except Exception as e:
+                    successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
+                    if not successfulResponse:
+                        continue
+                    else:
+                        success = True
+                        break
+
+            if not success:
+                bot.send_message(messageData.channel, f"{messageData.user}, I am currently unable to respond :/")
+    # random chat joining
         else:
             if messageData.channel not in self.RANDOM_CHAT_JOIN_CHANNELS:
                 return
@@ -160,23 +181,38 @@ class BottoChatbotCommand(CustomCommand):
 
             # random message chance trigger check - reset the auto respond chance if this happens
             if random.uniform(0, 100) < self.autoRespondChance[messageData.channel]:
-                self.autoRespondChance[messageData.channel] = 0
-                try:
-                    response = self.geminiClient.models.generate_content(
-                        model=self.currentModel,
-                        contents="\n".join(self.messageHistory[messageData.channel]),
-                        config=self.config
-                    )
-                    reply_text = response.text.strip() if getattr(response, "text", None) else None
-                    if not reply_text:
-                        self.TryGetResponseFromFallbackModel(bot, messageData, False)
-                        return
+                success = False
 
-                    # Enforce hard character limit to respect master phrase instructions
-                    if len(reply_text) > self.maxResponseChars:
-                        reply_text = reply_text[:self.maxResponseChars] + "..."
+                for i in range(self.maxRetries):
+                    try:
+                        response = self.geminiClient.models.generate_content(
+                            model=self.currentModel,
+                            contents="\n".join(self.messageHistory[messageData.channel]),
+                            config=self.config
+                        )
+                        reply_text = response.text.strip() if getattr(response, "text", None) else None
+                        if not reply_text:
+                            successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
+                            if not successfulResponse:
+                                continue
+                            else:
+                                success = True
+                                break
 
-                    self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
-                    bot.send_message(messageData.channel, reply_text)
-                except Exception as e:
-                    return
+                        # Enforce hard character limit to respect master phrase instructions
+                        if len(reply_text) > self.maxResponseChars:
+                            reply_text = reply_text[:self.maxResponseChars] + "..."
+
+                        self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
+                        bot.send_message(messageData.channel, reply_text)
+                        break
+                    except Exception as e:
+                        successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
+                        if not successfulResponse:
+                            continue
+                        else:
+                            success = True
+                            break
+                
+                if success:
+                    self.autoRespondChance[messageData.channel] = 0

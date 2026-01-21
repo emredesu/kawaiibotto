@@ -23,7 +23,8 @@ class GeminiCommand(Command):
 
     maxTokens = 2048
     currentModel = "gemini-2.5-flash"
-    MAX_RESPONSE_CHARS = 496
+    MAX_RESPONSE_CHARS = 480
+    maxRetries = 10
 
     messageHistory: Dict[str, GeminiChatHistory] = {}
 
@@ -62,30 +63,40 @@ class GeminiCommand(Command):
 
         userPrompt = " ".join(args)
 
-        hasActiveHistory = False 
+        hasActiveHistory = False
 
-        try:
-            # Check if the user is inside the messageHistory dict.
-            if messageData.user in self.messageHistory:
-                # If the user is inside the messageHistory dict, check if it's active (last active time is less than history duration). If so, use this ChatSession object.
-                if (time.time() - self.messageHistory[messageData.user].lastActiveTime) < self.HISTORY_DURATION:
-                    self.messageHistory[messageData.user].lastActiveTime = time.time() # Update last active time.
-                    hasActiveHistory = True
-                # Otherwise, create a new messageHistory object for the user with their prompt.
-                else:
-                    self.StartChat(messageData.user)
-            # Create a new messageHistory object for the user with their prompt.
+        success = False
+
+        # Check if the user is inside the messageHistory dict.
+        if messageData.user in self.messageHistory:
+            # If the user is inside the messageHistory dict, check if it's active (last active time is less than history duration). If so, use this ChatSession object.
+            if (time.time() - self.messageHistory[messageData.user].lastActiveTime) < self.HISTORY_DURATION:
+                self.messageHistory[messageData.user].lastActiveTime = time.time() # Update last active time.
+                hasActiveHistory = True
+            # Otherwise, create a new messageHistory object for the user with their prompt.
             else:
                 self.StartChat(messageData.user)
+        # Create a new messageHistory object for the user with their prompt.
+        else:
+            self.StartChat(messageData.user)
 
-            response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt)
-            reply_text = response.text if getattr(response, "text", None) else ""
+        for i in range(self.maxRetries):
+            try:
+                response = self.messageHistory[messageData.user].chatSession.send_message(userPrompt)
+                reply_text = response.text if getattr(response, "text", None) else None
+                if not reply_text:
+                    continue
+                else:
+                    # Enforce hard character limit to respect MASTER_PROMPT instructions
+                    if len(reply_text) > self.MAX_RESPONSE_CHARS:
+                        reply_text = reply_text[:self.MAX_RESPONSE_CHARS] + "..."
 
-            # Enforce hard character limit to respect MASTER_PROMPT instructions
-            if len(reply_text) > self.MAX_RESPONSE_CHARS:
-                reply_text = reply_text[:self.MAX_RESPONSE_CHARS] + "..."
-
-            bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {reply_text}")
-        except Exception as e:
-            bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured: {e}.")
+                    bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {reply_text}")
+                    success = True
+                    break
+            except Exception as e:
+                continue
+        
+        if not success:
+            bot.send_message(messageData.channel, f"{messageData.user}, Currently unable to respond. Please try again later.")
 
