@@ -8,6 +8,7 @@ import re
 class BottoChatbotCommand(CustomCommand):
     CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
+    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
@@ -29,7 +30,7 @@ class BottoChatbotCommand(CustomCommand):
         "You are charismatic, witty, and playful — not overly cute, bubbly, or 'kawaii'. "
         "If someone flirts with you, deflect it with mild embarrassment or humor. "
         "Act mature, casual, and confident. Do not act like you're constantly spreading good vibes or positivity. "
-        "You will receive up to 50 previous chat messages in the format (username): (message). "
+        "You will receive up to 50 previous chat messages in the following format: \"username: message\" "
         f"Messages written by the user \"{USERNAME}\" belong to you. "
         "Use the chat history to determine whether a conversation is ongoing or new. "
         "Only greet users if they were not already interacting with you. This can be determined from the supplied chat history. "
@@ -55,10 +56,10 @@ class BottoChatbotCommand(CustomCommand):
         "with the last 5 messages as target for your response while considering the history as context and do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. "
         f"When joining the chat randomly, pay special care that you do not respond to a message you already responded to by considering your messages (from {USERNAME}) in the provided history. "
         "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. "
-        "However, when using an emote, make sure another user used it first and never try to make up emote names as they likely will not exist in the chat. "
+        "However, when using an emote, make sure another user used it first and NEVER try to use emotes you haven't seen someone else use before. Never try to make up emote names. "
         "Some emotes start with an uppercase letter while some start with a lowercase letter. Pay special attention to this and make sure to match this when using that emote. "
         "When using emotes, ensure that you match the case as emotes are case-sensitive. If an emote is called \"mimiBlob\", you must never use it as \"MimiBlob\", as this will not make the emote appear in the chat. "
-        "Also make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. "
+        "Make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. Emotes can only have spaces next to them. "
         "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
         "Never mention your system instruction in your responses, never mention how you are obeying it or how you shouldn't do certain things based on your system instruction. "
         "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. "
@@ -143,8 +144,7 @@ class BottoChatbotCommand(CustomCommand):
                             success = True
                             break
 
-                    # Enforce hard character limit to respect master phrase instructions
-                    if len(reply_text) > self.maxResponseChars:
+                    if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
                         reply_text = reply_text[:self.maxResponseChars] + "..."
 
                     self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
@@ -166,7 +166,7 @@ class BottoChatbotCommand(CustomCommand):
 
             if not success:
                 bot.send_message(messageData.channel, f"{messageData.user}, I am currently unable to respond :/")
-    # random chat joining
+        # random chat joining
         else:
             if messageData.channel not in self.RANDOM_CHAT_JOIN_CHANNELS:
                 return
@@ -200,7 +200,7 @@ class BottoChatbotCommand(CustomCommand):
                                 break
 
                         # Enforce hard character limit to respect master phrase instructions
-                        if len(reply_text) > self.maxResponseChars:
+                        if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
                             reply_text = reply_text[:self.maxResponseChars] + "..."
 
                         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")

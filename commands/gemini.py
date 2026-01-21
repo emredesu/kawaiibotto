@@ -25,6 +25,7 @@ class GeminiCommand(Command):
     currentModel = "gemini-2.5-flash"
     MAX_RESPONSE_CHARS = 480
     maxRetries = 10
+    RESPONSE_TRUNCATED_CHANNELS = [] 
 
     messageHistory: Dict[str, GeminiChatHistory] = {}
 
@@ -88,7 +89,7 @@ class GeminiCommand(Command):
                     continue
                 else:
                     # Enforce hard character limit to respect MASTER_PROMPT instructions
-                    if len(reply_text) > self.MAX_RESPONSE_CHARS:
+                    if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.MAX_RESPONSE_CHARS:
                         reply_text = reply_text[:self.MAX_RESPONSE_CHARS] + "..."
 
                     bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {reply_text}")
