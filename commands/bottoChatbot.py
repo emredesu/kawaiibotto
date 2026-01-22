@@ -195,6 +195,8 @@ class BottoChatbotCommand(CustomCommand):
                             successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
                             if not successfulResponse:
                                 continue
+                            else:
+                                break
 
                         # Enforce hard character limit to respect master phrase instructions
                         if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
