@@ -8,7 +8,7 @@ import re
 class BottoChatbotCommand(CustomCommand):
     CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
-    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
+    RESPONSE_TRUNCATED_CHANNELS = []
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
@@ -22,7 +22,7 @@ class BottoChatbotCommand(CustomCommand):
 
     autoRespondChance = {} # key: channel name, value: auto respond chance in %
     maxAutoRespondChance = 5
-    autoRespondChanceIncreasePerMessage = 0.05
+    autoRespondChanceIncreasePerMessage = 0.10
     
     masterPhrase = (
         "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. "
@@ -195,9 +195,6 @@ class BottoChatbotCommand(CustomCommand):
                             successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
                             if not successfulResponse:
                                 continue
-                            else:
-                                success = True
-                                break
 
                         # Enforce hard character limit to respect master phrase instructions
                         if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
@@ -205,6 +202,7 @@ class BottoChatbotCommand(CustomCommand):
 
                         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
                         bot.send_message(messageData.channel, reply_text)
+                        success = True
                         break
                     except Exception as e:
                         successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData)
