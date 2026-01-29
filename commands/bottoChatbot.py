@@ -11,7 +11,7 @@ class BottoChatbotCommand(CustomCommand):
     RESPONSE_TRUNCATED_CHANNELS = []
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
-    messageHistoryLimit = 10
+    messageHistoryLimit = 50
     maxTokens = 2048
     currentModel = "gemini-2.5-flash"
     fallbackModel = "gemini-3-flash-preview"
@@ -29,7 +29,7 @@ class BottoChatbotCommand(CustomCommand):
 
     autoRespondChance = {} # key: channel name, value: auto respond chance in %
     maxAutoRespondChance = 5
-    autoRespondChanceIncreasePerMessage = 0.10
+    autoRespondChanceIncreasePerMessage = 0.5
     
     masterPhrase = (
         "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. "
@@ -92,7 +92,8 @@ class BottoChatbotCommand(CustomCommand):
         "Do not force the conversation forward or add unnecessary questions. "
         "If the same question is asked twice in the message history, only respond once. Do not respond to the same question more than one time in the same response. "
         "When you are prompted to create a response, you will be joining the chat without anyone mentioning you. This is something you occasionally do, but you usually only respond when people mention your name. "
-        "When joining the chat, generate a response with the last few messages in the history as target for your response while considering the history as context and do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. "
+        "When joining the chat, generate a response with the last few messages in the history as target for your response while considering the history as context. Do not mention any users and do not respond to messages you previously replied to and do not repeat your previous responses. "
+        "Do not attempt to answer any previously asked questions, only try to blend into the chat with the chat history as context. "
         f"When joining the chat, pay special care that you do not respond to a message you already responded to by considering your messages (from {USERNAME}) in the provided history. "
         "When joining the chat, pay attention to only respond to recent messages and not old messages in the history. "
         "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. "
@@ -125,7 +126,24 @@ class BottoChatbotCommand(CustomCommand):
             reply_text = reply_text[: self.maxResponseChars] + "..."
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
         bot.send_message(messageData.channel, reply_text)
+        self.autoRespondChance[messageData.channel] = 0
 
+    def TryGetResponseFromFallbackModel(self, bot, messageData, isMentionedJoin) -> bool: # Returns true if the model responded, otherwise false
+        try:
+            response = self.geminiClient.models.generate_content(
+                        model=self.fallbackModel,
+                        contents="\n".join(self.messageHistory[messageData.channel]),
+                        config=self.config if isMentionedJoin else self.randomJoinConfig
+                    )
+            reply_text = response.text.strip() if getattr(response, "text", None) else None
+            if not self.IsAcceptableReply(reply_text):
+                return False
+            else:
+                self.SendModelMessage(bot, messageData, reply_text)
+                return True
+        except:
+            return False
+            
     def __init__(self, commands):
         super().__init__(commands)
         self.geminiClient = GenAI.Client(api_key=GOOGLE_GEMINI_APIKEY)
@@ -155,21 +173,6 @@ class BottoChatbotCommand(CustomCommand):
                                                     types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
                                                 ])
 
-    def TryGetResponseFromFallbackModel(self, bot, messageData, isMentionedJoin) -> bool: # Returns true if the model responded, otherwise false
-        try:
-            response = self.geminiClient.models.generate_content(
-                        model=self.fallbackModel,
-                        contents="\n".join(self.messageHistory[messageData.channel]),
-                        config=self.config if isMentionedJoin else self.randomJoinConfig
-                    )
-            reply_text = response.text.strip() if getattr(response, "text", None) else None
-            if not self.IsAcceptableReply(reply_text):
-                return False
-            else:
-                self.SendModelMessage(bot, messageData, reply_text)
-                return True
-        except:
-            return False
 
     def HandleMessage(self, bot, messageData):
         if messageData.channel not in self.CHANNELS:
@@ -274,6 +277,3 @@ class BottoChatbotCommand(CustomCommand):
                         else:
                             success = True
                             break
-                
-                if success:
-                    self.autoRespondChance[messageData.channel] = 0
