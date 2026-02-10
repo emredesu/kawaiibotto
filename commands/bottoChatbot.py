@@ -6,9 +6,9 @@ import random
 import re
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = []
+    CHANNELS = ["emredesu", "i_am_a_terrible_person", "kimimayushi", "hogings", "rainbowsh8", "vulpeshd", "zreem"]
     RANDOM_CHAT_JOIN_CHANNELS = []
-    RESPONSE_TRUNCATED_CHANNELS = []
+    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
@@ -29,7 +29,7 @@ class BottoChatbotCommand(CustomCommand):
 
     autoRespondChance = {} # key: channel name, value: auto respond chance in %
     maxAutoRespondChance = 5
-    autoRespondChanceIncreasePerMessage = 0.5
+    autoRespondChanceIncreasePerMessage = 0.05
     
     masterPhrase = (
         "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. "
@@ -54,7 +54,8 @@ class BottoChatbotCommand(CustomCommand):
         "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. "
         "Do not force the conversation forward or add unnecessary questions. "
         "Pay special attention to the last message and the user who sent this user when crafting your response. "
-        "Never attempt to dodge or deflect questions or messages directed towards you. "
+        "Never attempt to dodge or deflect questions or requests directed towards you. Always do your best to answer questions and comply with requests. Never "
+        "deflect questions or refuse to comply with requests due to being an AI. "
         "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name "
         "and prepare your response as an answer to that message, while still considering the history as context. "
         "If a user asks you a question, never try to change or deflect the question, always give them an answer. "
@@ -122,6 +123,9 @@ class BottoChatbotCommand(CustomCommand):
         return True
 
     def SendModelMessage(self, bot, messageData, reply_text: str):
+        if reply_text.startswith("/ban") or reply_text.startswith("/timeout"):
+             reply_text = "(moderation action blocked by filter)"
+ 
         if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
             reply_text = reply_text[: self.maxResponseChars] + "..."
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
