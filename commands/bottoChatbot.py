@@ -13,8 +13,8 @@ class BottoChatbotCommand(CustomCommand):
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
     maxTokens = 2048
-    currentModel = "gemini-2.5-flash"
-    fallbackModel = "gemini-3-flash-preview"
+    currentModel = "gemini-3-flash"
+    fallbackModel = "gemini-2.5-flash"
     maxResponseChars = 496
     maxRetries = 50
 
