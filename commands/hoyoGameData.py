@@ -41,6 +41,9 @@ async def GetHoyoClient(messageData: TwitchIRCMessage) -> Union[genshin.Client, 
 async def GetKawaiibottoHoyoClient() -> genshin.Client:
 	return genshin.Client(kawaiibottoHoyolabCookies)
 
+def IsValidHoyoCookieValue(value: str) -> bool:
+	return len(value) > 0 and value[0].isalnum()
+
 async def GetGameAccountUID(client : genshin.Client, gameName : str) -> Union[int, None]:
 	highestAccountLevel = 0
 	highestLevelAccount = None
@@ -65,6 +68,8 @@ class HoyolabRegistrationWhisperCommand(WhisperComand):
 		if not successfulInit:
 			bot.send_message(messageData.channel, f"{messageData.user}, this command was not initialized successfully.")
 			return
+		
+		print("cmd works")
 
 		ltuid = ""
 		ltoken = ""
@@ -83,11 +88,15 @@ class HoyolabRegistrationWhisperCommand(WhisperComand):
 		if ltuid == "" or ltmid == "" or ltoken == "":
 			bot.send_whisper(messageData, f"Invalid registration structure. Should be as follows: _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken) ➡️ Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
+
+		if not IsValidHoyoCookieValue(ltuid) or not IsValidHoyoCookieValue(ltmid) or not IsValidHoyoCookieValue(ltoken):
+			bot.send_whisper(messageData, "Invalid cookie values. ltuid, ltmid and ltoken must start with a letter or number. Make sure you're not adding parantheses for these fields. ➡️ Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			return
 		
 		dbConnection = hoyoDBConnectionPool.get_connection()
 		dbCursor = dbConnection.cursor()
 
-		dbCursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltmid=VALUES(ltmid), ltoken=VALUES(ltoken)", 
+		dbCursor.execute("INSERT INTO hoyolabData (userID, username, ltuid, ltmid, ltoken) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltmid=VALUES(ltmid), ltoken=VALUES(ltoken)", 
 				   		(int(messageData.tags["user-id"]), messageData.whisperUser, ltuid, ltmid, ltoken))
 		dbConnection.commit()
 
@@ -117,16 +126,42 @@ class HoyolabRegistrationCommand(Command):
 		if ltuid == "" or ltmid == "" or ltoken == "":
 			bot.send_message(messageData.channel, f"{messageData.user}, Invalid registration structure. Should be as follows: _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken) ➡️ Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
+
+		if not IsValidHoyoCookieValue(ltuid) or not IsValidHoyoCookieValue(ltmid) or not IsValidHoyoCookieValue(ltoken):
+			bot.send_message(messageData.channel, f"{messageData.user}, Invalid cookie values. ltuid, ltmid and ltoken must start with a letter or number.")
+			return
 		
 		dbConnection = hoyoDBConnectionPool.get_connection()
 		dbCursor = dbConnection.cursor()
 
-		dbCursor.execute("INSERT INTO hoyolabData VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltmid=VALUES(ltmid), ltoken=VALUES(ltoken)", 
+		dbCursor.execute("INSERT INTO hoyolabData (userID, username, ltuid, ltmid, ltoken) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE ltuid=VALUES(ltuid), ltmid=VALUES(ltmid), ltoken=VALUES(ltoken)", 
 				   		(int(messageData.tags["user-id"]), messageData.user, ltuid, ltmid, ltoken))
 		dbConnection.commit()
 
 		bot.send_message(messageData.channel, f"{messageData.user}, Successfully registered your HoyoLAB cookies! You may now use all the commands related to Hoyo games. If you entered any values incorrectly, you may use this command again to fix them.")
 		dbConnection.close()
+
+class HoyoDeleteCommand(Command):
+	COMMAND_NAME = "hoyodelete"
+	COOLDOWN = 5
+	DESCRIPTION = "Remove your HoyoLAB cookies from the database."
+
+	def execute(self, bot, messageData: TwitchIRCMessage):
+		if not successfulInit:
+			bot.send_message(messageData.channel, f"{messageData.user}, this command was not initialized successfully.")
+			return
+
+		dbConnection = hoyoDBConnectionPool.get_connection()
+		dbCursor = dbConnection.cursor()
+		dbCursor.execute("DELETE FROM hoyolabData WHERE userID=%s", (int(messageData.tags["user-id"]),))
+		dbConnection.commit()
+		rows_deleted = dbCursor.rowcount
+		dbConnection.close()
+
+		if rows_deleted > 0:
+			bot.send_message(messageData.channel, f"{messageData.user}, your HoyoLAB data has been removed.")
+		else:
+			bot.send_message(messageData.channel, f"{messageData.user}, you are not registered for Hoyo commands yet.")
 
 class GenshinResinCheckCommand(Command):
 	COMMAND_NAME = ["genshinresin", "resin", "resincheck"]
