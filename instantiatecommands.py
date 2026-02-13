@@ -16,10 +16,11 @@ from commands.genshin import GenshinCommand
 from commands.echo import EchoCommand, EchoWhisperCommand
 from commands.maths import MathsCommand
 from commands.gpt import ChatBotCommand
-from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand, ZenlessZoneZeroEnergyCheckCommand, HoyolabRegistrationCommand, HoyolabRegistrationWhisperCommand, HoyoGameDailyRewardClaimCommand, HoyoDailyCheckReminderCommand, HoyoBannersCommand, HoyoEventsComnand
+from commands.hoyoGameData import GenshinResinCheckCommand, HonkaiStarRailStaminaCheckCommand, ZenlessZoneZeroEnergyCheckCommand, HoyolabRegistrationCommand, HoyolabRegistrationWhisperCommand, HoyoGameDailyRewardClaimCommand, HoyoDailyCheckReminderCommand, HoyoBannersCommand, HoyoEventsComnand, HoyoDeleteCommand
 from commands.gemini import GeminiCommand
 from commands.restart import RestartCommand
 from commands.bottoChatbot import BottoChatbotCommand
+from commands.quoteResponds import QuoteRespondsCommand
 
 def instantiate_commands(commands):
 	# PRIVMSG commands
@@ -54,6 +55,7 @@ def instantiate_commands(commands):
 	OCRTranslateCommand(commands)
 	HoyoBannersCommand(commands)
 	HoyoEventsComnand(commands)
+	HoyoDeleteCommand(commands)
 	RestartCommand(commands)
 
 def instantiate_whisper_commands(commands):
@@ -62,3 +64,4 @@ def instantiate_whisper_commands(commands):
 
 def instantiate_custom_commands(commands):
 	BottoChatbotCommand(commands)
+	QuoteRespondsCommand(commands)
