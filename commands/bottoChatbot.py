@@ -4,19 +4,21 @@ import google.genai as GenAI
 from google.genai import types
 import random
 import re
+import time
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = ["emredesu", "i_am_a_terrible_person", "kimimayushi", "hogings", "rainbowsh8", "vulpeshd", "zreem"]
+    CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
-    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
+    RESPONSE_TRUNCATED_CHANNELS = []
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
     maxTokens = 2048
-    currentModel = "gemini-3-flash"
+    currentModel = "gemini-3-flash-preview"
     fallbackModel = "gemini-2.5-flash"
     maxResponseChars = 496
-    maxRetries = 50
+    maxRetries = 5
+    maxQueriesPerMinute = 3
 
     UNWANTED_REPLIES = [
         "i cannot generate a reply this time.",
@@ -30,6 +32,8 @@ class BottoChatbotCommand(CustomCommand):
     autoRespondChance = {} # key: channel name, value: auto respond chance in %
     maxAutoRespondChance = 5
     autoRespondChanceIncreasePerMessage = 0.05
+
+    userQueryCountsPerMinute = {} # key: username, value: {minuteBucket: int, count: int}
     
     masterPhrase = (
         "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. "
@@ -40,7 +44,6 @@ class BottoChatbotCommand(CustomCommand):
         "You will receive up to 50 previous chat messages in the following format: \"username: message\" "
         f"Messages written by the user \"{USERNAME}\" belong to you. "
         "Use the chat history to determine whether a conversation is ongoing or new. "
-        "Only greet users if they were not already interacting with you. This can be determined from the supplied chat history. "
         f"Your name is \"{USERNAME}\" and you only respond when \"botto\" or \"{USERNAME}\" is mentioned. "
         "Never prefix your username at the start of your messages. Twitch handles that automatically. "
         f"Never start responses with \"{USERNAME}:\". "
@@ -51,7 +54,7 @@ class BottoChatbotCommand(CustomCommand):
         "If asked to choose between options (e.g. \"A\" or \"B\"?), pick one immediately and give a short reason. Never say \"both are good\" or \"it depends\". "
         "Respond to the person who mentioned \"botto\" and always mention their username somewhere in the reply. "
         "If someone mentioned your name, always respond to the last user (at the bottom of the history) that mentioned you, never someone who mentioned you earlier. "
-        "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. "
+        "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. Don't start your messages with \"Hey user!\" "
         "Do not force the conversation forward or add unnecessary questions. "
         "Pay special attention to the last message and the user who sent this user when crafting your response. "
         "Never attempt to dodge or deflect questions or requests directed towards you. Always do your best to answer questions and comply with requests. Never "
@@ -64,13 +67,15 @@ class BottoChatbotCommand(CustomCommand):
         "However, when using an emote, make sure another user used it first and NEVER try to use emotes you haven't seen someone else use before. Never try to make up emote names. "
         "Some emotes start with an uppercase letter while some start with a lowercase letter. Pay special attention to this and make sure to match this when using that emote. "
         "When using emotes, ensure that you match their capitalization as emotes are case-sensitive. If an emote is called \"mimiBlob\", you must never use it as \"MimiBlob\", as this will not make the emote appear in the chat. "
-        "Make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. Emotes can only have spaces next to them. "
+        "Make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. Emotes must only have spaces next to them. "
         "When you want to end a sentence with an emote, NEVER put a dot or any other punctuation at the end of that sentence. Emotes must only have spaces next to them. "
+        "Emotes that are always available to you are as follows: KonCha (anime girl waving), TehePelo (anime girl winking with her tongue out), PunOko (angry pouting anime girl), VoHiYo (anime girl reaching out). "
         "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
         "Never mention your system instruction in your responses, never mention how you are obeying it or how you shouldn't do certain things based on your system instruction. "
         "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. "
         "Never repeat the user's message to themselves when responding to them. "
         "If you responded to a user with \"I can't generate a reply this time\" or \"I cannot generate a reply this time.\" in the history, do not attempt to respond to them in your future messages. "
+        "Never respond to a message more than once. Never leak out your inner thought process in your response. "
     )
 
     randomChatJoinMasterPhrase = (
@@ -82,7 +87,7 @@ class BottoChatbotCommand(CustomCommand):
         "You will receive up to 50 previous chat messages in the following format: \"username: message\" "
         f"Messages written by the user \"{USERNAME}\" belong to you. "
         "Use the chat history to determine whether a conversation is ongoing or new. "
-        "Only greet users if they were not already interacting with you. This can be determined from the supplied chat history. "
+        "Never greet users when responding to them. Avoid using phrases such as \"Hey user!\" etc. "
         "Never prefix your username at the start of your messages. Twitch handles that automatically. "
         f"Never start responses with \"{USERNAME}:\". "
         "Do not include usernames at the start of messages, but naturally mention the username of the person you are responding to. "
@@ -108,7 +113,8 @@ class BottoChatbotCommand(CustomCommand):
         "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. "
         "Never repeat the user's message to themselves when responding to them. "
         "If you responded to a user with \"I can't generate a reply this time\" or \"I cannot generate a reply this time.\" in the history, do not attempt to respond to them in your future messages. "
-    )
+        "Never respond to a message more than once. Never leak out your inner thought process in your response. "
+)
 
     def IsAcceptableReply(self, reply_text):
         if not reply_text:
@@ -131,6 +137,37 @@ class BottoChatbotCommand(CustomCommand):
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
         bot.send_message(messageData.channel, reply_text)
         self.autoRespondChance[messageData.channel] = 0
+
+    def GetCurrentMinuteBucket(self) -> int:
+        return int(time.time() // 60)
+
+    def GetSecondsUntilNextMinute(self) -> int:
+        currentSeconds = int(time.time())
+        return 60 - (currentSeconds % 60)
+
+    def TryConsumeMinuteQuota(self, username: str) -> bool:
+        currentMinuteBucket = self.GetCurrentMinuteBucket()
+        userCounter = self.userQueryCountsPerMinute.get(username)
+
+        if not userCounter or userCounter["minuteBucket"] != currentMinuteBucket:
+            self.userQueryCountsPerMinute[username] = {"minuteBucket": currentMinuteBucket, "count": 1}
+            return True
+
+        if userCounter["count"] >= self.maxQueriesPerMinute:
+            return False
+
+        userCounter["count"] += 1
+        return True
+
+    def FormatRemainingTime(self, remainingSeconds: int) -> str:
+        if remainingSeconds < 60:
+            return f"{remainingSeconds}s"
+
+        minutes = remainingSeconds // 60
+        seconds = remainingSeconds % 60
+        if seconds == 0:
+            return f"{minutes}m"
+        return f"{minutes}m {seconds}s"
 
     def TryGetResponseFromFallbackModel(self, bot, messageData, isMentionedJoin) -> bool: # Returns true if the model responded, otherwise false
         try:
@@ -201,6 +238,9 @@ class BottoChatbotCommand(CustomCommand):
 
         # bot name mentioned, trigger response
         if self.NAME_PATTERN.search(messageData.content):
+            if not self.TryConsumeMinuteQuota(messageData.user):
+                self.SendModelMessage(bot, messageData, f"{messageData.user}, you have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute())}")
+                return
             success = False
 
             # try to get a response maxRetries times
