@@ -7,9 +7,9 @@ import re
 import time
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = ["emredesu", "i_am_a_terrible_person", "kimimayushi", "hogings", "rainbowsh8", "vulpeshd", "zreem"]
+    CHANNELS = []
     RANDOM_CHAT_JOIN_CHANNELS = []
-    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
+    RESPONSE_TRUNCATED_CHANNELS = []
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
