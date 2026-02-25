@@ -38,6 +38,14 @@ class kawaiibotto:
 		else:
 			self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))	# irc does not accept newlines, so we replace them with spaces
 
+	def send_reply_message(self, messageData, reply):
+		if len(reply) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
+			messages = [reply[i:i+500] for i in range(0, len(reply), 500)]
+			for i in messages:
+				self.socket.send("@reply-parent-msg-id={} PRIVMSG #{} :{}\r\n".format(messageData.tags["id"], messageData.channel, i.replace("\n", " ")).encode("utf-8"))
+		else:
+			self.socket.send("@reply-parent-msg-id={} PRIVMSG #{} :{}\r\n".format(messageData.tags["id"], messageData.channel, reply.replace("\n", " ")).encode("utf-8")) # irc does not accept newlines, so we replace them with spaces
+
 	def send_whisper(self, messageDataFromWhisper, msg):
 		if len(msg) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
 			msg = msg[480] + "..."
