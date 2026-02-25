@@ -1,5 +1,5 @@
 from commands.command import CustomCommand
-from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME
+from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME, channels as GlobalChannels
 import google.genai as GenAI
 from google.genai import types
 import random
@@ -7,9 +7,8 @@ import re
 import time
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = ["emredesu", "i_am_a_terrible_person", "kimimayushi", "hogings", "rainbowsh8", "vulpeshd", "zreem"]
+    CHANNELS = GlobalChannels
     RANDOM_CHAT_JOIN_CHANNELS = []
-    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
@@ -136,8 +135,6 @@ class BottoChatbotCommand(CustomCommand):
         elif reply_text.startswith("/") or reply_text.startswith("."):
             reply_text = "(command invocation blocked by filter)"
  
-        if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
-            reply_text = reply_text[: self.maxResponseChars] + "..."
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
         bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
