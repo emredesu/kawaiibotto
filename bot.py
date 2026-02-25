@@ -170,7 +170,7 @@ class kawaiibotto:
 				log(f"{messageData.whisperUser} used {COMMAND_PREFIX}{cmnd.COMMAND_NAME} through whispers. Full message: {messageData.whisperContent}")
 		except Exception as e:
 			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
-			self.send_message(messageData.channel, f"{messageData.user}, the execution of that command failed! The error has been logged, and will be fixed soon.")
+			self.send_reply_message(messageData, f"The execution of that command failed! The error has been logged, and will be fixed soon.")
 
 	def start(self):
 		self.connect()
