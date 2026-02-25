@@ -17,13 +17,13 @@ class UrbanCommand(Command):
 				try:
 					index = int(arg[6::])
 				except ValueError:
-					bot.send_message(messageData.channel, f"{messageData.user}, {arg[6::]} is not an integer :c")
+					bot.send_reply_message(messageData, f"{arg[6::]} is not an integer :c")
 					return
 
 				args.remove(arg)
 
 		if len(args) == 0:
-			bot.send_message(messageData.channel, f"{messageData.user}, no argument supplied!")
+			bot.send_reply_message(messageData, f"No argument supplied!")
 			return
 
 		query_params = {"term": " ".join(args)}
@@ -31,7 +31,7 @@ class UrbanCommand(Command):
 		data["list"].sort(key=lambda x: int(int(x["thumbs_up"]) - int(x["thumbs_down"])), reverse=True)
 
 		if not data["list"]:
-			bot.send_message(messageData.channel, f"{messageData.user}, no results found.")
+			bot.send_reply_message(messageData, f"No results found.")
 			return
 
 		# f-strings can't have backslashes so we need to assign new line characters to variables.
@@ -49,7 +49,7 @@ class UrbanCommand(Command):
 				definition = definition.replace(char, "")
 				example = example.replace(char, "")
 
-			bot.send_message(messageData.channel, f"{messageData.user}, ({len(data['list'])} extra definitions) (+{currind_data['thumbs_up']}/-{currind_data['thumbs_down']}) {definition.replace(crlf, lf)} - Example: {example.replace(crlf, lf)}")
+			bot.send_reply_message(messageData, f"({len(data['list'])} extra definitions) (+{currind_data['thumbs_up']}/-{currind_data['thumbs_down']}) {definition.replace(crlf, lf)} - Example: {example.replace(crlf, lf)}")
 		except IndexError:
-			bot.send_message(messageData.channel, f"{messageData.user}, Index too big! Max index for this query is {len(data['list']) - 1}.")
+			bot.send_reply_message(messageData, f"Index too big! Max index for this query is {len(data['list']) - 1}.")
 			return

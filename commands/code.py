@@ -14,7 +14,7 @@ class CodeCommand(Command):
 		try:
 			searched_command = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, "Usage: _code (command name)")
+			bot.send_reply_message(messageData, "Usage: _code (command name)")
 		else:
 			command_list = []
 
@@ -26,7 +26,7 @@ class CodeCommand(Command):
 					command_list.append(cmnd.COMMAND_NAME)
 
 			if searched_command not in command_list:
-				bot.send_message(messageData.channel, "There is no command with that name. :c")
+				bot.send_reply_message(messageData, "There is no command with that name. :c")
 				return
 			else:
 				command_object = None
@@ -42,4 +42,4 @@ class CodeCommand(Command):
 							command_object = cmnd
 							break
 
-			bot.send_message(messageData.channel, f"{messageData.user}, https://github.com/emredesu/kawaiibotto/blob/master/commands/{pathlib.Path(inspect.getfile(command_object.__class__)).stem}.py")
+			bot.send_reply_message(messageData, f"https://github.com/emredesu/kawaiibotto/blob/master/commands/{pathlib.Path(inspect.getfile(command_object.__class__)).stem}.py")

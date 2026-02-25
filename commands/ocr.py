@@ -72,7 +72,7 @@ class OCRCommand(Command):
             try:
                 target_language = matchedLanguageCodes[target_language]
             except KeyError:
-                bot.send_message(messageData.channel, f"{messageData.user}, the language code you inputted is invalid. Valid codes can be found at: https://ocr.space/OCRAPI#:~:text=faster%20upload%20speeds.-,language,-%5BOptional%5D%0AArabic")
+                bot.send_reply_message(messageData, f"The language code you inputted is invalid. Valid codes can be found at: https://ocr.space/OCRAPI#:~:text=faster%20upload%20speeds.-,language,-%5BOptional%5D%0AArabic")
                 return
 
         targetRequest = f"https://api.ocr.space/parse/imageurl?apikey={OCR_SPACE_APIKEY}&url={message_args[0]}"
@@ -82,22 +82,22 @@ class OCRCommand(Command):
         try:
             requestData = requests.get(targetRequest)
             if requestData.status_code != 200:
-                bot.send_message(messageData.channel, f"{messageData.user}, the OCR API returned a {requestData.status_code}.")
+                bot.send_reply_message(messageData, f"The OCR API returned a {requestData.status_code}.")
 
             jsonData = requestData.json()
             
             if jsonData["IsErroredOnProcessing"]:
                 errorMessage = " / ".join(jsonData["ErrorMessage"])
-                bot.send_message(messageData.channel, f"{messageData.user}, {errorMessage}")
+                bot.send_reply_message(messageData, f"{errorMessage}")
             else:
                 parsedText = jsonData["ParsedResults"][0]["ParsedText"]
                 if not parsedText:
-                    bot.send_message(messageData.channel, f"{messageData.user}, received empty response from the API, did you give the correct language code with lang:code ?")
+                    bot.send_reply_message(messageData, f"Received empty response from the API, did you give the correct language code with lang:code ?")
                     return
                 else:
-                    bot.send_message(messageData.channel, f"{messageData.user}, {parsedText}")
+                    bot.send_reply_message(messageData, f"{parsedText}")
         except:
-            bot.send_message(messageData.channel, f"{messageData.user}, an unknown error has occured.")
+            bot.send_reply_message(messageData, f"An unknown error has occured.")
 
 class OCRTranslateCommand(Command):
     COMMAND_NAME = ["ocrtranslate", "ocrt"]
@@ -296,7 +296,7 @@ class OCRTranslateCommand(Command):
             try:
                 textLanguage = self.matchedLanguageCodesForOCR[textLanguage]
             except KeyError:
-                bot.send_message(messageData.channel, f"{messageData.user}, the language code you inputted is invalid. Valid codes can be found at: https://ocr.space/OCRAPI#:~:text=faster%20upload%20speeds.-,language,-%5BOptional%5D%0AArabic")
+                bot.send_reply_message(messageData, f"The language code you inputted is invalid. Valid codes can be found at: https://ocr.space/OCRAPI#:~:text=faster%20upload%20speeds.-,language,-%5BOptional%5D%0AArabic")
                 return
             
         # Check if requested target language is supported by Google API
@@ -307,7 +307,7 @@ class OCRTranslateCommand(Command):
             elif value == targetLanguage.lower():
                 break
         else:
-            bot.send_message(messageData.channel, f"{messageData.user}, That language is not supported by Google translate API! To see which languages are supported, visit: https://cloud.google.com/translate/docs/languages")
+            bot.send_reply_message(messageData, f"That language is not supported by Google translate API! To see which languages are supported, visit: https://cloud.google.com/translate/docs/languages")
             return
 
         targetRequest = f"https://api.ocr.space/parse/imageurl?apikey={OCR_SPACE_APIKEY}&url={message_args[0]}"
@@ -317,30 +317,30 @@ class OCRTranslateCommand(Command):
         try:
             requestData = requests.get(targetRequest)
             if requestData.status_code != 200:
-                bot.send_message(messageData.channel, f"{messageData.user}, the OCR API returned a {requestData.status_code}.")
+                bot.send_reply_message(messageData, f"The OCR API returned a {requestData.status_code}.")
 
             jsonData = requestData.json()
             
             if jsonData["IsErroredOnProcessing"]:
                 errorMessage = " / ".join(jsonData["ErrorMessage"])
-                bot.send_message(messageData.channel, f"{messageData.user}, {errorMessage}")
+                bot.send_reply_message(messageData, f"{errorMessage}")
             else:
                 parsedText = jsonData["ParsedResults"][0]["ParsedText"]
                 if not parsedText:
-                    bot.send_message(messageData.channel, f"{messageData.user}, received empty response from the API, did you give the correct language code with lang:code ?")
+                    bot.send_reply_message(messageData, f"Received empty response from the API, did you give the correct language code with lang:code ?")
                     return
                 else:
                     data = requests.get(f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={targetLanguage}&dt=t&q={parsedText}&ie=UTF-8&oe=UTF-8").json()
                     is_successful = bool(data[0][0][4])
 
                     if not is_successful:
-                        bot.send_message(messageData.channel, f"{messageData.user}, translation failed ;w;")
+                        bot.send_reply_message(messageData, f"Translation failed ;w;")
                         return
                     else:
                         translated_text = ""
                         for i in range(len(data[0])):
                             translated_text += data[0][i][0]
 
-                        bot.send_message(messageData.channel, f"{messageData.user}, {data[2]} -> {targetLanguage} - {translated_text}")
+                        bot.send_reply_message(messageData, f"{data[2]} -> {targetLanguage} - {translated_text}")
         except:
-            bot.send_message(messageData.channel, f"{messageData.user}, an unknown error has occured.")
+            bot.send_reply_message(messageData, f"An unknown error has occured.")

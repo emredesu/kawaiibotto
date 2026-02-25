@@ -38,13 +38,13 @@ class RandomQuoteCommand(Command):
 				ch = messageData.channel
 		
 		if ch not in self.channels:
-			bot.send_message(messageData.channel, f"{'That' if messageData.channel != ch else 'This'} channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
+			bot.send_reply_message(messageData, f"{'That' if messageData.channel != ch else 'This'} channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
 			return
 		else:
 			request = requests.get(f"https://logs.ivr.fi/channel/{ch}/user/{person}/random?json=1")
 			
 			if request.status_code != 200:
-				bot.send_message(messageData.channel, f"{messageData.user}, API returned {request.status_code}.")
+				bot.send_reply_message(messageData, f"API returned {request.status_code}.")
 				return
 
 			rq_data = request.json()["messages"][0]			
@@ -56,9 +56,9 @@ class RandomQuoteCommand(Command):
 
 				dayDifferential = deltaTime.days
 
-				bot.send_message(messageData.channel, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
+				bot.send_reply_message(messageData, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
 			except KeyError:
-				bot.send_message(messageData.channel, f"{messageData.user}, API error.")
+				bot.send_reply_message(messageData, f"API error.")
 				return
 
 
@@ -74,7 +74,7 @@ class EmoteInfoCommand(Command):
 		try:
 			emote = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (emote name or emote ID)")
+			bot.send_reply_message(messageData, f"Usage: _{self.COMMAND_NAME} (emote name or emote ID)")
 			return
 		else:
 			try:
@@ -86,7 +86,10 @@ class EmoteInfoCommand(Command):
 
 				ch = data["channelLogin"]
 
-				bot.send_message(messageData.channel, f"{emote} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
+				if ch is not None:
+					bot.send_reply_message(messageData, f"{emote} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
+				else:
+					bot.send_reply_message(messageData, f"{emote} is a global Twitch emote.")
 			except KeyError:
 				# On failure, try again with the ?id=true parameter in case the given param is an emote code.
 				try:
@@ -99,7 +102,7 @@ class EmoteInfoCommand(Command):
 					ch = data["channelLogin"]
 					emoteName = data["emoteCode"]
 
-					bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
+					bot.send_reply_message(messageData, f"{emoteName} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
 				except KeyError:
 					# Lastly, try to extract the emote code from the given string in case it's an emote URL.
 					emoteCode = ""
@@ -112,13 +115,13 @@ class EmoteInfoCommand(Command):
 						ch = data["channelLogin"]
 						emoteName = data["emoteCode"]
 
-						bot.send_message(messageData.channel, f"{emoteName} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
+						bot.send_reply_message(messageData, f"{emoteName} belongs to channel \"{ch}\". https://chatvau.lt/channel/twitch/{ch}")
 					except (IndexError, KeyError):
 						# Give up.
 						statusCode = data["statusCode"]
 						errorMessage = data["error"]["message"]
 
-						bot.send_message(messageData.channel, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
+						bot.send_reply_message(messageData, f"API returned {statusCode}: {errorMessage}. If you're certain that this is a valid emote, try using the command with the emote code.")
 
 			except requests.exceptions.ConnectionError:
-				bot.send_message(messageData.channel, "API is down ;w;")
+				bot.send_reply_message(messageData, "API is down ;w;")

@@ -12,14 +12,14 @@ class RestartCommand(Command):
 
     def execute(self, bot, messageData):
         if messageData.user != AUTHORIZED_USER:
-            bot.send_message(messageData.channel, f"{messageData.user}, only the authorized user can restart the bot!")
+            bot.send_reply_message(messageData, f"Only the authorized user can restart the bot!")
             return
         if platform.system() != "Linux":
-            bot.send_message(messageData.channel, f"{messageData.user}, this command is configured to work with Linux only.")
+            bot.send_reply_message(messageData, f"This command is configured to work with Linux only.")
             return
         
         try:
-            bot.send_message(messageData.channel, f"{messageData.user}, restarting...")
+            bot.send_reply_message(messageData, f"Restarting...")
 
             subprocess.run(
                 ["sudo", "-S", "systemctl", "restart", self.serviceName],
@@ -28,6 +28,6 @@ class RestartCommand(Command):
                 check=True
             )
         except subprocess.CalledProcessError:
-            bot.send_message(messageData.channel, f"{messageData.user}, error when restarting the bot.")
+            bot.send_reply_message(messageData, f"Error when restarting the bot.")
 
         

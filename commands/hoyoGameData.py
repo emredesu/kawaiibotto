@@ -66,7 +66,7 @@ class HoyolabRegistrationWhisperCommand(WhisperComand):
 
 	def execute(self, bot, messageData: TwitchIRCMessage):
 		if not successfulInit:
-			bot.send_message(messageData.channel, f"{messageData.user}, this command was not initialized successfully.")
+			bot.send_reply_message(messageData, f"This command was not initialized successfully.")
 			return
 		
 		print("cmd works")
@@ -124,11 +124,11 @@ class HoyolabRegistrationCommand(Command):
 				ltoken = arg[7::]
 
 		if ltuid == "" or ltmid == "" or ltoken == "":
-			bot.send_message(messageData.channel, f"{messageData.user}, Invalid registration structure. Should be as follows: _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken) ➡️ Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_reply_message(messageData, f"Invalid registration structure. Should be as follows: _hoyoregister ltuid:(ltuid) ltmid:(ltmid) ltoken:(ltoken) ➡️ Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 
 		if not IsValidHoyoCookieValue(ltuid) or not IsValidHoyoCookieValue(ltmid) or not IsValidHoyoCookieValue(ltoken):
-			bot.send_message(messageData.channel, f"{messageData.user}, Invalid cookie values. ltuid, ltmid and ltoken must start with a letter or number.")
+			bot.send_reply_message(messageData, f"Invalid cookie values. ltuid, ltmid and ltoken must start with a letter or number.")
 			return
 		
 		dbConnection = hoyoDBConnectionPool.get_connection()
@@ -138,7 +138,7 @@ class HoyolabRegistrationCommand(Command):
 				   		(int(messageData.tags["user-id"]), messageData.user, ltuid, ltmid, ltoken))
 		dbConnection.commit()
 
-		bot.send_message(messageData.channel, f"{messageData.user}, Successfully registered your HoyoLAB cookies! You may now use all the commands related to Hoyo games. If you entered any values incorrectly, you may use this command again to fix them.")
+		bot.send_reply_message(messageData, f"Successfully registered your HoyoLAB cookies! You may now use all the commands related to Hoyo games. If you entered any values incorrectly, you may use this command again to fix them.")
 		dbConnection.close()
 
 class HoyoDeleteCommand(Command):
@@ -148,7 +148,7 @@ class HoyoDeleteCommand(Command):
 
 	def execute(self, bot, messageData: TwitchIRCMessage):
 		if not successfulInit:
-			bot.send_message(messageData.channel, f"{messageData.user}, this command was not initialized successfully.")
+			bot.send_reply_message(messageData, f"This command was not initialized successfully.")
 			return
 
 		dbConnection = hoyoDBConnectionPool.get_connection()
@@ -159,9 +159,9 @@ class HoyoDeleteCommand(Command):
 		dbConnection.close()
 
 		if rows_deleted > 0:
-			bot.send_message(messageData.channel, f"{messageData.user}, your HoyoLAB data has been removed.")
+			bot.send_reply_message(messageData, f"Your HoyoLAB data has been removed.")
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, you are not registered for Hoyo commands yet.")
+			bot.send_reply_message(messageData, f"You are not registered for Hoyo commands yet.")
 
 class GenshinResinCheckCommand(Command):
 	COMMAND_NAME = ["genshinresin", "resin", "resincheck"]
@@ -183,23 +183,23 @@ class GenshinResinCheckCommand(Command):
 					userNotes : genshin.models.Notes = asyncio.run(self.GetGenshinNotes(client, genshinUID))
 
 					if userNotes.remaining_transformer_recovery_time is not None:
-						bot.send_message(messageData.channel, 
-							f"{messageData.user}, {self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
+						bot.send_reply_message(messageData, 
+							f"{self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
 							Dailies: {('✅' if userNotes.claimed_commission_reward else '❌')} | Realm currency: {userNotes.current_realm_currency}/{userNotes.max_realm_currency} | \
 							Parametric transformer {f'ready in {userNotes.remaining_transformer_recovery_time.days} day(s).' if userNotes.remaining_transformer_recovery_time.days > 0 else 'is ready!'}")
 					else:
-						bot.send_message(messageData.channel, 
-							f"{messageData.user}, {self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
+						bot.send_reply_message(messageData, 
+							f"{self.GENSHIN_EMOTE} Genshin data for {genshinUID} - Resin: {userNotes.current_resin}/{userNotes.max_resin} | Resin fully recovered in: {str(userNotes.remaining_resin_recovery_time)} | \
 							Dailies: {('✅' if userNotes.claimed_commission_reward else '❌')} | Realm currency: {userNotes.current_realm_currency}/{userNotes.max_realm_currency} | \
 							Parametric transformer not yet obtained.")
 				except genshin.errors.InternalDatabaseError:
-					bot.send_message(messageData.channel, f"{messageData.user}, data doesn't exist! Please make sure your Real-time Notes and other settings are enabled in the HoyoLAB battle chronicle.")
+					bot.send_reply_message(messageData, f"Data doesn't exist! Please make sure your Real-time Notes and other settings are enabled in the HoyoLAB battle chronicle.")
 					return
 			else:
-				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Genshin Impact account. {self.GENSHIN_EMOTE}")
+				bot.send_reply_message(messageData, f"You do not have a Genshin Impact account. {self.GENSHIN_EMOTE}")
 				return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_reply_message(messageData, f"You have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 
 class HonkaiStarRailStaminaCheckCommand(Command):
@@ -220,14 +220,14 @@ class HonkaiStarRailStaminaCheckCommand(Command):
 			if starRailUID is not None:
 				userNotes : genshin.models.StarRailNote = asyncio.run(self.GetStarRailNotes(client, starRailUID))
 
-				bot.send_message(messageData.channel, 
-					f"{messageData.user}, {self.STAR_RAIL_EMOTE} Star Rail data for {starRailUID} - Stamina: {userNotes.current_stamina}/{userNotes.max_stamina} | Stamina fully recovered in: {str(userNotes.stamina_recover_time)} | \
+				bot.send_reply_message(messageData, 
+					f"{self.STAR_RAIL_EMOTE} Star Rail data for {starRailUID} - Stamina: {userNotes.current_stamina}/{userNotes.max_stamina} | Stamina fully recovered in: {str(userNotes.stamina_recover_time)} | \
 					Reserve stamina: {userNotes.current_reserve_stamina} | Reserve stamina full: {'✅' if userNotes.is_reserve_stamina_full else '❌'} | Dailies: {'✅' if userNotes.current_train_score == userNotes.max_train_score else '❌'} ({userNotes.current_train_score}/{userNotes.max_train_score})")
 			else:
-				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Honkai: Star Rail account. {self.STAR_RAIL_EMOTE}")
+				bot.send_reply_message(messageData, f"You do not have a Honkai: Star Rail account. {self.STAR_RAIL_EMOTE}")
 				return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_reply_message(messageData, f"You have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 
 class ZenlessZoneZeroEnergyCheckCommand(Command):
@@ -250,14 +250,14 @@ class ZenlessZoneZeroEnergyCheckCommand(Command):
 			if zzzUID is not None:
 				userNotes : genshin.models.ZZZNotes = asyncio.run(self.GetZZZNotes(client, zzzUID))
 
-				bot.send_message(messageData.channel, 
-					f"{messageData.user}, {self.ZZZ_EMOTE} Zenless Zone Zero data for {zzzUID} - Energy: {userNotes.battery_charge.current}/{userNotes.battery_charge.max} | Energy fully recovered in: {str(datetime.timedelta(seconds=userNotes.battery_charge.seconds_till_full))} | \
+				bot.send_reply_message(messageData, 
+					f"{self.ZZZ_EMOTE} Zenless Zone Zero data for {zzzUID} - Energy: {userNotes.battery_charge.current}/{userNotes.battery_charge.max} | Energy fully recovered in: {str(datetime.timedelta(seconds=userNotes.battery_charge.seconds_till_full))} | \
 					Scratch card completed: {'✅' if userNotes.scratch_card_completed else '❌'} | Video store: {self.VIDEO_STORE_STATE[userNotes.video_store_state]} | Dailies: {'✅' if userNotes.engagement.current == userNotes.engagement.max else '❌'} ({userNotes.engagement.current}/{userNotes.engagement.max})")
 			else:
-				bot.send_message(messageData.channel, f"{messageData.user} you do not have a Zenless Zone Zero account. {self.ZZZ_EMOTE}")
+				bot.send_reply_message(messageData, f"You do not have a Zenless Zone Zero account. {self.ZZZ_EMOTE}")
 				return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_reply_message(messageData, f"You have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 		
 class HoyoGameDailyRewardClaimCommand(Command):
@@ -288,7 +288,7 @@ class HoyoGameDailyRewardClaimCommand(Command):
 
 				# Handle no game name
 				if targetGame not in ["genshin", "hsr", "zzz", "all"]:
-					bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr, zzz or all for to claim for all games at once.")
+					bot.send_reply_message(messageData, f"Invalid game name supplied! Valid game names are: genshin, hsr, zzz or all for to claim for all games at once.")
 					return
 				
 				# Handle all games claim
@@ -304,21 +304,21 @@ class HoyoGameDailyRewardClaimCommand(Command):
 						except:
 							resultStr += f"{game}: (no account) "
 
-					bot.send_message(messageData.channel, f"{messageData.user}, {resultStr}")
+					bot.send_reply_message(messageData, f"{resultStr}")
 					self.UpdateClaimDate(messageData)
 				# Handle singular game claim				
 				else:
 					rewardData = asyncio.run(self.ClaimDailyRewards(client, self.GAME_NAME_TO_ENUM[targetGame]))
-					bot.send_message(messageData.channel, f"{messageData.user}, successfully claimed {rewardData}!")
+					bot.send_reply_message(messageData, f"Successfully claimed {rewardData}!")
 					self.UpdateClaimDate(messageData)
 			except IndexError:
-				bot.send_message(messageData.channel, f"{messageData.user}, you didn't supply a game name to claim daily rewards for! Valid games names are: genshin, hsr, zzz or all for to claim for all games at once.")
+				bot.send_reply_message(messageData, f"You didn't supply a game name to claim daily rewards for! Valid games names are: genshin, hsr, zzz or all for to claim for all games at once.")
 			except genshin.AlreadyClaimed:
-				bot.send_message(messageData.channel, f"{messageData.user}, you already claimed daily rewards for that game today!")
+				bot.send_reply_message(messageData, f"You already claimed daily rewards for that game today!")
 			except:
-				bot.send_message(messageData.channel, f"{messageData.user}, error - you probably don't have an account in that game.")
+				bot.send_reply_message(messageData, f"Error - you probably don't have an account in that game.")
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, you have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
+			bot.send_reply_message(messageData, f"You have not yet registered to use Hoyo commands or your cookies have expired/are unvalid! Registration tutorial: https://github.com/emredesu/kawaiibotto/blob/master/how_to_register_for_hoyo_game_data_check.md")
 			return
 		
 class HoyoDailyCheckReminderCommand(Command):
@@ -341,13 +341,13 @@ class HoyoDailyCheckReminderCommand(Command):
 					usernames.append(user[0])
 
 			if len(usernames) > 0:
-				bot.send_message(messageData.channel, f"{', '.join(usernames)} time to use _hoyoclaim for daily rewards! HungryPaimon")
+				bot.send_reply_message(messageData, f"{', '.join(usernames)} time to use _hoyoclaim for daily rewards! HungryPaimon")
 			else:
-				bot.send_message(messageData.channel, "There's no one that didn't claim their rewards! HungryPaimon")
+				bot.send_reply_message(messageData, "There's no one that didn't claim their rewards! HungryPaimon")
 
 			dbConnection.close()
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, it's kind of you to be considerate, but only the bot owner or the broadcaster can use this command to avoid spam.")
+			bot.send_reply_message(messageData, f"It's kind of you to be considerate, but only the bot owner or the broadcaster can use this command to avoid spam.")
 		
 class HoyoBannersCommand(Command):
 	COMMAND_NAME = "hoyobanners"
@@ -429,15 +429,15 @@ class HoyoBannersCommand(Command):
 		try:
 			targetGame = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"{messageData.user}, No game name supplied! Valid game names are: genshin, hsr")
+			bot.send_reply_message(messageData, f"No game name supplied! Valid game names are: genshin, hsr")
 			return
 
 		# Handle invalid game name
 		if targetGame not in ["genshin", "hsr"]:
-			bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr")
+			bot.send_reply_message(messageData, f"invalid game name supplied! Valid game names are: genshin, hsr")
 			return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, {asyncio.run(self.GetEventBannerData(targetGame))}")
+			bot.send_reply_message(messageData, f"{asyncio.run(self.GetEventBannerData(targetGame))}")
 
 class HoyoEventsComnand(Command):
 	COMMAND_NAME = "hoyoevents"
@@ -493,12 +493,12 @@ class HoyoEventsComnand(Command):
 		try:
 			targetGame = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"{messageData.user}, No game name supplied! Valid game names are: genshin, hsr")
+			bot.send_reply_message(messageData, f"No game name supplied! Valid game names are: genshin, hsr")
 			return
 
 		# Handle invalid game name
 		if targetGame not in ["genshin", "hsr"]:
-			bot.send_message(messageData.channel, f"{messageData.user}, invalid game name supplied! Valid game names are: genshin, hsr")
+			bot.send_reply_message(messageData, f"invalid game name supplied! Valid game names are: genshin, hsr")
 			return
 		else:
-			bot.send_message(messageData.channel, f"{messageData.user}, {asyncio.run(self.GetEventData(targetGame))}")
+			bot.send_reply_message(messageData, f"{asyncio.run(self.GetEventData(targetGame))}")

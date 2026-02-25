@@ -15,11 +15,11 @@ class QueryCommand(Command):
 		result = client.query(question)
 
 		if result["@success"] == "false":
-			bot.send_message(messageData.channel, f"{messageData.user}, Wolfram-Alpha did not understand your question.")
+			bot.send_reply_message(messageData, f"Wolfram-Alpha did not understand your question.")
 			return
 		else:
 			try:
 				result_text = next(result.results).text.replace("\n", " ")
-				bot.send_message(messageData.channel, f"/me Query result: {result_text}")
+				bot.send_reply_message(messageData, f"/me Query result: {result_text}")
 			except StopIteration:
-				bot.send_message(messageData.channel, f"{messageData.user}, No proper answer was found for your query.")
+				bot.send_reply_message(messageData, f"No proper answer was found for your query.")

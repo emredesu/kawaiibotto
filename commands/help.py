@@ -10,35 +10,35 @@ class HelpCommand(Command):
 			command_to_get_help_for = messageData.content.split()[1]
 
 			if command_to_get_help_for not in bot.commands:
-				bot.send_message(messageData.channel, f"{messageData.user}, command not found.")
+				bot.send_reply_message(messageData, f"Command not found.")
 				return
 		except IndexError:
-			bot.send_message(messageData.channel, "Usage: _help {command name}")
+			bot.send_reply_message(messageData, "Usage: _help {command name}")
 		else:
 			command_found = False
 
 			for cmd in bot.commands:
 				if isinstance(cmd.COMMAND_NAME, str) and cmd.COMMAND_NAME == command_to_get_help_for:
-					bot.send_message(messageData.channel, messageData.user + ", " + cmd.DESCRIPTION)
+					bot.send_reply_message(messageData, cmd.DESCRIPTION)
 					command_found = True
 				elif isinstance(cmd.COMMAND_NAME, list):
 					for commandName in cmd.COMMAND_NAME:
 						if commandName == command_to_get_help_for:
-							bot.send_message(messageData.channel, messageData.user + ", " + cmd.DESCRIPTION)
+							bot.send_reply_message(messageData, cmd.DESCRIPTION)
 							command_found = True
 
 			# If still not found, search whisper commands.
 			if command_found is False:
 				for cmd in bot.whisperCommands:
 					if isinstance(cmd.COMMAND_NAME, str) and cmd.COMMAND_NAME == command_to_get_help_for:
-						bot.send_message(messageData.channel, messageData.user + ", " + cmd.DESCRIPTION)
+						bot.send_reply_message(messageData, cmd.DESCRIPTION)
 						command_found = True
 					elif isinstance(cmd.COMMAND_NAME, list):
 						for commandName in cmd.COMMAND_NAME:
 							if commandName == command_to_get_help_for:
-								bot.send_message(messageData.channel, messageData.user + ", " + cmd.DESCRIPTION)
+								bot.send_reply_message(messageData, cmd.DESCRIPTION)
 								command_found = True
 
 			if command_found is False:
-				bot.send_message(messageData.channel, "Specified command was not found.")
+				bot.send_reply_message(messageData, "Specified command was not found.")
 				return

@@ -43,7 +43,6 @@ class ChatBotCommand(Command):
 		args = messageData.content.split()
 		args.pop(0) # Get rid of the command invocation
 
-
 		if historyWipeTag in args:
 			args.pop(args.index(historyWipeTag))
 
@@ -52,7 +51,7 @@ class ChatBotCommand(Command):
 
 		userPrompt = " ".join(args)
 		if not userPrompt:
-			bot.send_message(messageData.channel, f"{messageData.user}, You haven't given the model a prompt! Example usage: _gpt Tell me a story about a turtle.")
+			bot.send_reply_message(messageData, f"You haven't given the model a prompt! Example usage: _gpt Tell me a story about a turtle.")
 			return
         
 		try:
@@ -93,20 +92,20 @@ class ChatBotCommand(Command):
 				input = userMessageHistory
 			)
 
-			bot.send_message(messageData.channel, f"{messageData.user}," + (self.HISTORY_EMOJI if hasHistory else " ") + response.output_text)
+			bot.send_reply_message(messageData, f"{(self.HISTORY_EMOJI if hasHistory else " ")} {response.output_text}")
 			self.messageHistory[messageData.user].append(GPTMessageData(False, response.output_text, time.time()))
 
 			# Save bot response to message history too.
 		except openai.APIConnectionError as e:
-			bot.send_message(messageData.channel, f"{messageData.user}, could not connect to OpenAI services.")
+			bot.send_reply_message(messageData, f"Could not connect to OpenAI services.")
 			return
 		except openai.RateLimitError as e:
-			bot.send_message(messageData.channel, f"{messageData.user}, currently rate limited by OpenAI! Try again later.")
+			bot.send_reply_message(messageData, f"Currently rate limited by OpenAI! Try again later.")
 			return
 		except openai.APIStatusError as e:
-			bot.send_message(messageData.channel, f"{messageData.user}, OpenAI API status error: {e.status_code}: {e.response}")
+			bot.send_reply_message(messageData, f"OpenAI API status error: {e.status_code}: {e.response}")
 			return
 		except Exception as e:
-			bot.send_message(messageData.channel, f"{messageData.user}, An unknown error occured.")
+			bot.send_reply_message(messageData, f"An unknown error occured.")
 			messagetypes.error(f"{e}")
 			return

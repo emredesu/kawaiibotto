@@ -7,4 +7,4 @@ class HelloWorldCommand(Command):
 	DESCRIPTION = "hello world, programmed to work and not to feel ;w;"
 
 	def execute(self, bot, messageData):
-		bot.send_message(messageData.channel, "hello! :DD")
+		bot.send_reply_message(messageData, "hello! :DD")

@@ -15,12 +15,12 @@ class MathsCommand(Command):
 		expression = urllib.parse.quote(expression)
 
 		if not expression:
-			bot.send_message(messageData.channel, f"{messageData.user}, no expression was given!")
+			bot.send_reply_message(messageData, f"No expression was given!")
 			return
 
 		try:
 			data = requests.get(f"http://api.mathjs.org/v4/?expr={expression}")
-			bot.send_message(messageData.channel, str(float(data.text))) # Casting to float gets rid of Euler notation
+			bot.send_reply_message(messageData, str(float(data.text))) # Casting to float gets rid of Euler notation
 		except Exception as exception:
-			bot.send_message(messageData.channel, f"Unidentified error occured: {exception.__class__.__name__}")
+			bot.send_reply_message(messageData, f"Unidentified error occured: {exception.__class__.__name__}")
 			return

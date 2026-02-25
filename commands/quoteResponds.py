@@ -2,7 +2,7 @@ from commands.command import CustomCommand
 import time
 
 class QuoteRespondsCommand(CustomCommand):
-    colonThreeChannel = ""
+    colonThreeChannel = "kimimayushi"
     colonThreeCooldown = 10
     colonThreeLastTriggerTime = 0
 

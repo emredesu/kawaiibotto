@@ -14,7 +14,7 @@ class UserIDCommand(Command):
 		try:
 			username = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (username)")
+			bot.send_reply_message(messageData, f"Usage: _{self.COMMAND_NAME} (username)")
 			return
 		else:
 			url = f"https://api.twitch.tv/helix/users?login={username}"
@@ -24,9 +24,9 @@ class UserIDCommand(Command):
 				print(data)
 				userid = data["data"][0]["id"]
 			except IndexError:
-				bot.send_message(messageData.channel, "User not found ¯\\_(ツ)_/¯")
+				bot.send_reply_message(messageData, "User not found ¯\\_(ツ)_/¯")
 			else:
-				bot.send_message(messageData.channel, userid)
+				bot.send_reply_message(messageData, userid)
 
 
 class ProfilePictureCommand(Command):
@@ -40,7 +40,7 @@ class ProfilePictureCommand(Command):
 		try:
 			username = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (username)")
+			bot.send_reply_message(messageData, f"Usage: _{self.COMMAND_NAME} (username)")
 			return
 		else:
 			url = f"https://api.twitch.tv/helix/users?login={username}"
@@ -49,9 +49,9 @@ class ProfilePictureCommand(Command):
 			try:
 				userid = data["data"][0]["profile_image_url"]
 			except IndexError:
-				bot.send_message(messageData.channel, "User not found ¯\\_(ツ)_/¯")
+				bot.send_reply_message(messageData, "User not found ¯\\_(ツ)_/¯")
 			else:
-				bot.send_message(messageData.channel, userid)
+				bot.send_reply_message(messageData, userid)
 
 
 class EmotesCommand(Command):
@@ -65,7 +65,7 @@ class EmotesCommand(Command):
 		try:
 			username = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (username)")
+			bot.send_reply_message(messageData, f"Usage: _{self.COMMAND_NAME} (username)")
 			return
 		else:
 			url = f"https://api.twitch.tv/helix/users?login={username}"
@@ -74,13 +74,13 @@ class EmotesCommand(Command):
 			try:
 				userid = data["data"][0]["id"]
 			except IndexError:
-				bot.send_message(messageData.channel, "User not found ¯\\_(ツ)_/¯")
+				bot.send_reply_message(messageData, "User not found ¯\\_(ツ)_/¯")
 				return
 			else:
 				broadcaster_type = data["data"][0]["broadcaster_type"]
 
 				if broadcaster_type not in ["partner", "affiliate"]:
-					bot.send_message(messageData.channel, "That user is not an affiliate nor a partner. ;w;")
+					bot.send_reply_message(messageData, "That user is not an affiliate nor a partner. ;w;")
 					return
 				else:
-					bot.send_message(messageData.channel, "https://chatvau.lt/channel/twitch/{}".format(username))
+					bot.send_reply_message(messageData, "https://chatvau.lt/channel/twitch/{}".format(username))

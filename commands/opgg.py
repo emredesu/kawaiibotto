@@ -14,14 +14,14 @@ class OpggCommand(Command):
 		try:
 			region = args[1]
 		except IndexError:
-			bot.send_message(messageData.channel, f"Usage: _{self.COMMAND_NAME} (optional region) (player)")
+			bot.send_reply_message(messageData, f"Usage: _{self.COMMAND_NAME} (optional region) (player)")
 			return
 		else:
 			player_name = "+".join(args[2::])
 
 			if region not in available_regions:
-				bot.send_message(messageData.channel, f"Invalid region provided! Available regions are: {' '.join(available_regions)}")
+				bot.send_reply_message(messageData, f"Invalid region provided! Available regions are: {' '.join(available_regions)}")
 			elif region == "kr":
-				bot.send_message(messageData.channel, f"https://www.op.gg/summoner/userName={player_name}")
+				bot.send_reply_message(messageData, f"https://www.op.gg/summoner/userName={player_name}")
 			else:
-				bot.send_message(messageData.channel, f"https://www.op.gg/summoners/{region}/{player_name}")
+				bot.send_reply_message(messageData, f"https://www.op.gg/summoners/{region}/{player_name}")

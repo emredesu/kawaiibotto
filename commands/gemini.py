@@ -1,6 +1,6 @@
 from commands.command import Command
 import messagetypes
-from globals import GOOGLE_GEMINI_APIKEY
+from globals import GOOGLE_GEMINI_APIKEY, CHATBOT_RESPONSE_TRUNCATED_CHANNELS
 import time
 from typing import Dict
 import google.genai as GenAI
@@ -22,10 +22,10 @@ class GeminiCommand(Command):
     HISTORY_EMOJI = "⌛ "
 
     maxTokens = 2048
-    currentModel = "gemini-2.5-flash"
+    currentModel = "gemini-3-flash-preview"
     MAX_RESPONSE_CHARS = 480
     maxRetries = 10
-    RESPONSE_TRUNCATED_CHANNELS = [] 
+    RESPONSE_TRUNCATED_CHANNELS = CHATBOT_RESPONSE_TRUNCATED_CHANNELS
 
     messageHistory: Dict[str, GeminiChatHistory] = {}
 
@@ -92,12 +92,12 @@ class GeminiCommand(Command):
                     if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.MAX_RESPONSE_CHARS:
                         reply_text = reply_text[:self.MAX_RESPONSE_CHARS] + "..."
 
-                    bot.send_message(messageData.channel, f"{messageData.user}, {self.HISTORY_EMOJI if hasActiveHistory else ''} {reply_text}")
+                    bot.send_reply_message(messageData.channel, f"{self.HISTORY_EMOJI if hasActiveHistory else ''} {reply_text}")
                     success = True
                     break
             except Exception as e:
                 continue
         
         if not success:
-            bot.send_message(messageData.channel, f"{messageData.user}, Currently unable to respond. Please try again later.")
+            bot.send_reply_message(messageData, f"Currently unable to respond. Please try again later.")
 
