@@ -19,7 +19,7 @@ GENSHIN_MYSQL_DB_PASSWORD = ""
 GENSHIN_DB_POOL_SIZE = 0
 
 # HoyoLAB cookies for Hoyoverse game command data
-kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": ".7WzAZwAAAAAB.MEUCIGhbL5rwTheufJEzbIcM026hVYkBsuzfuAXn-GdxiCMlAiEA8MfWXR_Awihg_NxkGiAO5W0G3COOaX5S0bYsXFIw6P0", "ltmid_v2": ""}
+kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": "", "ltmid_v2": ""}
 kawaiibottoGenshinUID = 0
 kawaiibottoStarRailUID = 0
 
