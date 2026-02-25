@@ -92,7 +92,7 @@ class ChatBotCommand(Command):
 				input = userMessageHistory
 			)
 
-			bot.send_reply_message(messageData, f"{(self.HISTORY_EMOJI if hasHistory else " ")} {response.output_text}")
+			bot.send_reply_message(messageData, f"{self.HISTORY_EMOJI if hasHistory else ' '} {response.output_text}")
 			self.messageHistory[messageData.user].append(GPTMessageData(False, response.output_text, time.time()))
 
 			# Save bot response to message history too.
