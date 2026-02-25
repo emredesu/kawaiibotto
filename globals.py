@@ -13,15 +13,18 @@ OPENAI_APIKEY = ""
 GOOGLE_GEMINI_APIKEY = ""
 
 # Genshin command specific values
-GENSHIN_MYSQL_DB_HOST = "192.168.1.1"
+GENSHIN_MYSQL_DB_HOST = ""
 GENSHIN_MYSQL_DB_USERNAME = ""
 GENSHIN_MYSQL_DB_PASSWORD = ""
-GENSHIN_DB_POOL_SIZE = 25
+GENSHIN_DB_POOL_SIZE = 0
 
 # HoyoLAB cookies for Hoyoverse game command data
-kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": "", "ltmid_v2": ""}
+kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": ".7WzAZwAAAAAB.MEUCIGhbL5rwTheufJEzbIcM026hVYkBsuzfuAXn-GdxiCMlAiEA8MfWXR_Awihg_NxkGiAO5W0G3COOaX5S0bYsXFIw6P0", "ltmid_v2": ""}
 kawaiibottoGenshinUID = 0
 kawaiibottoStarRailUID = 0
+
+# Chatbot values
+CHATBOT_RESPONSE_TRUNCATED_CHANNELS = []
 
 # Platform values
 SUDO_PASSWORD = ""
@@ -35,7 +38,7 @@ HOST = "irc.chat.twitch.tv"
 PORT = 6667
 
 # Add the channels that you want to join here! (make sure the names are all in lower case)
-channels = []
+channels = [""]
 
 # Debug channel will be the place where the bot reports once it's online.
 debug_channel = ""
