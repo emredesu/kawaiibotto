@@ -23,7 +23,7 @@ kawaiibottoHoyolabCookies = {"ltuid_v2": 0, "ltoken_v2": "", "ltmid_v2": ""}
 kawaiibottoGenshinUID = 0
 kawaiibottoStarRailUID = 0
 
-# Chatbot values
+# Chatbot related values
 CHATBOT_RESPONSE_TRUNCATED_CHANNELS = []
 
 # Platform values
