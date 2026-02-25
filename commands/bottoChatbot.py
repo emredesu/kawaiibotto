@@ -7,9 +7,9 @@ import re
 import time
 
 class BottoChatbotCommand(CustomCommand):
-    CHANNELS = []
+    CHANNELS = ["emredesu", "i_am_a_terrible_person", "kimimayushi", "hogings", "rainbowsh8", "vulpeshd", "zreem"]
     RANDOM_CHAT_JOIN_CHANNELS = []
-    RESPONSE_TRUNCATED_CHANNELS = []
+    RESPONSE_TRUNCATED_CHANNELS = ["vulpeshd"]
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     messageHistoryLimit = 50
@@ -139,7 +139,7 @@ class BottoChatbotCommand(CustomCommand):
         if messageData.channel in self.RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
             reply_text = reply_text[: self.maxResponseChars] + "..."
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
-        bot.send_message(messageData.channel, reply_text)
+        bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
 
     def GetCurrentMinuteBucket(self) -> int:
@@ -229,7 +229,7 @@ class BottoChatbotCommand(CustomCommand):
         
         # Bot memory clear - only for authorized user and streamer
         if (messageData.user == AUTHORIZED_USER or messageData.user == messageData.channel) and messageData.content.startswith("botto restart"):
-            bot.send_message(messageData.channel, "🧠🔄️👍")
+            bot.send_reply_message(messageData, "🧠🔄️👍")
             self.messageHistory[messageData.channel] = []
             return
 
@@ -281,7 +281,7 @@ class BottoChatbotCommand(CustomCommand):
                         break
 
             if not success:
-                bot.send_message(messageData.channel, f"{messageData.user}, I am currently unable to respond :/")
+                bot.send_reply_message(messageData, f"I am currently unable to respond :/")
         # random chat joining
         else:
             if messageData.channel not in self.RANDOM_CHAT_JOIN_CHANNELS:
