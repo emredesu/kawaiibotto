@@ -1,5 +1,5 @@
 from commands.command import CustomCommand
-from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME, channels as GlobalChannels
+from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME, channels as GlobalChannels, CHATBOT_RESPONSE_TRUNCATED_CHANNELS
 import google.genai as GenAI
 from google.genai import types
 import random
@@ -135,6 +135,8 @@ class BottoChatbotCommand(CustomCommand):
         elif reply_text.startswith("/") or reply_text.startswith("."):
             reply_text = "(command invocation blocked by filter)"
  
+        if messageData.channel in CHATBOT_RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
+            reply_text = reply_text[: self.maxResponseChars] + "..."
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
         bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
