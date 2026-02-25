@@ -24,7 +24,7 @@ class UserIDCommand(Command):
 				print(data)
 				userid = data["data"][0]["id"]
 			except IndexError:
-				bot.send_message(messageData.channel, "User not found ¯\_(ツ)_/¯")
+				bot.send_message(messageData.channel, "User not found ¯\\_(ツ)_/¯")
 			else:
 				bot.send_message(messageData.channel, userid)
 
@@ -49,7 +49,7 @@ class ProfilePictureCommand(Command):
 			try:
 				userid = data["data"][0]["profile_image_url"]
 			except IndexError:
-				bot.send_message(messageData.channel, "User not found ¯\_(ツ)_/¯")
+				bot.send_message(messageData.channel, "User not found ¯\\_(ツ)_/¯")
 			else:
 				bot.send_message(messageData.channel, userid)
 
@@ -74,7 +74,7 @@ class EmotesCommand(Command):
 			try:
 				userid = data["data"][0]["id"]
 			except IndexError:
-				bot.send_message(messageData.channel, "User not found ¯\_(ツ)_/¯")
+				bot.send_message(messageData.channel, "User not found ¯\\_(ツ)_/¯")
 				return
 			else:
 				broadcaster_type = data["data"][0]["broadcaster_type"]
