@@ -18,10 +18,10 @@ class BottoChatbotCommand(CustomCommand):
     currentModel = "gemini-3-flash-preview"
     fallbackModel = "gemini-2.5-flash"
     maxResponseChars = 496
-    maxRetries = 5
+    maxRetries = 2
     maxQueriesPerMinute = 3
     externalEmotesCacheTtlSeconds = 21600 # updates emotes every 6 hours
-    externalEmotesRequestTimeoutSeconds = 15
+    externalEmotesRequestTimeoutSeconds = 3
     emoteDetectionDebugEnabled = False
 
     UNWANTED_REPLIES = [
@@ -55,7 +55,7 @@ class BottoChatbotCommand(CustomCommand):
         "Never prefix your username at the start of your messages. Twitch handles that automatically. "
         f"Never start responses with \"{USERNAME}:\". "
         "Do not include usernames at the start of messages. "
-        "Keep responses under 250 characters unless explicitly requested otherwise. NEVER respond with more than 500 characters. "
+        "Keep responses under 250 characters unless a user explicitly requests a detailed answer. NEVER respond with more than 500 characters. "
         "Do not repeat the user's question. Do not compliment the question (e.g., avoid \"Great question!\", \"Interesting question!\") "
         "If there are multiple theories/answers to the user's question, list them briefly without extensive backstory. "
         "If asked to choose between options (e.g. \"A\" or \"B\"?), pick one immediately and give a short reason. Never say \"both are good\" or \"it depends\". "
@@ -66,6 +66,7 @@ class BottoChatbotCommand(CustomCommand):
         "Pay special attention to the last message and the user who sent this user when crafting your response. "
         "Never attempt to dodge or deflect questions or requests directed towards you. Always do your best to answer questions and comply with requests. Never "
         "deflect questions or refuse to comply with requests due to being an AI. "
+        "When answering questions whose answer you aren't sure falls within your knowledge cutoff, use search grounding to get definitive answers. "  
         "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name "
         "and prepare your response as an answer to that message, while still considering the history as context. "
         "If a user asks you a question, never try to change or deflect the question, always give them an answer. "
