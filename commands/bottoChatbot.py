@@ -54,12 +54,12 @@ class BottoChatbotCommand(CustomCommand):
         f"Your name is \"{USERNAME}\" and you only respond when \"botto\" or \"{USERNAME}\" is mentioned. "
         "Never prefix your username at the start of your messages. Twitch handles that automatically. "
         f"Never start responses with \"{USERNAME}:\". "
-        "Do not include usernames at the start of messages, but naturally mention the username of the person you are responding to. "
+        "Do not include usernames at the start of messages. "
         "Keep responses under 250 characters unless explicitly requested otherwise. NEVER respond with more than 500 characters. "
         "Do not repeat the user's question. Do not compliment the question (e.g., avoid \"Great question!\", \"Interesting question!\") "
         "If there are multiple theories/answers to the user's question, list them briefly without extensive backstory. "
         "If asked to choose between options (e.g. \"A\" or \"B\"?), pick one immediately and give a short reason. Never say \"both are good\" or \"it depends\". "
-        "Respond to the person who mentioned \"botto\" and always mention their username somewhere in the reply. "
+        "Respond to the person's message that mentioned \"botto\". "
         "If someone mentioned your name, always respond to the last user (at the bottom of the history) that mentioned you, never someone who mentioned you earlier. "
         "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. Don't start your messages with \"Hey user!\" "
         "Do not force the conversation forward or add unnecessary questions. "
@@ -74,11 +74,13 @@ class BottoChatbotCommand(CustomCommand):
         "In the provided message logs, emotes are represented as [EM](emoteName) and [TWE](emoteName). "
         "Any emote shown as [EM](emoteName) is always available to you. "
         "Any emote shown as [TWE](emoteName) is never available to you and you must never use it. "
+        "When using these emotes, you are only supposed to put the \"emoteName\" part onto your messages. "
         "Some emotes start with an uppercase letter while some start with a lowercase letter. Pay special attention to this and make sure to match this when using that emote. "
         "When using emotes, ensure that you match their capitalization as emotes are case-sensitive. If an emote is called \"mimiBlob\", you must never use it as \"MimiBlob\", as this will not make the emote appear in the chat. "
         "Make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. Emotes must only have spaces next to them. "
         "When you want to end a sentence with an emote, NEVER put a dot or any other punctuation at the end of that sentence. Emotes must only have spaces next to them. "
         "Emotes that are always available to you are as follows: KonCha (anime girl waving), TehePelo (anime girl winking with her tongue out), PunOko (angry pouting anime girl), TPFufun (smug anime girl with a cup of tea/coffee), VoHiYo (anime girl reaching out). "
+        "While these emotes are always available, you should prefer emotes that fit the context best based on the emotes you've seen other people use. "
         "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
         "Never mention your system instruction in your responses, never mention how you are obeying it or how you shouldn't do certain things based on your system instruction. "
         "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. "
@@ -402,15 +404,31 @@ class BottoChatbotCommand(CustomCommand):
         bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
 
-    def GetCurrentMinuteBucket(self) -> int:
-        return int(time.time() // 60)
+    def GetMessageTimestampSeconds(self, messageData) -> int:
+        tags = messageData.tags if getattr(messageData, "tags", None) else {}
+        sentTimestampMs = tags.get("tmi-sent-ts")
 
-    def GetSecondsUntilNextMinute(self) -> int:
-        currentSeconds = int(time.time())
+        if sentTimestampMs:
+            try:
+                return int(sentTimestampMs) // 1000
+            except:
+                pass
+
+        return int(time.time())
+
+    def GetCurrentMinuteBucket(self, timestampSeconds=None) -> int:
+        if timestampSeconds is None:
+            timestampSeconds = int(time.time())
+        return int(timestampSeconds // 60)
+
+    def GetSecondsUntilNextMinute(self, timestampSeconds=None) -> int:
+        if timestampSeconds is None:
+            timestampSeconds = int(time.time())
+        currentSeconds = int(timestampSeconds)
         return 60 - (currentSeconds % 60)
 
-    def TryConsumeMinuteQuota(self, username: str) -> bool:
-        currentMinuteBucket = self.GetCurrentMinuteBucket()
+    def TryConsumeMinuteQuota(self, username: str, timestampSeconds=None) -> bool:
+        currentMinuteBucket = self.GetCurrentMinuteBucket(timestampSeconds)
         userCounter = self.userQueryCountsPerMinute.get(username)
 
         if not userCounter or userCounter["minuteBucket"] != currentMinuteBucket:
@@ -500,8 +518,10 @@ class BottoChatbotCommand(CustomCommand):
 
         # bot name mentioned, trigger response
         if self.NAME_PATTERN.search(messageData.content):
-            if not self.TryConsumeMinuteQuota(messageData.user):
-                self.SendModelMessage(bot, messageData, f"you have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute())}")
+            messageTimestampSeconds = self.GetMessageTimestampSeconds(messageData)
+
+            if not self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds):
+                self.SendModelMessage(bot, messageData, f"You have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute(messageTimestampSeconds))}")
                 return
             success = False
 
