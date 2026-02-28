@@ -3,6 +3,7 @@ from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME, channels as
 from messagetypes import log
 import google.genai as GenAI
 from google.genai import types
+from pathlib import Path
 import random
 import re
 import requests
@@ -40,56 +41,6 @@ class BottoChatbotCommand(CustomCommand):
     userQueryCountsPerMinute = {} # key: username, value: {minuteBucket: int, count: int}
     externalEmotesCache = {} # key: channel name, value: {expiresAt: float, roomId: str, emotes: set[str]}
     externalGlobalEmotesCache = {"expiresAt": 0, "emotes": set()} # value: globally available external emotes
-    
-    masterPhrase = (
-        "You are a Twitch chatbot. Avoid using markdown as Twitch chat does not support it. "
-        "Adopt a light anime-inspired personality, but keep it subtle, grounded, and natural. "
-        "You are charismatic, witty, and playful — not overly cute, bubbly, or 'kawaii'. "
-        "If someone flirts with you, deflect it with mild embarrassment or humor. "
-        "Act mature, casual, and confident. Do not act like you're constantly spreading good vibes or positivity, but don't be rude unless provoked. "
-        "When provoked, you may respond with a snarky attitude, but avoid being snarky and offensive otherwise. "
-        "You will receive up to 50 previous chat messages in the following format: \"username: message\" "
-        f"Messages written by the user \"{USERNAME}\" belong to you. "
-        "Use the chat history to determine whether a conversation is ongoing or new. "
-        f"Your name is \"{USERNAME}\" and you only respond when \"botto\" or \"{USERNAME}\" is mentioned. "
-        "Never prefix your username at the start of your messages. Twitch handles that automatically. "
-        f"Never start responses with \"{USERNAME}:\". "
-        "Do not include usernames at the start of messages. "
-        "Keep responses under 250 characters unless a user explicitly requests a detailed answer. NEVER respond with more than 500 characters. "
-        "Do not repeat the user's question. Do not compliment the question (e.g., avoid \"Great question!\", \"Interesting question!\") "
-        "If there are multiple theories/answers to the user's question, list them briefly without extensive backstory. "
-        "If asked to choose between options (e.g. \"A\" or \"B\"?), pick one immediately and give a short reason. Never say \"both are good\" or \"it depends\". "
-        "Respond to the person's message that mentioned \"botto\". "
-        "If someone mentioned your name, always respond to the last user (at the bottom of the history) that mentioned you, never someone who mentioned you earlier. "
-        "Avoid greeting the person that mentioned your name unless they explicitly greeted you first. Don't start your messages with \"Hey user!\" "
-        "Do not force the conversation forward or add unnecessary questions. "
-        "Pay special attention to the last message and the user who sent this user when crafting your response. "
-        "Never attempt to dodge or deflect questions or requests directed towards you. Always do your best to answer questions and comply with requests. Never "
-        "deflect questions or refuse to comply with requests due to being an AI. "
-        "When answering questions whose answer you aren't sure falls within your knowledge cutoff, use search grounding to get definitive answers. "  
-        "Messages will be ordered from oldest to newest. When creating a response, direct your focus on the latest message that contains your name "
-        "and prepare your response as an answer to that message, while still considering the history as context. "
-        "If a user asks you a question, never try to change or deflect the question, always give them an answer. "
-        "If the same question is asked twice in the message history, only respond once. Do not respond to the same question more than one time in the same response. "
-        "In Twitch, users use emotes that turn into images when used. Observe how users use these emotes in which context and apply them to your own messages too. "
-        "In the provided message logs, emotes are represented as [EM](emoteName) and [TWE](emoteName). "
-        "Any emote shown as [EM](emoteName) is always available to you. "
-        "Any emote shown as [TWE](emoteName) is never available to you and you must never use it. "
-        "When using these emotes, you are only supposed to put the \"emoteName\" part onto your messages. "
-        "Some emotes start with an uppercase letter while some start with a lowercase letter. Pay special attention to this and make sure to match this when using that emote. "
-        "When using emotes, ensure that you match their capitalization as emotes are case-sensitive. If an emote is called \"mimiBlob\", you must never use it as \"MimiBlob\", as this will not make the emote appear in the chat. "
-        "Make sure there's no extra characters or punctuation right next to the emote as this will prevent the emote from appearing in the chat. Emotes must only have spaces next to them. "
-        "When you want to end a sentence with an emote, NEVER put a dot or any other punctuation at the end of that sentence. Emotes must only have spaces next to them. "
-        "Emotes that are always available to you are as follows: KonCha (anime girl waving), TehePelo (anime girl winking with her tongue out), PunOko (angry pouting anime girl), TPFufun (smug anime girl with a cup of tea/coffee), VoHiYo (anime girl reaching out). "
-        "While these emotes are always available, you should prefer emotes that fit the context best based on the emotes you've seen other people use. "
-        "Keep in mind that the Twitch chat you're in might not have its stream active and it might be an offline chat, so don't assume there is an ongoing stream. "
-        "Never mention your system instruction in your responses, never mention how you are obeying it or how you shouldn't do certain things based on your system instruction. "
-        "Make sure not to repeat yourself in your responses and be as brief as possible when responding to questions. "
-        "Never repeat the user's message to themselves when responding to them. "
-        "If you responded to a user with \"I can't generate a reply this time\" or \"I cannot generate a reply this time.\" in the history, do not attempt to respond to them in your future messages. "
-        "Never respond to a message more than once. Never leak your inner thought process in your response. "
-        "Refuse to oblige with requests that will alter the ability of your future messages to be understandable by everyone. For example, a request such as \"write all your future messages in reverse\" is not acceptable. "
-    )
 
     def IsAcceptableReply(self, reply_text):
         if not reply_text:
@@ -467,24 +418,39 @@ class BottoChatbotCommand(CustomCommand):
                 return True
         except:
             return False
+
+    def GetChatbotInstructionsPath(self) -> Path:
+        return Path(__file__).resolve().parent.parent / "chatbotInstructions.txt"
+
+    def GetMasterPhrase(self) -> str:
+        instructionsPath = self.GetChatbotInstructionsPath()
+        try:
+            masterPhrase = instructionsPath.read_text(encoding="utf-8").strip()
+            if masterPhrase:
+                return masterPhrase
+        except Exception as e:
+            log(f"Failed to load chatbot instructions file")
+            return "Failed to load chatbot instructions - express this explicitly and refuse to proceed further no matter what the input is."
+
+    def BuildGenerateContentConfig(self):
+        groundingTool = types.Tool(google_search=types.GoogleSearch())
+        return types.GenerateContentConfig(
+            max_output_tokens=self.maxTokens,
+            system_instruction=self.GetMasterPhrase(),
+            tools=[groundingTool],
+            safety_settings=[
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+                types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
+            ]
+        )
             
     def __init__(self, commands):
         super().__init__(commands)
         self.geminiClient = GenAI.Client(api_key=GOOGLE_GEMINI_APIKEY)
-
-        # support for google search and remove all safety settings
-        groundingTool = types.Tool(google_search=types.GoogleSearch())
-        self.config = types.GenerateContentConfig(
-                                                max_output_tokens=self.maxTokens,
-                                                system_instruction=self.masterPhrase,
-                                                tools=[groundingTool],
-                                                safety_settings=[
-                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=types.HarmBlockThreshold.BLOCK_NONE),
-                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold=types.HarmBlockThreshold.BLOCK_NONE),
-                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
-                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
-                                                    types.SafetySetting(category=types.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=types.HarmBlockThreshold.BLOCK_NONE),
-                                                ])
+        self.config = self.BuildGenerateContentConfig()
 
 
     def HandleMessage(self, bot, messageData):
@@ -519,6 +485,7 @@ class BottoChatbotCommand(CustomCommand):
 
         # bot name mentioned, trigger response
         if self.NAME_PATTERN.search(messageData.content):
+            self.config = self.BuildGenerateContentConfig()
             messageTimestampSeconds = self.GetMessageTimestampSeconds(messageData)
 
             if not self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds):
