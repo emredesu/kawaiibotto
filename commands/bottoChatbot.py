@@ -14,6 +14,7 @@ class BottoChatbotCommand(CustomCommand):
     RANDOM_CHAT_JOIN_CHANNELS = []
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
+    TOKEN_PATTERN = re.compile(r"(?<!\S)\S+(?!\S)")
     messageHistoryLimit = 50
     maxTokens = 2048
     currentModel = "gemini-3-flash-preview"
@@ -98,10 +99,9 @@ class BottoChatbotCommand(CustomCommand):
 
         externalEmotes, usedCachedExternalEmotes = self.GetExternalEmotesForChannel(messageData)
         externalEmoteCount = len(externalEmotes)
-        tokenPattern = re.compile(r"(?<!\S)\S+(?!\S)")
         twitchTagRanges = [(start, end) for start, end, _, _ in emoteSpans]
 
-        for tokenMatch in tokenPattern.finditer(content):
+        for tokenMatch in self.TOKEN_PATTERN.finditer(content):
             tokenStart = tokenMatch.start()
             tokenEnd = tokenMatch.end() - 1
             token = tokenMatch.group(0)
