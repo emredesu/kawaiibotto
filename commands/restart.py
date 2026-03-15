@@ -3,6 +3,15 @@ from globals import AUTHORIZED_USER, SUDO_PASSWORD
 import subprocess
 import platform
 
+
+def restart_bot_service(service_name):
+    subprocess.run(
+        ["sudo", "-S", "systemctl", "restart", service_name],
+        input=SUDO_PASSWORD + "\n",
+        text=True,
+        check=True
+    )
+
 class RestartCommand(Command):
     COMMAND_NAME = "restart"
     COOLDOWN = 5
@@ -20,13 +29,7 @@ class RestartCommand(Command):
         
         try:
             bot.send_reply_message(messageData, f"Restarting...")
-
-            subprocess.run(
-                ["sudo", "-S", "systemctl", "restart", self.serviceName],
-                input=SUDO_PASSWORD + "\n",
-                text=True,
-                check=True
-            )
+            restart_bot_service(self.serviceName)
         except subprocess.CalledProcessError:
             bot.send_reply_message(messageData, f"Error when restarting the bot.")
 
