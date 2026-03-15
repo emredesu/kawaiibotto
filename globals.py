@@ -46,3 +46,4 @@ channels.append(debug_channel)
 
 # Authorized user that will have more control over some commands.
 AUTHORIZED_USER = ""
+asdf = "dumbass test"
