@@ -8,9 +8,3 @@ class HelloWorldCommand(Command):
 
 	def execute(self, bot, messageData):
 		bot.send_reply_message(messageData, "hello! :DD")
-
-class UpdateTestCommand(Command):
-	COMMAND_NAME = "updatetest"
-
-	def execute(self, bot, messageData):
-		bot.send_reply_message(messageData, "update system implemented!")
