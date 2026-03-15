@@ -1,4 +1,4 @@
-from commands.helloworld import HelloWorldCommand
+from commands.helloworld import HelloWorldCommand, UpdateTestCommand
 from commands.ivrfi_api_commands import RandomQuoteCommand, EmoteInfoCommand
 from commands.opgg import OpggCommand
 from commands.twitch_api_commands import UserIDCommand, ProfilePictureCommand, EmotesCommand
@@ -59,6 +59,7 @@ def instantiate_commands(commands):
 	HoyoDeleteCommand(commands)
 	RestartCommand(commands)
 	UpdateCommand(commands)
+	UpdateTestCommand(commands)
 
 def instantiate_whisper_commands(commands):
 	EchoWhisperCommand(commands)
