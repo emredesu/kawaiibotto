@@ -8,7 +8,7 @@ import subprocess
 
 class UpdateCommand(Command):
     COMMAND_NAME = "update"
-    COOLDOWN = 5
+    COOLDOWN = 120
     DESCRIPTION = "Pulls latest changes from GitHub and restarts the bot. Authorized user only"
 
     REPOSITORY_URL = "https://github.com/emredesu/kawaiibotto"
