@@ -105,16 +105,6 @@ def _get_storage_usage(path="/"):
 	return used_storage, total_storage, storage_usage_percentage
 
 
-def _get_load_average():
-	try:
-		_, _, load_15m = os.getloadavg()
-		cpu_cores = os.cpu_count() or 1
-		load_15m_percentage = (load_15m / cpu_cores) * 100.0
-		return f"15m {load_15m:.2f} ({load_15m_percentage:.0f}%) of {cpu_cores} cores"
-	except (AttributeError, OSError):
-		return "N/A"
-
-
 class SystemUsageCommand(Command):
 	COMMAND_NAME = ["sysusage", "systemusage", "usage", "status"]
 	COOLDOWN = 5
@@ -137,7 +127,6 @@ class SystemUsageCommand(Command):
 			used_memory, total_memory, memory_usage_percentage = _get_memory_usage(meminfo)
 			used_swap, total_swap, swap_usage_percentage = _get_swap_usage(meminfo)
 			used_storage, total_storage, storage_usage_percentage = _get_storage_usage("/")
-			load_average = _get_load_average()
 		except OSError:
 			bot.send_reply_message(messageData, "Could not read Linux system metrics from this host.")
 			return
@@ -154,7 +143,7 @@ class SystemUsageCommand(Command):
 			messageData,
 			f"🖥️ CPU: {cpu_usage_percentage:.2f}% 🧠 RAM: {_format_bytes(used_memory)}/{_format_bytes(total_memory)} ({memory_usage_percentage:.1f}%) "
 			f"💾 Storage: {_format_bytes(used_storage)}/{_format_bytes(total_storage)} ({storage_usage_percentage:.1f}%) "
-			f"📡 Latency: {latency_text} 📈 Load Avg (15m): {load_average}{swap_segment}"
+			f"📡 Latency: {latency_text}"
 		)
 
 		bot.ping_twitch()
