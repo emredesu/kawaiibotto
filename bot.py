@@ -8,10 +8,18 @@ import time
 import traceback
 import requests
 import json
+import threading
+import copy
+from concurrent.futures import ThreadPoolExecutor
 
 class kawaiibotto:
 	def __init__(self):
 		self.socket = socket.socket()
+
+		self.baseCommandExeceutor = ThreadPoolExecutor(max_workers=20)
+		self.customCommandExecutor = ThreadPoolExecutor(max_workers=50)
+		self.cooldown_lock = threading.Lock()
+		self.send_lock = threading.Lock()
 		
 		self.commands = []
 		self.whisperCommands = []
@@ -34,17 +42,21 @@ class kawaiibotto:
 		if len(msg) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
 			messages = [msg[i:i+500] for i in range(0, len(msg), 500)]
 			for i in messages:
-				self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, i.replace("\n", " ")).encode("utf-8"))
+				with self.send_lock:
+					self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, i.replace("\n", " ")).encode("utf-8"))
 		else:
-			self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))	# irc does not accept newlines, so we replace them with spaces
+			with self.send_lock:
+				self.socket.send("PRIVMSG #{} :{}\r\n".format(ch, msg.replace("\n", " ")).encode("utf-8"))	# irc does not accept newlines, so we replace them with spaces
 
 	def send_reply_message(self, messageData, reply):
 		if len(reply) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
 			messages = [reply[i:i+500] for i in range(0, len(reply), 500)]
-			for i in messages:
-				self.socket.send("@reply-parent-msg-id={} PRIVMSG #{} :{}\r\n".format(messageData.tags["id"], messageData.channel, i.replace("\n", " ")).encode("utf-8"))
+			with self.send_lock:
+				for i in messages:
+					self.socket.send("@reply-parent-msg-id={} PRIVMSG #{} :{}\r\n".format(messageData.tags["id"], messageData.channel, i.replace("\n", " ")).encode("utf-8"))
 		else:
-			self.socket.send("@reply-parent-msg-id={} PRIVMSG #{} :{}\r\n".format(messageData.tags["id"], messageData.channel, reply.replace("\n", " ")).encode("utf-8")) # irc does not accept newlines, so we replace them with spaces
+			with self.send_lock:
+				self.socket.send("@reply-parent-msg-id={} PRIVMSG #{} :{}\r\n".format(messageData.tags["id"], messageData.channel, reply.replace("\n", " ")).encode("utf-8")) # irc does not accept newlines, so we replace them with spaces
 
 	def send_whisper(self, messageDataFromWhisper, msg):
 		if len(msg) > 500:	# can't send messages with a length of over 500 to Twitch IRC, so the bot sends them seperately if the message is larger than 500 characters
@@ -54,7 +66,8 @@ class kawaiibotto:
 
 	def ping_twitch(self):
 		self.last_twitch_pinged_time = datetime.datetime.now()
-		self.socket.send("PING :tmi.twitch.tv\r\n".encode("utf-8"))
+		with self.send_lock:
+			self.socket.send("PING :tmi.twitch.tv\r\n".encode("utf-8"))
 
 	def connect(self):
 		while True:
@@ -106,8 +119,9 @@ class kawaiibotto:
 		parsedMsg = self.ParseMessage(rawMessage)
 
 		if parsedMsg.messageType == "PING":
-			self.socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
-			self.ping_twitch() # When Twitch pings us, we ping Twitch back to get our current RTT to Twitch servers.
+			with self.send_lock:
+				self.socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
+				self.ping_twitch() # When Twitch pings us, we ping Twitch back to get our current RTT to Twitch servers.
 		elif parsedMsg.messageType == "PONG":
 			self.last_twitch_pong_time = datetime.datetime.now()
 		elif parsedMsg.messageType == "RECONNECT":
@@ -123,17 +137,15 @@ class kawaiibotto:
 					if isinstance(command.COMMAND_NAME, list): # alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
-								if self.CheckCanExecute(command, parsedMsg.user):
-									self.execute_command(command, parsedMsg)
+								self.baseCommandExeceutor.submit(self.execute_command_threaded, command, copy.deepcopy(parsedMsg)) # pass deep copy to prevent race conditions
 					else:
 						if command.COMMAND_NAME == invoked_command:
-							if self.CheckCanExecute(command, parsedMsg.user):
-								self.execute_command(command, parsedMsg)
+							self.baseCommandExeceutor.submit(self.execute_command_threaded, command, copy.deepcopy(parsedMsg)) # pass deep copy to prevent race conditions
 			# Custom command invocation
 			else:
 				for customCommand in self.customCommands:
 					if parsedMsg.channel in customCommand.CHANNELS:
-						customCommand.HandleMessage(self, parsedMsg)
+						self.customCommandExecutor.submit(self.handle_custom_command_threaded, customCommand, copy.deepcopy(parsedMsg)) # pass deep copy to prevent race conditions
 		elif parsedMsg.messageType == "WHISPER":
 			# Whisper command invocation
 			if parsedMsg.whisperContent.startswith(COMMAND_PREFIX):
@@ -143,21 +155,10 @@ class kawaiibotto:
 					if isinstance(command.COMMAND_NAME, list): # alias support
 						for alias in command.COMMAND_NAME:
 							if alias == invoked_command:
-								if self.CheckCanExecute(command, parsedMsg.user):
-									self.execute_command(command, parsedMsg)
+								self.baseCommandExeceutor.submit(self.execute_command_threaded, command, copy.deepcopy(parsedMsg)) # pass deep copy to prevent race conditions
 					else:
 						if command.COMMAND_NAME == invoked_command:
-							if self.CheckCanExecute(command, parsedMsg.user):
-								self.execute_command(command, parsedMsg)
-
-	def CheckCanExecute(self, cmnd, user) -> bool:
-		if user in cmnd.lastUseTimePerUser:
-			if time.time() - cmnd.lastUseTimePerUser[user] > cmnd.COOLDOWN:
-				return True
-			else:
-				return False
-		else:
-			return True
+							self.baseCommandExeceutor.submit(self.execute_command_threaded, command, copy.deepcopy(parsedMsg)) # pass deep copy to prevent race conditions
 
 	def execute_command(self, cmnd, messageData):
 		cmnd.lastUseTimePerUser[messageData.user] = time.time()
@@ -171,6 +172,28 @@ class kawaiibotto:
 		except Exception as e:
 			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
 			self.send_reply_message(messageData, f"The execution of that command failed! The error has been logged, and will be fixed soon.")
+
+	def execute_command_threaded(self, cmnd, messageData):
+		try:
+			with self.cooldown_lock:
+				lastUseTime = cmnd.lastUseTimePerUser.get(messageData.user)
+
+				if lastUseTime and time.time() - lastUseTime <= cmnd.COOLDOWN:
+					return
+
+				cmnd.lastUseTimePerUser[messageData.user] = time.time()
+
+			cmnd.execute(self, messageData)
+		except Exception as e:
+			error(f"execution of command {cmnd.COMMAND_NAME} failed with {str(e.__class__.__name__)}: {str(e)}")
+			self.send_reply_message(messageData, "The execution of that command failed!")
+
+	def handle_custom_command_threaded(self, cmnd, messageData):
+		try:
+			cmnd.HandleMessage(self, messageData)
+		except Exception as e:
+			error(f"execution of custom command {cmnd} failed with {str(e.__class__.__name__)}: {str(e)}")
+			self.send_reply_message(messageData, "The execution of that command failed!")
 
 	def start(self):
 		self.connect()

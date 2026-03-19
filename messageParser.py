@@ -2,20 +2,20 @@ import re
 
 # A class that handles the parsing of Twitch IRC messages.
 class TwitchIRCMessage:
-	messageType: str = None
-	hasTags: bool = False
-	tags: dict = {}
-
-	# PRIVMSG data
-	user: str = None
-	channel: str = None
-	content: str = None
-
-	# WHISPER data
-	whisperUser: str = None
-	whisperContent: str = None
-
 	def __init__(self, message: str):
+		self.messageType: str = None
+		self.hasTags: bool = False
+		self.tags: dict = {}
+
+		# PRIVMSG data
+		self.user: str = None
+		self.channel: str = None
+		self.content: str = None
+
+		# WHISPER data
+		self.whisperUser: str = None
+		self.whisperContent: str = None
+
 		#print(f"Now parsing: {message} \n")
 
 		if message[0] == "@": # This message contains tags. Tags will be parsed and placed into the "tags" dict.
