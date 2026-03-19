@@ -79,6 +79,8 @@ class kawaiibotto:
 				self.socket = socket.socket()
 				time.sleep(self.reconnections ** 2)
 			else:
+				self.reconnections = 0
+
 				self.socket.send("CAP REQ :twitch.tv/commands twitch.tv/tags\r\n".encode("utf-8")) # Request message tags capabilities
 				self.socket.send("PASS oauth:{}\r\n".format(OAUTH_TOKEN).encode("utf-8"))
 				self.socket.send("NICK {}\r\n".format(USERNAME).encode("utf-8"))
