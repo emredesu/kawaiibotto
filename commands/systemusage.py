@@ -26,9 +26,34 @@ def _read_proc_stat():
 	return idle_time, total_time
 
 
-def _get_cpu_usage_percentage(sample_duration=0.2):
+def _get_cpu_usage_percentage(sample_duration=0.25, sample_count=3):
+	if sample_count < 1:
+		sample_count = 1
+
+	usage_samples = []
+	idle_previous, total_previous = _read_proc_stat()
+
+	for _ in range(sample_count):
+		time.sleep(sample_duration)
+		idle_current, total_current = _read_proc_stat()
+
+		idle_delta = idle_current - idle_previous
+		total_delta = total_current - total_previous
+
+		idle_previous, total_previous = idle_current, total_current
+
+		if total_delta <= 0:
+			continue
+
+		used_delta = max(total_delta - idle_delta, 0)
+		usage_samples.append((used_delta / total_delta) * 100.0)
+
+	if usage_samples:
+		average_usage = sum(usage_samples) / len(usage_samples)
+		return max(0.0, min(100.0, average_usage))
+
 	idle_time_before, total_time_before = _read_proc_stat()
-	time.sleep(sample_duration)
+	time.sleep(max(sample_duration, 0.5))
 	idle_time_after, total_time_after = _read_proc_stat()
 
 	idle_delta = idle_time_after - idle_time_before
@@ -37,7 +62,7 @@ def _get_cpu_usage_percentage(sample_duration=0.2):
 	if total_delta <= 0:
 		return 0.0
 
-	used_delta = total_delta - idle_delta
+	used_delta = max(total_delta - idle_delta, 0)
 	return max(0.0, min(100.0, (used_delta / total_delta) * 100.0))
 
 
@@ -82,8 +107,10 @@ def _get_storage_usage(path="/"):
 
 def _get_load_average():
 	try:
-		load_1m, load_5m, load_15m = os.getloadavg()
-		return f"{load_1m:.2f}/{load_5m:.2f}/{load_15m:.2f}"
+		_, _, load_15m = os.getloadavg()
+		cpu_cores = os.cpu_count() or 1
+		load_15m_percentage = (load_15m / cpu_cores) * 100.0
+		return f"15m {load_15m:.2f} ({load_15m_percentage:.0f}%) of {cpu_cores} cores"
 	except (AttributeError, OSError):
 		return "N/A"
 
@@ -125,9 +152,9 @@ class SystemUsageCommand(Command):
 
 		bot.send_reply_message(
 			messageData,
-			f"🖥️ CPU: {cpu_usage_percentage:.1f}% 🧠 RAM: {_format_bytes(used_memory)}/{_format_bytes(total_memory)} ({memory_usage_percentage:.1f}%) "
+			f"🖥️ CPU: {cpu_usage_percentage:.2f}% 🧠 RAM: {_format_bytes(used_memory)}/{_format_bytes(total_memory)} ({memory_usage_percentage:.1f}%) "
 			f"💾 Storage: {_format_bytes(used_storage)}/{_format_bytes(total_storage)} ({storage_usage_percentage:.1f}%) "
-			f"📡 Latency: {latency_text} 📈 Load: {load_average}{swap_segment}"
+			f"📡 Latency: {latency_text} 📈 Load Avg (15m): {load_average}{swap_segment}"
 		)
 
 		bot.ping_twitch()
