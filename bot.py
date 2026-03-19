@@ -121,7 +121,7 @@ class kawaiibotto:
 		if parsedMsg.messageType == "PING":
 			with self.send_lock:
 				self.socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
-				self.ping_twitch() # When Twitch pings us, we ping Twitch back to get our current RTT to Twitch servers.
+			self.ping_twitch() # When Twitch pings us, we ping Twitch back to get our current RTT to Twitch servers.
 		elif parsedMsg.messageType == "PONG":
 			self.last_twitch_pong_time = datetime.datetime.now()
 		elif parsedMsg.messageType == "RECONNECT":
