@@ -4,6 +4,7 @@ from commands.opgg import OpggCommand
 from commands.twitch_api_commands import UserIDCommand, ProfilePictureCommand, EmotesCommand
 from commands.query import QueryCommand
 from commands.ping import PingCommand
+from commands.systemusage import SystemUsageCommand
 from commands.sourcecode import SourceCodeCommand
 from commands.commands import CommandsCommand
 from commands.help import HelpCommand
@@ -33,6 +34,7 @@ def instantiate_commands(commands):
 	EmotesCommand(commands)
 	QueryCommand(commands)
 	PingCommand(commands)
+	SystemUsageCommand(commands)
 	SourceCodeCommand(commands)
 	CommandsCommand(commands)
 	HelpCommand(commands)
