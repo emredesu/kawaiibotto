@@ -15,7 +15,7 @@ class BottoChatbotCommand(CustomCommand):
     KEYWORDS = ["kawaiibotto", "botto"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     TOKEN_PATTERN = re.compile(r"(?<!\S)\S+(?!\S)")
-    messageHistoryLimit = 50
+    messageHistoryLimit = 20
     maxTokens = 2048
     currentModel = "gemini-3-flash-preview"
     fallbackModel = "gemini-2.5-flash"
