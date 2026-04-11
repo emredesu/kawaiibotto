@@ -1,16 +1,16 @@
 from commands.command import Command
-from globals import AUTHORIZED_USER, SUDO_PASSWORD
+from globals import AUTHORIZED_USER
 import subprocess
 import platform
-
+import os
 
 def restart_bot_service(service_name):
-    subprocess.run(
-        ["sudo", "-S", "systemctl", "restart", service_name],
-        input=SUDO_PASSWORD + "\n",
-        text=True,
-        check=True
-    )
+    cmd = ["systemctl", "restart", service_name]
+
+    if os.geteuid() != 0:
+        cmd.insert(0, "sudo")
+
+    subprocess.run(cmd, check=True)
 
 class RestartCommand(Command):
     COMMAND_NAME = "restart"
