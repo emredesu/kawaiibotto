@@ -35,5 +35,5 @@ class PingCommand(Command):
 		if bot.last_twitch_pong_time is not None \
 		and bot.last_twitch_pinged_time is not None else "N/A"
 
-		bot.send_reply_message(messageData, calculate_uptime(bot) + f" Latency to TMI: {ping_to_twitch}ms")
+		bot.send_reply_message(messageData, calculate_uptime(bot) + f" Total latency: {ping_to_twitch}ms ⏲️")
 		bot.ping_twitch()
