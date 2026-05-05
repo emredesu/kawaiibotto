@@ -1739,7 +1739,7 @@ class GenshinCommand(Command):
             if duelTarget == botUsername:
                 bot.send_reply_message(messageData, f"Think you stand a chance against Paimon?! {self.stabEmote}")
                 return self.CleanUpCommand(dbConnection)
-            elif duelTarget == messageData.user:
+            elif duelTarget.lower() == messageData.user.lower():
                 bot.send_reply_message(messageData, f"Don't be so self-conflicted, love yourself! {self.thumbsUpEmote}")
                 return self.CleanUpCommand(dbConnection)
 
