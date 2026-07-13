@@ -515,7 +515,7 @@ class BottoChatbotCommand(CustomCommand):
                             success = True
                             break
 
-                    self.SendModelMessage(bot, messageData, reply_text, isProModel)
+                    self.SendModelMessage(bot, messageData, ("/me" if isProModel else "") + reply_text, isProModel)
 
                     # reset auto respond chance on bot mention
                     if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
