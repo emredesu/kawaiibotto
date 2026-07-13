@@ -12,13 +12,14 @@ import time
 class BottoChatbotCommand(CustomCommand):
     CHANNELS = GlobalChannels
     RANDOM_CHAT_JOIN_CHANNELS = []
-    KEYWORDS = ["kawaiibotto", "botto"]
+    KEYWORDS = ["kawaiibotto", "botto", "bottopro"]
     NAME_PATTERN = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in KEYWORDS) + r")\b", re.IGNORECASE)
     TOKEN_PATTERN = re.compile(r"(?<!\S)\S+(?!\S)")
     messageHistoryLimit = 20
     maxTokens = 2048
     currentModel = "gemini-3.1-flash-lite"
     fallbackModel = "gemini-2.5-flash"
+    proModel = "gemini-3.5-flash"
     maxResponseChars = 496
     maxRetries = 2
     maxQueriesPerMinute = 3
@@ -344,7 +345,7 @@ class BottoChatbotCommand(CustomCommand):
         except Exception:
             return set()
 
-    def SendModelMessage(self, bot, messageData, reply_text: str):
+    def SendModelMessage(self, bot, messageData, reply_text: str, isProModel: bool):
         if reply_text.startswith("/ban") or reply_text.startswith("/timeout") or reply_text.startswith(".timeout") or reply_text.startswith(".ban"):
             reply_text = "(moderation action blocked by filter)"
         elif reply_text.startswith("/") or reply_text.startswith("."):
@@ -352,7 +353,7 @@ class BottoChatbotCommand(CustomCommand):
  
         if messageData.channel in CHATBOT_RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
             reply_text = reply_text[: self.maxResponseChars] + "..."
-        self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
+        self.messageHistory[messageData.channel].append(f"[{"PRO" if isProModel else "BASIC"}] ({USERNAME}): ({reply_text})")
         bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
 
@@ -487,6 +488,7 @@ class BottoChatbotCommand(CustomCommand):
         if self.NAME_PATTERN.search(messageData.content):
             self.config = self.BuildGenerateContentConfig()
             messageTimestampSeconds = self.GetMessageTimestampSeconds(messageData)
+            selectedModel = self.proModel if re.search(r"\bbottopro\b", messageData.content or "", re.IGNORECASE) else self.currentModel
 
             if not self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds):
                 self.SendModelMessage(bot, messageData, f"You have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute(messageTimestampSeconds))}")
@@ -497,7 +499,7 @@ class BottoChatbotCommand(CustomCommand):
             for i in range(self.maxRetries):
                 try:
                     response = self.geminiClient.models.generate_content(
-                        model=self.currentModel,
+                        model=selectedModel,
                         contents="\n".join(self.messageHistory[messageData.channel]),
                         config=self.config
                     )
