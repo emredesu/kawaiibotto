@@ -354,6 +354,9 @@ class BottoChatbotCommand(CustomCommand):
         if messageData.channel in CHATBOT_RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
             reply_text = reply_text[: self.maxResponseChars] + "..."
 
+        if isProModel:
+            reply_text = "/me " + reply_text
+
         modelLabel = "PRO" if isProModel else "BASIC"
         self.messageHistory[messageData.channel].append(f"[{modelLabel}] ({USERNAME}): ({reply_text})")
         bot.send_reply_message(messageData, reply_text)
@@ -515,7 +518,7 @@ class BottoChatbotCommand(CustomCommand):
                             success = True
                             break
 
-                    self.SendModelMessage(bot, messageData, ("/me" if isProModel else "") + reply_text, isProModel)
+                    self.SendModelMessage(bot, messageData, reply_text, isProModel)
 
                     # reset auto respond chance on bot mention
                     if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
