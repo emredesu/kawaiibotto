@@ -348,7 +348,7 @@ class BottoChatbotCommand(CustomCommand):
     def SendModelMessage(self, bot, messageData, reply_text: str, isProModel: bool = False):
         if reply_text.startswith("/ban") or reply_text.startswith("/timeout") or reply_text.startswith(".timeout") or reply_text.startswith(".ban"):
             reply_text = "(moderation action blocked by filter)"
-        elif reply_text.startswith("/") or reply_text.startswith(".") and not reply_text.startswith("/me"):
+        elif (reply_text.startswith("/") or reply_text.startswith(".")) and not reply_text.startswith("/me"):
             reply_text = "(command invocation blocked by filter)"
  
         if messageData.channel in CHATBOT_RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
