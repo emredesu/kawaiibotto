@@ -345,7 +345,7 @@ class BottoChatbotCommand(CustomCommand):
         except Exception:
             return set()
 
-    def SendModelMessage(self, bot, messageData, reply_text: str, isProModel: bool):
+    def SendModelMessage(self, bot, messageData, reply_text: str, isProModel: bool = False):
         if reply_text.startswith("/ban") or reply_text.startswith("/timeout") or reply_text.startswith(".timeout") or reply_text.startswith(".ban"):
             reply_text = "(moderation action blocked by filter)"
         elif reply_text.startswith("/") or reply_text.startswith("."):
@@ -353,7 +353,9 @@ class BottoChatbotCommand(CustomCommand):
  
         if messageData.channel in CHATBOT_RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
             reply_text = reply_text[: self.maxResponseChars] + "..."
-        self.messageHistory[messageData.channel].append(f"[{"PRO" if isProModel else "BASIC"}] ({USERNAME}): ({reply_text})")
+
+        modelLabel = "PRO" if isProModel else "BASIC"
+        self.messageHistory[messageData.channel].append(f"[{modelLabel}] ({USERNAME}): ({reply_text})")
         bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
 
@@ -404,7 +406,7 @@ class BottoChatbotCommand(CustomCommand):
             return f"{minutes}m"
         return f"{minutes}m {seconds}s"
 
-    def TryGetResponseFromFallbackModel(self, bot, messageData, isMentionedJoin) -> bool: # Returns true if the model responded, otherwise false
+    def TryGetResponseFromFallbackModel(self, bot, messageData, isMentionedJoin, isProModel: bool = False) -> bool: # Returns true if the model responded, otherwise false
         try:
             response = self.geminiClient.models.generate_content(
                         model=self.fallbackModel,
@@ -415,7 +417,7 @@ class BottoChatbotCommand(CustomCommand):
             if not self.IsAcceptableReply(reply_text):
                 return False
             else:
-                self.SendModelMessage(bot, messageData, reply_text)
+                self.SendModelMessage(bot, messageData, reply_text, isProModel)
                 return True
         except:
             return False
@@ -488,10 +490,11 @@ class BottoChatbotCommand(CustomCommand):
         if self.NAME_PATTERN.search(messageData.content):
             self.config = self.BuildGenerateContentConfig()
             messageTimestampSeconds = self.GetMessageTimestampSeconds(messageData)
-            selectedModel = self.proModel if re.search(r"\bbottopro\b", messageData.content or "", re.IGNORECASE) else self.currentModel
+            isProModel = bool(re.search(r"\bbottopro\b", messageData.content or "", re.IGNORECASE))
+            selectedModel = self.proModel if isProModel else self.currentModel
 
             if not self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds):
-                self.SendModelMessage(bot, messageData, f"You have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute(messageTimestampSeconds))}")
+                self.SendModelMessage(bot, messageData, f"You have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute(messageTimestampSeconds))}", isProModel)
                 return
             success = False
 
@@ -505,14 +508,14 @@ class BottoChatbotCommand(CustomCommand):
                     )
                     reply_text = response.text.strip() if getattr(response, "text", None) else None
                     if not self.IsAcceptableReply(reply_text):
-                        successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData, True)
+                        successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData, True, isProModel)
                         if not successfulResponse:
                             continue
                         else:
                             success = True
                             break
 
-                    self.SendModelMessage(bot, messageData, reply_text)
+                    self.SendModelMessage(bot, messageData, reply_text, isProModel)
 
                     # reset auto respond chance on bot mention
                     if messageData.channel in self.RANDOM_CHAT_JOIN_CHANNELS:
@@ -521,7 +524,7 @@ class BottoChatbotCommand(CustomCommand):
                     success = True
                     break
                 except Exception as e:
-                    successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData, True)
+                    successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData, True, isProModel)
                     if not successfulResponse:
                         continue
                     else:
