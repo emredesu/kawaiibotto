@@ -353,6 +353,9 @@ class BottoChatbotCommand(CustomCommand):
         if messageData.channel in CHATBOT_RESPONSE_TRUNCATED_CHANNELS and len(reply_text) > self.maxResponseChars:
             reply_text = reply_text[: self.maxResponseChars] + "..."
         self.messageHistory[messageData.channel].append(f"({USERNAME}): ({reply_text})")
+        if len(self.messageHistory[messageData.channel]) > self.messageHistoryLimit: # prevent message history going over the limit
+            self.messageHistory[messageData.channel].pop(0)
+            
         bot.send_reply_message(messageData, reply_text)
         self.autoRespondChance[messageData.channel] = 0
 
