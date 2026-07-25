@@ -17,8 +17,8 @@ class BottoChatbotCommand(CustomCommand):
     TOKEN_PATTERN = re.compile(r"(?<!\S)\S+(?!\S)")
     messageHistoryLimit = 20
     maxTokens = 2048
-    currentModel = "gemini-3.5-flash"
-    fallbackModel = "gemini-3.1-flash-lite"
+    currentModel = "gemini-3.5-flash-lite"
+    fallbackModel = "gemini-3.5-flash"
     maxResponseChars = 496
     maxRetries = 2
     maxQueriesPerMinute = 3
