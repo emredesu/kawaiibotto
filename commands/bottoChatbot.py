@@ -1,5 +1,5 @@
 from commands.command import CustomCommand
-from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME, channels as GlobalChannels, CHATBOT_RESPONSE_TRUNCATED_CHANNELS
+from globals import GOOGLE_GEMINI_APIKEY, AUTHORIZED_USER, USERNAME, channels as GlobalChannels, CHATBOT_RESPONSE_TRUNCATED_CHANNELS, CHATBOT_PRO_ENABLED_CHANNELS
 from messagetypes import log
 import google.genai as GenAI
 from google.genai import types
@@ -496,6 +496,9 @@ class BottoChatbotCommand(CustomCommand):
             self.config = self.BuildGenerateContentConfig()
             messageTimestampSeconds = self.GetMessageTimestampSeconds(messageData)
             isProModel = bool(re.search(r"\bbottopro\b", messageData.content or "", re.IGNORECASE))
+            if isProModel and messageData.channel not in CHATBOT_PRO_ENABLED_CHANNELS:
+                return
+
             selectedModel = self.proModel if isProModel else self.currentModel
 
             if not self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds):

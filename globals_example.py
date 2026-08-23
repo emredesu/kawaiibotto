@@ -25,6 +25,7 @@ kawaiibottoStarRailUID = 0
 
 # Chatbot related values
 CHATBOT_RESPONSE_TRUNCATED_CHANNELS = []
+CHATBOT_PRO_ENABLED_CHANNELS = []
 
 # Platform values
 SUDO_PASSWORD = ""
