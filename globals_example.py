@@ -9,7 +9,7 @@ TWITCH_BOT_UID = 0 # Required for whispers functionality.
 # API key info for various apps
 WOLFRAM_APP_ID = ""
 OCR_SPACE_APIKEY = ""
-OPENAI_APIKEY = ""
+OPENAI_APIKEY = "" # unused
 GOOGLE_GEMINI_APIKEY = ""
 
 # Genshin command specific values
