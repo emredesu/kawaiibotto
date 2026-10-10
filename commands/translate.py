@@ -165,7 +165,7 @@ class TranslateCommand(Command):
 		text = " ".join(text_array)
 		data = requests.get(f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_language}&tl={target_language}&dt=t&q={text}&ie=UTF-8&oe=UTF-8").json()
 		
-		translated_text = data.json()[0][0][1]
+		translated_text = data[0][0][1]
 
 		if source_language == "auto":
 			source_language = data[2]
