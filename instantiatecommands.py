@@ -8,7 +8,7 @@ from commands.sourcecode import SourceCodeCommand
 from commands.commands import CommandsCommand
 from commands.help import HelpCommand
 from commands.code import CodeCommand
-from commands.translate import TranslateCommand
+from commands.translate import TranslateCommand, RomanizeCommand
 from commands.currency import CurrencyCommand
 from commands.urban import UrbanCommand
 from commands.define import DefineCommand
@@ -39,6 +39,7 @@ def instantiate_commands(commands):
 	CodeCommand(commands)
 	ProfilePictureCommand(commands)
 	TranslateCommand(commands)
+	RomanizeCommand(commands)
 	CurrencyCommand(commands)
 	UrbanCommand(commands)
 	DefineCommand(commands)
