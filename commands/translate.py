@@ -163,30 +163,11 @@ class TranslateCommand(Command):
 			return
 
 		text = " ".join(text_array)
-		response = requests.get(f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_language}&tl={target_language}&dt=t&q={text}&ie=UTF-8&oe=UTF-8")
-		response.raise_for_status()
-		data = response.json()
+		data = requests.get(f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_language}&tl={target_language}&dt=t&q={text}&ie=UTF-8&oe=UTF-8").json()
+		
+		translated_text = data.json()[0][0][1]
 
-		if not isinstance(data, list) or not data or not isinstance(data[0], list) or not data[0]:
-			bot.send_reply_message(messageData, f"Translation failed ;w;")
-			return
-
-		translation_entry = data[0]
-		if not isinstance(translation_entry, list) or not translation_entry:
-			bot.send_reply_message(messageData, f"Translation failed ;w;")
-			return
-
-		translated_text = ""
-		for index in (1, 0):
-			if isinstance(translation_entry[index], str) and translation_entry[index]:
-				translated_text = translation_entry[index]
-				break
-
-		if not translated_text:
-			bot.send_reply_message(messageData, f"Translation failed ;w;")
-			return
-
-		if source_language == "auto" and len(data) > 2 and isinstance(data[2], str):
+		if source_language == "auto":
 			source_language = data[2]
 
 		bot.send_reply_message(messageData, f"{source_language} -> {target_language} - {translated_text}")
