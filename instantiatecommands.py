@@ -2,7 +2,6 @@ from commands.helloworld import HelloWorldCommand
 from commands.ivrfi_api_commands import RandomQuoteCommand, EmoteInfoCommand
 from commands.opgg import OpggCommand
 from commands.twitch_api_commands import UserIDCommand, ProfilePictureCommand, EmotesCommand
-from commands.query import QueryCommand
 from commands.ping import PingCommand
 from commands.systemusage import SystemUsageCommand
 from commands.sourcecode import SourceCodeCommand
@@ -10,6 +9,7 @@ from commands.commands import CommandsCommand
 from commands.help import HelpCommand
 from commands.code import CodeCommand
 from commands.translate import TranslateCommand
+from commands.currency import CurrencyCommand
 from commands.urban import UrbanCommand
 from commands.define import DefineCommand
 from commands.ocr import OCRCommand, OCRTranslateCommand
@@ -31,7 +31,6 @@ def instantiate_commands(commands):
 	OpggCommand(commands)
 	UserIDCommand(commands)
 	EmotesCommand(commands)
-	QueryCommand(commands)
 	PingCommand(commands)
 	SystemUsageCommand(commands)
 	SourceCodeCommand(commands)
@@ -40,6 +39,7 @@ def instantiate_commands(commands):
 	CodeCommand(commands)
 	ProfilePictureCommand(commands)
 	TranslateCommand(commands)
+	CurrencyCommand(commands)
 	UrbanCommand(commands)
 	DefineCommand(commands)
 	OCRCommand(commands)
