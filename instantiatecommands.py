@@ -1,5 +1,5 @@
 from commands.helloworld import HelloWorldCommand
-from commands.ivrfi_api_commands import RandomQuoteCommand, EmoteInfoCommand
+from commands.ivrfi_api_commands import RandomQuoteCommand, EmoteInfoCommand, RandomLineCommand
 from commands.opgg import OpggCommand
 from commands.twitch_api_commands import UserIDCommand, ProfilePictureCommand, EmotesCommand
 from commands.ping import PingCommand

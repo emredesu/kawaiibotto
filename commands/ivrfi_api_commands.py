@@ -61,6 +61,55 @@ class RandomQuoteCommand(Command):
 				bot.send_reply_message(messageData, f"API error.")
 				return
 
+class RandomLineCommand(Command):
+	COMMAND_NAME = "rl"
+	COOLDOWN = 0
+	DESCRIPTION = f"Get a random line in a specified channel. Only usable for channels in https://logs.ivr.fi/channels. Example usage: _{COMMAND_NAME} forsen"
+
+	def __init__(self, commands):
+			super().__init__(commands)
+			try:
+				channels_data = requests.get("https://logs.ivr.fi/channels").json()
+			except:
+				error("can't import RandomQuoteCommand, ivr.fi API is down ;w;")
+				return
+			else:
+				self.channels = [channels_data["channels"][i]["name"] for i in range(len(channels_data["channels"]))]
+
+	def execute(self, bot, messageData):
+		args = messageData.content.split()
+		ch = ""
+
+		try: # Passing an argument means the user is trying to query a specific channel
+			ch = args[1]
+		except IndexError: # Passing no arguments means the user is querying this channel
+			ch = messageData.channel
+		
+		if ch not in self.channels:
+			bot.send_reply_message(messageData, f"{'That' if messageData.channel != ch else 'This'} channel is not logged by the API. Visit https://logs.ivr.fi/channels to see which channels are logged ^-^")
+			return
+		else:
+			request = requests.get(f"https://logs.ivr.fi/channel/{ch}/random?json=1")
+			
+			if request.status_code != 200:
+				bot.send_reply_message(messageData, f"API returned {request.status_code}.")
+				return
+
+			rq_data = request.json()["messages"][0]			
+
+			try:
+				timestamp = rq_data["timestamp"]
+				datetimeObj = dateutil.parser.parse(timestamp).replace(tzinfo=None)
+				deltaTime = datetime.now() - datetimeObj
+
+				dayDifferential = deltaTime.days
+
+				bot.send_reply_message(messageData, f"{dayDifferential} days ago, #{rq_data['channel']} {rq_data['username']}: {rq_data['text']}")
+			except KeyError:
+				bot.send_reply_message(messageData, f"API error.")
+				return
+	
+
 
 class EmoteInfoCommand(Command):
 	COMMAND_NAME = ["emoteinfo", "weit"]
