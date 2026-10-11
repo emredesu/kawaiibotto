@@ -27,6 +27,7 @@ def instantiate_commands(commands):
 	# PRIVMSG commands
 	HelloWorldCommand(commands)
 	RandomQuoteCommand(commands)
+	RandomLineCommand(commands)
 	EmoteInfoCommand(commands)
 	OpggCommand(commands)
 	UserIDCommand(commands)
