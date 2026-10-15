@@ -19,7 +19,7 @@ class BottoChatbotCommand(CustomCommand):
     maxTokens = 2048
     currentModel = "gemini-3.5-flash-lite"
     fallbackModel = "gemini-2.5-flash"
-    proModel = "gemini-3.5-flash"
+    proModel = "gemini-3.8-flash"
     maxResponseChars = 496
     maxRetries = 2
     maxQueriesPerMinute = 3
