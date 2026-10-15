@@ -16,4 +16,4 @@ class QuoteRespondsCommand(CustomCommand):
             self.colonThreeLastTriggerTime = time.time()
 
         if (messageData.channel.lower() == "emredesu" and "emgay" in messageData.content):
-            bot.send_message(messageData.channel, "emstraight")
+            bot.send_reply_message(messageData.channel, "emstraight")
