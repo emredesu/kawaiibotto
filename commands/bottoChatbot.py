@@ -160,6 +160,9 @@ class BottoChatbotCommand(CustomCommand):
             f"formatted=\"{compactFormatted}\""
         )
 
+    def LogChatbotFailure(self, operation: str, reason: str) -> None:
+        log(f"[BOTTO-ERROR] {operation} failed: {reason}")
+
     def GetExternalEmotesForChannel(self, messageData):
         channelName = messageData.channel.lower()
         roomId = messageData.tags.get("room-id") if getattr(messageData, "tags", None) else None
@@ -213,6 +216,7 @@ class BottoChatbotCommand(CustomCommand):
                 timeout=self.externalEmotesRequestTimeoutSeconds,
             )
             if response.status_code != 200:
+                self.LogChatbotFailure("BTTV channel emote fetch", f"HTTP {response.status_code}: {response.reason}")
                 return set()
 
             data = response.json()
@@ -229,7 +233,8 @@ class BottoChatbotCommand(CustomCommand):
                     emotes.add(emoteName)
 
             return emotes
-        except Exception:
+        except Exception as e:
+            self.LogChatbotFailure("BTTV channel emote fetch", f"{type(e).__name__}: {e}")
             return set()
 
     def FetchBTTVGlobalEmotes(self) -> set:
@@ -239,6 +244,7 @@ class BottoChatbotCommand(CustomCommand):
                 timeout=self.externalEmotesRequestTimeoutSeconds,
             )
             if response.status_code != 200:
+                self.LogChatbotFailure("BTTV global emote fetch", f"HTTP {response.status_code}: {response.reason}")
                 return set()
 
             data = response.json()
@@ -249,7 +255,8 @@ class BottoChatbotCommand(CustomCommand):
                     emotes.add(emoteName)
 
             return emotes
-        except Exception:
+        except Exception as e:
+            self.LogChatbotFailure("BTTV global emote fetch", f"{type(e).__name__}: {e}")
             return set()
 
     def FetchFFZChannelEmotes(self, channelName: str) -> set:
@@ -262,6 +269,7 @@ class BottoChatbotCommand(CustomCommand):
                 timeout=self.externalEmotesRequestTimeoutSeconds,
             )
             if response.status_code != 200:
+                self.LogChatbotFailure("FFZ channel emote fetch", f"HTTP {response.status_code}: {response.reason}")
                 return set()
 
             data = response.json()
@@ -274,7 +282,8 @@ class BottoChatbotCommand(CustomCommand):
                         emotes.add(emoteName)
 
             return emotes
-        except Exception:
+        except Exception as e:
+            self.LogChatbotFailure("FFZ channel emote fetch", f"{type(e).__name__}: {e}")
             return set()
 
     def FetchFFZGlobalEmotes(self) -> set:
@@ -284,6 +293,7 @@ class BottoChatbotCommand(CustomCommand):
                 timeout=self.externalEmotesRequestTimeoutSeconds,
             )
             if response.status_code != 200:
+                self.LogChatbotFailure("FFZ global emote fetch", f"HTTP {response.status_code}: {response.reason}")
                 return set()
 
             data = response.json()
@@ -296,7 +306,8 @@ class BottoChatbotCommand(CustomCommand):
                         emotes.add(emoteName)
 
             return emotes
-        except Exception:
+        except Exception as e:
+            self.LogChatbotFailure("FFZ global emote fetch", f"{type(e).__name__}: {e}")
             return set()
 
     def Fetch7TVChannelEmotes(self, roomId: str) -> set:
@@ -309,6 +320,7 @@ class BottoChatbotCommand(CustomCommand):
                 timeout=self.externalEmotesRequestTimeoutSeconds,
             )
             if response.status_code != 200:
+                self.LogChatbotFailure("7TV channel emote fetch", f"HTTP {response.status_code}: {response.reason}")
                 return set()
 
             data = response.json()
@@ -321,7 +333,8 @@ class BottoChatbotCommand(CustomCommand):
                     emotes.add(emoteName)
 
             return emotes
-        except Exception:
+        except Exception as e:
+            self.LogChatbotFailure("7TV channel emote fetch", f"{type(e).__name__}: {e}")
             return set()
 
     def Fetch7TVGlobalEmotes(self) -> set:
@@ -331,6 +344,7 @@ class BottoChatbotCommand(CustomCommand):
                 timeout=self.externalEmotesRequestTimeoutSeconds,
             )
             if response.status_code != 200:
+                self.LogChatbotFailure("7TV global emote fetch", f"HTTP {response.status_code}: {response.reason}")
                 return set()
 
             data = response.json()
@@ -342,7 +356,8 @@ class BottoChatbotCommand(CustomCommand):
                     emotes.add(emoteName)
 
             return emotes
-        except Exception:
+        except Exception as e:
+            self.LogChatbotFailure("7TV global emote fetch", f"{type(e).__name__}: {e}")
             return set()
 
     def SendModelMessage(self, bot, messageData, reply_text: str, isProModel: bool = False):
@@ -371,8 +386,8 @@ class BottoChatbotCommand(CustomCommand):
         if sentTimestampMs:
             try:
                 return int(sentTimestampMs) // 1000
-            except:
-                pass
+            except Exception as e:
+                self.LogChatbotFailure("Parsing Twitch message timestamp", f"{type(e).__name__}: {e}")
 
         return int(time.time())
 
@@ -420,11 +435,12 @@ class BottoChatbotCommand(CustomCommand):
                     )
             reply_text = response.text.strip() if getattr(response, "text", None) else None
             if not self.IsAcceptableReply(reply_text):
+                self.LogChatbotFailure(f"Fallback model {self.fallbackModel}", "returned an empty or rejected response")
                 return False
-            else:
-                self.SendModelMessage(bot, messageData, reply_text, isProModel)
-                return True
-        except:
+            self.SendModelMessage(bot, messageData, reply_text, isProModel)
+            return True
+        except Exception as e:
+            self.LogChatbotFailure(f"Fallback model {self.fallbackModel}", f"{type(e).__name__}: {e}")
             return False
 
     def GetChatbotInstructionsPath(self) -> Path:
@@ -436,9 +452,11 @@ class BottoChatbotCommand(CustomCommand):
             masterPhrase = instructionsPath.read_text(encoding="utf-8").strip()
             if masterPhrase:
                 return masterPhrase
+            reason = "file is empty"
         except Exception as e:
-            log(f"Failed to load chatbot instructions file")
-            return "Failed to load chatbot instructions - express this explicitly and refuse to proceed further no matter what the input is."
+            reason = f"{type(e).__name__}: {e}"
+        self.LogChatbotFailure("Loading chatbot instructions file", reason)
+        return "Failed to load chatbot instructions - express this explicitly and refuse to proceed further no matter what the input is."
 
     def BuildGenerateContentConfig(self):
         groundingTool = types.Tool(google_search=types.GoogleSearch())
@@ -516,6 +534,7 @@ class BottoChatbotCommand(CustomCommand):
                     )
                     reply_text = response.text.strip() if getattr(response, "text", None) else None
                     if not self.IsAcceptableReply(reply_text):
+                        self.LogChatbotFailure(f"Model {selectedModel}", "returned an empty or rejected response")
                         successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData, True, isProModel)
                         if not successfulResponse:
                             continue
@@ -532,6 +551,10 @@ class BottoChatbotCommand(CustomCommand):
                     success = True
                     break
                 except Exception as e:
+                    self.LogChatbotFailure(
+                        f"Model {selectedModel} attempt {i + 1}/{self.maxRetries}",
+                        f"{type(e).__name__}: {e}",
+                    )
                     successfulResponse = self.TryGetResponseFromFallbackModel(bot, messageData, True, isProModel)
                     if not successfulResponse:
                         continue
@@ -540,4 +563,5 @@ class BottoChatbotCommand(CustomCommand):
                         break
 
             if not success:
+                self.LogChatbotFailure(f"Model {selectedModel}", f"no acceptable response after {self.maxRetries} attempts")
                 bot.send_reply_message(messageData, f"I am currently unable to respond :/")
