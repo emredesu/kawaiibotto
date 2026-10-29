@@ -7,6 +7,7 @@ from pathlib import Path
 import random
 import re
 import requests
+import threading
 import time
 
 class BottoChatbotCommand(CustomCommand):
@@ -23,6 +24,9 @@ class BottoChatbotCommand(CustomCommand):
     maxResponseChars = 496
     maxRetries = 2
     maxQueriesPerMinute = 3
+    chatbotBanDurationsSeconds = (60, 300, 3600, 21600, 86400, 604800)
+    chatbotBanDurationLabels = ("1m", "5m", "1h", "6h", "1d", "7d")
+    chatbotAbuseResetSeconds = 604800
     externalEmotesCacheTtlSeconds = 21600 # updates emotes every 6 hours
     externalEmotesRequestTimeoutSeconds = 3
     emoteDetectionDebugEnabled = False
@@ -41,6 +45,7 @@ class BottoChatbotCommand(CustomCommand):
     autoRespondChanceIncreasePerMessage = 0.05
 
     userQueryCountsPerMinute = {} # key: username, value: {minuteBucket: int, count: int}
+    chatbotAbuseRecords = {} # key: username, value: {banLevel: int, banExpiresAt: int, lastViolationAt: int}
     externalEmotesCache = {} # key: channel name, value: {expiresAt: float, roomId: str, emotes: set[str]}
     externalGlobalEmotesCache = {"expiresAt": 0, "emotes": set()} # value: globally available external emotes
 
@@ -402,19 +407,38 @@ class BottoChatbotCommand(CustomCommand):
         currentSeconds = int(timestampSeconds)
         return 60 - (currentSeconds % 60)
 
-    def TryConsumeMinuteQuota(self, username: str, timestampSeconds=None) -> bool:
+    def TryConsumeMinuteQuota(self, username: str, timestampSeconds=None):
+        if timestampSeconds is None:
+            timestampSeconds = int(time.time())
+
+        username = username.lower()
         currentMinuteBucket = self.GetCurrentMinuteBucket(timestampSeconds)
-        userCounter = self.userQueryCountsPerMinute.get(username)
+        with self.chatbotAbuseLock:
+            abuseRecord = self.chatbotAbuseRecords.get(username)
+            if abuseRecord and abuseRecord["banExpiresAt"] > timestampSeconds:
+                return False, abuseRecord["banExpiresAt"] - timestampSeconds, abuseRecord["banLevel"], False
 
-        if not userCounter or userCounter["minuteBucket"] != currentMinuteBucket:
-            self.userQueryCountsPerMinute[username] = {"minuteBucket": currentMinuteBucket, "count": 1}
-            return True
+            userCounter = self.userQueryCountsPerMinute.get(username)
+            if not userCounter or userCounter["minuteBucket"] != currentMinuteBucket:
+                self.userQueryCountsPerMinute[username] = {"minuteBucket": currentMinuteBucket, "count": 1}
+                return True, 0, 0, False
 
-        if userCounter["count"] >= self.maxQueriesPerMinute:
-            return False
+            if userCounter["count"] < self.maxQueriesPerMinute:
+                userCounter["count"] += 1
+                return True, 0, 0, False
 
-        userCounter["count"] += 1
-        return True
+            if not abuseRecord or timestampSeconds - abuseRecord["lastViolationAt"] >= self.chatbotAbuseResetSeconds:
+                banLevel = 0
+            else:
+                banLevel = min(abuseRecord["banLevel"] + 1, len(self.chatbotBanDurationsSeconds) - 1)
+
+            banDurationSeconds = self.chatbotBanDurationsSeconds[banLevel]
+            self.chatbotAbuseRecords[username] = {
+                "banLevel": banLevel,
+                "banExpiresAt": timestampSeconds + banDurationSeconds,
+                "lastViolationAt": timestampSeconds,
+            }
+            return False, banDurationSeconds, banLevel, True
 
     def FormatRemainingTime(self, remainingSeconds: int) -> str:
         if remainingSeconds < 60:
@@ -425,6 +449,20 @@ class BottoChatbotCommand(CustomCommand):
         if seconds == 0:
             return f"{minutes}m"
         return f"{minutes}m {seconds}s"
+
+    def GetChatbotBanMessage(self, remainingSeconds: int, banLevel: int, didEscalateBan: bool) -> str:
+        banLabel = self.chatbotBanDurationLabels[banLevel]
+        if didEscalateBan:
+            return (
+                f"Chatbot ban: you exceeded the request limit through repeated spam. "
+                f"You cannot use botto for {banLabel}. "
+                f"Further violations after this ban can result in a longer ban."
+            )
+
+        return (
+            f"Chatbot ban: you are still blocked from using botto for "
+            f"{self.FormatRemainingTime(remainingSeconds)} due to spam."
+        )
 
     def TryGetResponseFromFallbackModel(self, bot, messageData, isMentionedJoin, isProModel: bool = False) -> bool: # Returns true if the model responded, otherwise false
         try:
@@ -475,6 +513,7 @@ class BottoChatbotCommand(CustomCommand):
             
     def __init__(self, commands):
         super().__init__(commands)
+        self.chatbotAbuseLock = threading.Lock()
         self.geminiClient = GenAI.Client(api_key=GOOGLE_GEMINI_APIKEY)
         self.config = self.BuildGenerateContentConfig()
 
@@ -511,7 +550,6 @@ class BottoChatbotCommand(CustomCommand):
 
         # bot name mentioned, trigger response
         if self.NAME_PATTERN.search(messageData.content):
-            self.config = self.BuildGenerateContentConfig()
             messageTimestampSeconds = self.GetMessageTimestampSeconds(messageData)
             isProModel = bool(re.search(r"\bbottopro\b", messageData.content or "", re.IGNORECASE))
             if isProModel and messageData.channel not in CHATBOT_PRO_ENABLED_CHANNELS:
@@ -519,9 +557,15 @@ class BottoChatbotCommand(CustomCommand):
 
             selectedModel = self.proModel if isProModel else self.currentModel
 
-            if not self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds):
-                self.SendModelMessage(bot, messageData, f"You have exceeded your rate-limits PunOko You will be able to chat with botto in {self.FormatRemainingTime(self.GetSecondsUntilNextMinute(messageTimestampSeconds))}", isProModel)
+            canUseChatbot, remainingSeconds, banLevel, isNewBan = self.TryConsumeMinuteQuota(messageData.user, messageTimestampSeconds)
+            if not canUseChatbot:
+                bot.send_reply_message(
+                    messageData,
+                    self.GetChatbotBanMessage(remainingSeconds, banLevel, isNewBan),
+                )
                 return
+
+            self.config = self.BuildGenerateContentConfig()
             success = False
 
             # try to get a response maxRetries times
